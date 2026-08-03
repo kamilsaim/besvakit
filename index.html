@@ -706,7 +706,7 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
    Vakitler cihazda hesaplanır; hiçbir sunucuya vakit sorulmaz.
    ========================================================== */
 const APP = 'Beş Vakit';
-const SURUM = '0.7.1';
+const SURUM = '0.7.2';
 const LOGO = 'logos.png';
 const KABE = { lat: 21.4224779, lng: 39.8261722 };
 const VAKITLER = [
@@ -1594,6 +1594,38 @@ function cumaSaatDk(){
   return isNaN(dk) ? null : dk;
 }
 
+/* ==========================================================
+   ANDROID WIDGET KÖPRÜSÜ
+   Widget kendi hesabını yapmaz; 30 günlük vakti buradan okur.
+   Böylece astronomik motor tek yerde kalır ve uygulama günlerce
+   açılmasa da ana ekrandaki widget doğru çalışmaya devam eder.
+   Tarayıcıda hiçbir şey yapmaz — yalnızca APK içinde çalışır.
+   ========================================================== */
+let _widgetSonYazim = '';
+async function widgetVeriYaz(){
+  const P = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Preferences;
+  if(!P) return;
+  const bugun = new Date();
+  // aynı gün ve aynı ayarlarla ikinci kez yazma
+  const imza = gunAnahtar(bugun) + '|' + A.sehir + '|' + A.lat.toFixed(4) + ',' + A.lng.toFixed(4) +
+               '|' + A.rakim + '|' + A.yontem + '|' + A.mezhep + '|' + (A.temkin?1:0) +
+               '|' + VAKITLER.map(v=>A.duzeltme[v.k]).join(',');
+  if(imza === _widgetSonYazim) return;
+
+  const gunler = {};
+  for(let i=0; i<30; i++){
+    const d = new Date(bugun); d.setDate(d.getDate() + i);
+    const v = vakitleriHesapla(d, A);
+    gunler[gunAnahtar(d)] = VAKITLER.map(x => isNaN(v[x.k]) ? 0 : Math.round(v[x.k]));
+  }
+  try{
+    await P.set({ key:'bv_widget', value: JSON.stringify({
+      sehir: A.sehir, yazan: gunAnahtar(bugun), gunler
+    })});
+    _widgetSonYazim = imza;
+  }catch(e){}
+}
+
 /* ---------- günü tazele ---------- */
 function gunuTazele(){
   const bugun = new Date();
@@ -1609,6 +1641,7 @@ function gunuTazele(){
   takipCiz();
   tikTak();
   kibleBilgiTazele();
+  widgetVeriYaz();
 }
 
 /* ==========================================================

@@ -81,6 +81,12 @@ kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasın�
 
 ## Sürüm geçmişi
 
+### 0.7.2
+- **Android widget köprüsü.** Uygulama 30 günlük vakti `@capacitor/preferences` ile
+  cihazın `SharedPreferences` dosyasına yazar; ana ekran widget'ı oradan okur.
+  Hesap mantığı tek yerde kalır — widget kendi hesabını yapmaz, uygulama günlerce
+  açılmasa da doğru çalışmaya devam eder.
+
 ### 0.7.1
 - **Tek dokunuşla sapma ölçümü.** Telefon güneşin yatay yönüne çevrilmişken pusulanın
   söylediği yön ile hesaplanan güneş azimutu karşılaştırılır; fark doğrudan telefonun
@@ -144,9 +150,9 @@ kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasın�
 - [x] Namaz takibi, kaza sayacı, zikirmatik
 - [x] Dini günler takvimi
 - [x] Çevrimdışı kabuk, vakit öncesi hatırlatma
+- [x] Android ana ekran widget'ı — sıradaki vakit, kalan süre, günün altı vakti
 - [ ] Capacitor kabuk (APK) — uygulama kapalıyken de bildirim
 - [ ] Gerçek ezan sesi
-- [ ] Android ana ekran widget'ı
 - [x] Açık tema ve AMOLED tema
 - [x] Ramazan modu — iftar/sahur geri sayımı
 - [x] Kerahat vakitleri uyarısı
