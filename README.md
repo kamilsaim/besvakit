@@ -8,7 +8,7 @@
 
 [**→ Uygulamayı aç**](https://kamilsaim.github.io/besvakit/)
 
-![sürüm](https://img.shields.io/badge/sürüm-0.2.0-22B2AE?style=flat-square)
+![sürüm](https://img.shields.io/badge/sürüm-0.3.0-22B2AE?style=flat-square)
 ![bağımlılık](https://img.shields.io/badge/bağımlılık-yok-D8A93C?style=flat-square)
 ![tek dosya](https://img.shields.io/badge/tek%20dosya-HTML-080C18?style=flat-square)
 
@@ -25,9 +25,11 @@ API anahtarı gerekmez, hiçbir veri dışarı çıkmaz. Tek bir HTML dosyası; 
 |---|---|
 | **Vakitler** | Altı vakit, canlı geri sayım, gün şeridi, aylık imsakiye |
 | **Dini günler** | Kandiller, bayramlar, üç aylar — hicri takvimden otomatik |
-| **Kıble** | Gerçek pusula, kalibrasyon, uydu haritası üzerinde kıble hattı |
+| **Kıble** | Sekmeye girince başlayan pusula, kalibrasyon, uydu haritasında kıble hattı |
+| **İbadet** | Namaz takibi, seri gün, aylık istatistik, kaza sayacı, zikirmatik |
 | **Camiler** | 3 km çevrendeki camiler, yön ve yürüme mesafesiyle |
-| **Bildirim** | Vakit girince bildirim, sesli uyarı, titreşim |
+| **Bildirim** | Vakit girince ve istersen X dakika öncesinde uyarı, ses, titreşim |
+| **Çevrimdışı** | Servis işçisiyle uygulama kabuğu; vakitler zaten cihazda hesaplanıyor |
 
 ## Nasıl hesaplıyor
 
@@ -77,12 +79,17 @@ ya da doğrudan [yayındaki sürümü](https://kamilsaim.github.io/besvakit/) ku
 
 ## Yol haritası
 
+- [x] Namaz takibi, kaza sayacı, zikirmatik
+- [x] Dini günler takvimi
+- [x] Çevrimdışı kabuk, vakit öncesi hatırlatma
 - [ ] Capacitor kabuk (APK) — uygulama kapalıyken de bildirim
 - [ ] Gerçek ezan sesi
 - [ ] Android ana ekran widget'ı
+- [ ] Açık tema ve AMOLED tema
 - [ ] Ramazan modu — iftar/sahur geri sayımı
+- [ ] Cuma modu — salavat sayacı, Kehf hatırlatması
 - [ ] Kerahat vakitleri uyarısı
-- [ ] Kaza namazı sayacı
+- [ ] Ayarları ve kayıtları dışa aktar / geri yükle
 
 ## Lisans
 

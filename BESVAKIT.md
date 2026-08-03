@@ -3,7 +3,7 @@
 Reklamsız, ücretsiz, internetsiz çalışan namaz vakti + kıble uygulaması.
 Tek dosya HTML → GitHub Pages → Capacitor kabuk (APK/IPA) → widget.
 
-**Durum:** v0.1 çalışıyor. `besvakit.html` tek başına açılır, kurulum gerektirmez.
+**Durum:** v0.3.0 yayında → https://kamilsaim.github.io/besvakit/
 
 ---
 
@@ -11,7 +11,10 @@ Tek dosya HTML → GitHub Pages → Capacitor kabuk (APK/IPA) → widget.
 
 ```
 besvakit/
-├── index.html          # besvakit.html'i buraya index.html olarak koy
+├── index.html          # uygulamanın tamamı
+├── sw.js               # çevrimdışı kabuk (APK'da gereksiz)
+├── logos.png           # favicon, manifest ikonu, marka
+├── README.md           # GitHub vitrini
 └── BESVAKIT.md         # bu dosya
 ```
 
@@ -43,9 +46,24 @@ Tek `<script>` bloğu, üç mantıksal katman:
 |---|---|---|
 | Hesap motoru | Astronomik vakit + kıble | `julian`, `gunes`, `vakitleriHesapla`, `kibleAcisi` |
 | Arayüz | Gökyüzü, geri sayım, liste, imsakiye | `gunuTazele`, `tikTak`, `seritCiz`, `gokyuzuCiz` |
+| Dini günler | Hicri takvimden kandil/bayram | `hicriParcala`, `diniGunListesi`, `diniGunleriCiz` |
+| İbadet | Namaz takibi, kaza, zikirmatik | `takipCiz`, `seriHesapla`, `istatistikCiz`, `tesbihArtir` |
 | Donanım | Pusula, GPS, harita, Overpass | `pusulaBaslat`, `yonOlayi`, `haritaKur`, `camileriBul` |
 
-**Global durum:** `A` (ayarlar, localStorage anahtarı `besvakit`), `bugunVakit`, `kible`, `yon`.
+**Global durum:** `A` (ayarlar), `TAKIP` (namaz/kaza), `ZIKIR`, `bugunVakit`, `kible`, `yon`.
+
+**localStorage anahtarları:** `besvakit` (ayarlar), `besvakit_takip`, `besvakit_zikir`,
+`besvakit_cami` (24 saatlik Overpass önbelleği). İbadet kayıtları ayarlardan ayrı tutuluyor —
+zamanla büyüyen tek veri o, ayar okumasını yavaşlatmasın.
+
+### Dini günler
+Hicri tarihler `Intl.DateTimeFormat('...-u-ca-islamic-umalqura')` ile çözülür; bugünden
+400 gün ileri taranıp tablodaki (ay, gün) çiftleri eşleştirilir, sonuç güne göre önbelleklenir.
+Kandiller gece ibadeti olduğu için ilgili hicri günün **bir önceki akşamına** yazılır.
+Regaib, Recep'in ilk cumasını bulup bir gün geri alarak hesaplanır.
+Doğrulandı: Mevlid 24 Ağu 2026, Regaib 10 Ara 2026, Kurban Bayramı 16 May 2027.
+
+> Ümmülkura ile Diyanet takvimi nadiren bir gün kayabilir; rasathane ilanı esastır.
 
 ### Vakit hesabı
 PrayTimes ile aynı astronomik model, sıfırdan yazıldı, bağımlılık yok.
@@ -180,10 +198,10 @@ Yaklaşım: HTML tarafı hesapladığı 30 günlük vakti `Preferences` eklentis
   İhtiyaç olursa "en yakın gün" veya "gecenin 1/7'si" yöntemi eklenir.
 - **PWA'da arka plan bildirimi yok.** Uygulama açıkken `setInterval` ile çalışır.
   Gerçek çözüm APK. iOS'ta PWA'da hiç olmaz.
-- **Overpass rate limit** — arka arkaya çok sorguda 429 döner, sonuçlar cache'lenmiyor.
-  Yapılacak: sonucu `localStorage`'a 24 saat cache'le.
-- **Service worker yok** → ilk yüklemeden sonra offline çalışması tarayıcı cache'ine bağlı.
-  Tek dosya olduğu için ekleme kolay; APK'da gereksiz.
+- **Namaz takibi geçmişe dönük değil.** Yalnızca bugünü işaretleyebilirsin; dün unutulduysa
+  telafi yok. İstenirse ızgaradaki güne dokununca o günü düzenleme eklenebilir.
+- **Zikir sayacı zikir değişince sıfırlanır.** Günlük toplam korunur ama yarım kalan
+  tesbih kaybolur. Bilinçli tercih; şikayet gelirse zikir başına sayaç tutulur.
 
 ---
 
