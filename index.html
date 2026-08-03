@@ -9,6 +9,9 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Beş Vakit">
+<meta name="description" content="Reklamsız, ücretsiz, internetsiz çalışan namaz vakti ve kıble uygulaması.">
+<link rel="icon" type="image/png" href="logos.png">
+<link rel="apple-touch-icon" href="logos.png">
 <link id="manifest" rel="manifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -128,6 +131,36 @@ table.imsakiye td:first-child{color:var(--sis);font-weight:700}
 table.imsakiye tr.bugun{background:rgba(216,169,60,.12)}
 table.imsakiye tr.bugun td{color:var(--pirinc);font-weight:700}
 
+/* katlanabilir başlık */
+button.baslik{display:flex;align-items:center;justify-content:space-between;width:100%;
+  padding:0;text-align:left;font-family:inherit}
+button.baslik .ok{font-size:15px;line-height:1;color:var(--sis);transition:transform .22s;transform:rotate(180deg)}
+button.baslik[aria-expanded=false] .ok{transform:rotate(0deg)}
+button.baslik[aria-expanded=false]{color:var(--sis)}
+.katlanir.gizli{display:none}
+
+/* dini günler */
+.dini-satir{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--cizgi)}
+.dini-satir:last-child{border-bottom:0}
+.dini-satir.yakin{background:linear-gradient(90deg,rgba(34,178,174,.12),transparent)}
+.dini-ikon{width:26px;text-align:center;font-size:15px;opacity:.85;flex:none;color:var(--pirinc)}
+.dini-ad{flex:1;font-weight:600;font-size:14px;letter-spacing:.01em}
+.dini-ad em{display:block;font-style:normal;font-size:11.5px;color:var(--hayalet);font-weight:500;margin-top:1px}
+.dini-kalan{text-align:right;flex:none}
+.dini-kalan b{display:block;font-family:'Antonio',sans-serif;font-size:22px;font-weight:400;
+  font-variant-numeric:tabular-nums;line-height:1;color:var(--sis)}
+.dini-kalan span{display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--hayalet);margin-top:3px}
+.dini-satir.yakin .dini-kalan b{color:var(--cini)}
+
+/* marka / hakkında */
+.marka-logo{width:22px;height:22px;flex:none;display:block}
+.hakkinda{display:flex;align-items:center;gap:14px;padding:16px}
+.hakkinda img{width:56px;height:56px;flex:none}
+.hakkinda-ad{font-family:'Antonio',sans-serif;font-size:26px;letter-spacing:.02em;line-height:1}
+.hakkinda-alt{font-size:12px;color:var(--hayalet);margin-top:4px;line-height:1.5}
+.hakkinda-alt b{color:var(--sis);font-weight:600}
+
 /* ---------- kıble ---------- */
 .pusula-sar{display:grid;place-items:center;padding:8px 0 4px}
 #pusula{width:min(86vw,340px);height:min(86vw,340px);display:block}
@@ -202,7 +235,7 @@ table.imsakiye tr.bugun td{color:var(--pirinc);font-weight:700}
 <header id="gokyuzu">
   <svg class="yildizlar" id="yildizlar" aria-hidden="true"></svg>
   <div class="hero-ust">
-    <button class="konum" id="konumBtn">◉ <span id="konumAd">Konum alınıyor…</span></button>
+    <button class="konum" id="konumBtn"><img class="marka-logo" src="logos.png" alt="Beş Vakit"><span id="konumAd">Konum alınıyor…</span></button>
     <div class="hicri" id="tarih"></div>
   </div>
   <div class="hero-orta">
@@ -222,8 +255,17 @@ table.imsakiye tr.bugun td{color:var(--pirinc);font-weight:700}
   <section class="sayfa acik" id="sayfa-vakit">
     <div class="baslik">Bugün</div>
     <div class="kart" id="vakitListe"></div>
-    <div class="baslik">Bu ayın imsakiyesi</div>
-    <div class="kart" style="padding:0 10px"><table class="imsakiye" id="imsakiye"></table></div>
+    <button class="baslik" id="imsakiyeBaslik" aria-expanded="true" aria-controls="imsakiyeKart">
+      Bu ayın imsakiyesi <span class="ok" aria-hidden="true">⌃</span>
+    </button>
+    <div class="kart katlanir" id="imsakiyeKart" style="padding:0 10px">
+      <table class="imsakiye" id="imsakiye"></table>
+    </div>
+
+    <button class="baslik" id="diniBaslik" aria-expanded="false" aria-controls="diniKart">
+      Dini günler ve geceler <span class="ok" aria-hidden="true">⌃</span>
+    </button>
+    <div class="kart katlanir gizli" id="diniKart"></div>
   </section>
 
   <!-- KIBLE -->
@@ -231,7 +273,7 @@ table.imsakiye tr.bugun td{color:var(--pirinc);font-weight:700}
     <div class="pusula-sar"><svg id="pusula" viewBox="0 0 320 320" aria-label="Kıble pusulası"></svg></div>
     <div class="pusula-durum">
       <div class="sapma" id="sapmaYazi">—</div>
-      <div class="pusula-mesaj" id="pusulaMesaj">Pusulayı başlatmak için aşağıdaki düğmeye dokun.</div>
+      <div class="pusula-mesaj" id="pusulaMesaj">Pusula başlatılıyor…</div>
     </div>
     <div style="margin-top:14px"><button class="btn" id="pusulaBtn">Pusulayı başlat</button></div>
     <div class="btn-satir">
@@ -337,9 +379,24 @@ table.imsakiye tr.bugun td{color:var(--pirinc);font-weight:700}
       </div>
     </div>
 
-    <p class="bilgi" style="margin:22px 0 40px;text-align:center">
-      Beş Vakit · reklamsız, ücretsiz, internetsiz çalışır<br>
-      Vakitler cihazında hesaplanır. Cami verisi © OpenStreetMap katkıcıları.
+    <div class="baslik">Hakkında</div>
+    <div class="kart">
+      <div class="hakkinda">
+        <img src="logos.png" alt="Beş Vakit logosu">
+        <div>
+          <div class="hakkinda-ad">Beş Vakit</div>
+          <div class="hakkinda-alt">
+            Sürüm <b id="surumYazi">—</b> · reklamsız, ücretsiz, internetsiz<br>
+            Vakitler cihazında hesaplanır, hiçbir sunucuya sorulmaz.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="bilgi" style="margin:14px 0 40px;text-align:center">
+      Hesaplama yöntemi Diyanet ile aynı astronomik modeldir; kaynak koda
+      <b>github.com/kamilsaim/besvakit</b> adresinden ulaşabilirsin.<br>
+      Harita ve cami verisi © OpenStreetMap katkıcıları · Uydu görüntüsü Esri.
     </p>
   </section>
 </main>
@@ -359,6 +416,8 @@ table.imsakiye tr.bugun td{color:var(--pirinc);font-weight:700}
    Vakitler cihazda hesaplanır; hiçbir sunucuya vakit sorulmaz.
    ========================================================== */
 const APP = 'Beş Vakit';
+const SURUM = '0.2.0';
+const LOGO = 'logos.png';
 const KABE = { lat: 21.4224779, lng: 39.8261722 };
 const VAKITLER = [
   { k:'imsak',   ad:'İmsak',  alt:'Sabah namazı başlangıcı', ikon:'☾' },
@@ -399,6 +458,7 @@ const VARSAYILAN = {
   duzeltme:{ imsak:0, gunes:0, ogle:0, ikindi:0, aksam:0, yatsi:0 },
   bildirim:{ imsak:true, gunes:false, ogle:true, ikindi:true, aksam:true, yatsi:true },
   bildirimAcik:false, ses:true, titresim:true, gokyuzu:true, uyanik:false,
+  imsakiyeAcik:true, diniAcik:false,
   sapma:0
 };
 let A = yukle();
@@ -678,6 +738,97 @@ function imsakiyeCiz(){
   $('#imsakiye').innerHTML = s + '</tbody>';
 }
 
+/* ---------- dini günler ve geceler ----------
+   Hicri tarihler Ümmülkura takviminden (Intl) çözülür; hesap yine cihazda yapılır.
+   Kandiller gece ibadeti olduğu için ilgili hicri günün bir önceki akşamına yazılır. */
+const DINI = [
+  { ad:'Üç Ayların Başlangıcı', alt:'Recep ayı girer',            ay:7,  gun:1,  ikon:'◈' },
+  { ad:'Regaib Kandili',        alt:'Recep ayının ilk cuma gecesi', ozel:'regaib', ikon:'✦' },
+  { ad:'Miraç Kandili',         alt:'27 Recep gecesi',            ay:7,  gun:27, gece:true, ikon:'✦' },
+  { ad:'Berat Kandili',         alt:'15 Şaban gecesi',            ay:8,  gun:15, gece:true, ikon:'✦' },
+  { ad:'Ramazan Başlangıcı',    alt:'İlk oruç',                   ay:9,  gun:1,  ikon:'☾' },
+  { ad:'Kadir Gecesi',          alt:'27 Ramazan gecesi',          ay:9,  gun:27, gece:true, ikon:'✧' },
+  { ad:'Ramazan Bayramı Arefesi', alt:'Son oruç günü',            ay:10, gun:1,  kaydir:-1, ikon:'◌' },
+  { ad:'Ramazan Bayramı',       alt:'3 gün',                      ay:10, gun:1,  ikon:'★' },
+  { ad:'Kurban Bayramı Arefesi',alt:'9 Zilhicce',                 ay:12, gun:9,  ikon:'◌' },
+  { ad:'Kurban Bayramı',        alt:'4 gün',                      ay:12, gun:10, ikon:'★' },
+  { ad:'Hicri Yılbaşı',         alt:'1 Muharrem',                 ay:1,  gun:1,  ikon:'◈' },
+  { ad:'Aşure Günü',            alt:'10 Muharrem',                ay:1,  gun:10, ikon:'◈' },
+  { ad:'Mevlid Kandili',        alt:'12 Rebiülevvel gecesi',      ay:3,  gun:12, gece:true, ikon:'✦' }
+];
+let _diniOnbellek = null;
+
+function hicriParcala(d){
+  const p = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura',
+    { day:'numeric', month:'numeric', year:'numeric' }).formatToParts(d);
+  const o = {};
+  p.forEach(x => { if(x.type!=='literal' && x.type!=='era') o[x.type] = parseInt(x.value,10); });
+  return o;
+}
+const gunBasi = d => { const x = new Date(d); x.setHours(0,0,0,0); return x; };
+
+function diniGunListesi(){
+  if(_diniOnbellek && _diniOnbellek.gun === gunBasi(new Date()).getTime()) return _diniOnbellek.liste;
+  const bugun = gunBasi(new Date());
+  const tarama = [];
+  try{
+    for(let i=-3; i<=400; i++){
+      const d = new Date(bugun); d.setDate(d.getDate()+i); d.setHours(12,0,0,0);
+      tarama.push({ d: gunBasi(d), h: hicriParcala(d) });
+    }
+  }catch(e){ return []; }
+
+  const liste = [];
+  DINI.forEach(x=>{
+    let tarih = null;
+    if(x.ozel === 'regaib'){
+      const c = tarama.find(t => t.h.month === 7 && t.d.getDay() === 5 && t.h.day <= 7);
+      if(c){ tarih = new Date(c.d); tarih.setDate(tarih.getDate()-1); }   // perşembeyi cumaya bağlayan gece
+    }else{
+      const c = tarama.find(t => t.h.month === x.ay && t.h.day === x.gun);
+      if(c){
+        tarih = new Date(c.d);
+        if(x.gece) tarih.setDate(tarih.getDate()-1);
+        if(x.kaydir) tarih.setDate(tarih.getDate()+x.kaydir);
+      }
+    }
+    if(tarih && tarih >= bugun) liste.push({ ...x, tarih });
+  });
+  liste.sort((a,b)=> a.tarih - b.tarih);
+  _diniOnbellek = { gun: bugun.getTime(), liste };
+  return liste;
+}
+
+function diniGunleriCiz(){
+  const liste = diniGunListesi();
+  if(!liste.length){
+    $('#diniKart').innerHTML = kutu('Dini günler hesaplanamadı — cihazın hicri takvim desteği yok.');
+    return;
+  }
+  const bugun = gunBasi(new Date());
+  $('#diniKart').innerHTML = liste.map(x=>{
+    const fark = Math.round((x.tarih - bugun)/86400000);
+    const kalan = fark === 0 ? ['Bugün',''] : fark === 1 ? ['Yarın',''] : [String(fark),'gün'];
+    return `<div class="dini-satir ${fark <= 7 ? 'yakin':''}">
+      <div class="dini-ikon">${x.ikon}</div>
+      <div class="dini-ad">${x.ad}<em>${x.alt} · ${x.tarih.getDate()} ${AYLAR[x.tarih.getMonth()]} ${GUNLER[x.tarih.getDay()]}</em></div>
+      <div class="dini-kalan"><b>${kalan[0]}</b><span>${kalan[1]}</span></div>
+    </div>`;
+  }).join('');
+}
+
+/** Katlanabilir bölüm. Kapalıyken içerik hiç çizilmez — imsakiye 31 günlük hesap demek. */
+function katlamaKur(btnSel, kartSel, anahtar, ciz){
+  const btn = $(btnSel), kart = $(kartSel);
+  const uygula = ac=>{
+    btn.setAttribute('aria-expanded', ac);
+    kart.classList.toggle('gizli', !ac);
+    if(ac) ciz();
+  };
+  uygula(!!A[anahtar]);
+  btn.onclick = ()=>{ A[anahtar] = !A[anahtar]; kaydet(); uygula(A[anahtar]); };
+}
+
 /* ---------- günü tazele ---------- */
 function gunuTazele(){
   const bugun = new Date();
@@ -685,7 +836,8 @@ function gunuTazele(){
   $('#konumAd').textContent = A.sehir;
   $('#tarih').innerHTML = `${bugun.getDate()} ${AYLAR[bugun.getMonth()]} ${GUNLER[bugun.getDay()]}<br>${hicriYaz(bugun)}`;
   vakitListesiCiz();
-  imsakiyeCiz();
+  if(A.imsakiyeAcik) imsakiyeCiz();
+  if(A.diniAcik) diniGunleriCiz();
   tikTak();
   kibleBilgiTazele();
 }
@@ -693,7 +845,8 @@ function gunuTazele(){
 /* ==========================================================
    KIBLE PUSULASI
    ========================================================== */
-let kible = 0, yon = null, yonHam = null, pusulaAcik = false, gercekKuzey = false, sonTitresim = 0;
+let kible = 0, yon = null, yonHam = null, pusulaAcik = false, pusulaRed = false,
+    gercekKuzey = false, sonTitresim = 0;
 
 function pusulaCiz(){
   const svg = $('#pusula'), M = 160, R = 128;
@@ -784,15 +937,26 @@ function yonOlayi(e){
   pusulaCiz();
 }
 
-async function pusulaBaslat(){
+/**
+ * Kıble sekmesi açılınca otomatik, düğmeyle elle çağrılır.
+ * iOS izni kullanıcı hareketi ister; sekme dokunuşu da bir hareket sayıldığı için
+ * otomatik başlatma çalışır. İzin bir kez reddedilirse her sekme geçişinde
+ * yeniden sorulmasın diye sadece elle çağrıda tekrar denenir.
+ */
+async function pusulaBaslat(elle){
   if(pusulaAcik) return;
+  if(!elle && pusulaRed) return;
   if(!window.isSecureContext){ $('#pusulaMesaj').textContent = 'Pusula için sayfanın https ile açılması gerekir.'; return; }
   try{
     if(typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function'){
       const izin = await DeviceOrientationEvent.requestPermission();
-      if(izin !== 'granted'){ $('#pusulaMesaj').textContent = 'Pusula izni verilmedi. Ayarlar → Safari → Hareket ve Yön Erişimi\'ni aç.'; return; }
+      if(izin !== 'granted'){
+        pusulaRed = true;
+        $('#pusulaMesaj').textContent = 'Pusula izni verilmedi. Ayarlar → Safari → Hareket ve Yön Erişimi\'ni aç, sonra “Pusulayı başlat”a dokun.';
+        return;
+      }
     }
-  }catch(err){ $('#pusulaMesaj').textContent = 'Pusula izni alınamadı: ' + err.message; return; }
+  }catch(err){ pusulaRed = true; $('#pusulaMesaj').textContent = 'Pusula izni alınamadı: ' + err.message; return; }
 
   if('ondeviceorientationabsolute' in window)
     window.addEventListener('deviceorientationabsolute', yonOlayi, true);
@@ -1017,22 +1181,33 @@ function sekmeAc(ad){
   $$('.sayfa').forEach(s => s.classList.toggle('acik', s.id === 'sayfa-'+ad));
   $$('#tabbar button').forEach(b => b.classList.toggle('acik', b.dataset.sayfa === ad));
   if(ad === 'harita') haritaKur();
+  if(ad === 'kible') pusulaBaslat(false);
   window.scrollTo({top:0, behavior:'instant'});
 }
 function manifestKur(){
-  const m = { name:APP, short_name:APP, start_url:'.', display:'standalone',
-    background_color:'#080C18', theme_color:'#080C18', lang:'tr', orientation:'portrait' };
+  // Blob manifest göreli yolu çözemez; ikon adresi mutlak verilmeli.
+  const ikon = new URL(LOGO, location.href).href;
+  const m = { name:APP, short_name:APP, description:'Namaz vakti ve kıble', start_url:'.',
+    display:'standalone', background_color:'#080C18', theme_color:'#080C18',
+    lang:'tr', orientation:'portrait',
+    icons:[
+      { src:ikon, sizes:'512x512', type:'image/png', purpose:'any' },
+      { src:ikon, sizes:'512x512', type:'image/png', purpose:'maskable' }
+    ] };
   try{ $('#manifest').href = URL.createObjectURL(new Blob([JSON.stringify(m)],{type:'application/json'})); }catch(e){}
 }
 function baslat(){
   manifestKur();
   yildizlariCiz();
   ayarlariKur();
+  $('#surumYazi').textContent = SURUM;
+  katlamaKur('#imsakiyeBaslik', '#imsakiyeKart', 'imsakiyeAcik', imsakiyeCiz);
+  katlamaKur('#diniBaslik', '#diniKart', 'diniAcik', diniGunleriCiz);
   gunuTazele();
   setInterval(tikTak, 1000);
 
   $$('#tabbar button').forEach(b => b.onclick = ()=> sekmeAc(b.dataset.sayfa));
-  $('#pusulaBtn').onclick = pusulaBaslat;
+  $('#pusulaBtn').onclick = ()=> pusulaBaslat(true);
   $('#camiAraBtn').onclick = camileriBul;
   $('#uyduBtn').onclick = ()=>{
     if(!harita) return;
