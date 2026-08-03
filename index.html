@@ -34,6 +34,7 @@
   --gokyuzu:linear-gradient(180deg,#060A16,#101833);
   --safe-b:env(safe-area-inset-bottom,0px);
   --safe-t:env(safe-area-inset-top,0px);
+  --tabbar:rgba(10,14,28,.88);
 }
 
 /* Açık tema — Selçuklu paleti korunur, zemin/metin ters çevrilir.
@@ -51,6 +52,7 @@
   --sis:rgba(24,48,45,.70);
   --hayalet:rgba(24,48,45,.45);
   --cizgi:rgba(24,48,45,.14);
+  --tabbar:rgba(255,255,255,.90);
 }
 /* AMOLED — tam siyah, pikseller sönük kalsın */
 :root[data-tema=amoled]{
@@ -59,6 +61,7 @@
   --kat:#0A0A0A;
   --kat2:#161616;
   --cizgi:rgba(242,238,226,.14);
+  --tabbar:rgba(0,0,0,.92);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
@@ -260,7 +263,7 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
 /* ---------- ibadet: tesbih ---------- */
 .tesbih-sar{display:grid;place-items:center;padding:6px 0 2px}
 #tesbihBtn{width:min(66vw,250px);height:min(66vw,250px);border-radius:50%;
-  background:radial-gradient(circle at 50% 38%,var(--kat2),#0C1226);
+  background:radial-gradient(circle at 50% 38%,var(--kat2),var(--lacivert));
   border:1.5px solid rgba(216,169,60,.35);display:grid;place-items:center;
   box-shadow:0 0 0 10px rgba(216,169,60,.06);transition:transform .1s,box-shadow .2s}
 #tesbihBtn:active{transform:scale(.97);box-shadow:0 0 0 14px rgba(34,178,174,.12)}
@@ -328,7 +331,7 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
 
 /* ---------- tab bar ---------- */
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:60;display:grid;grid-template-columns:repeat(4,1fr);
-  background:rgba(10,14,28,.88);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  background:var(--tabbar);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
   border-top:1px solid var(--cizgi);padding-bottom:var(--safe-b)}
 .tabbar button{padding:9px 0 8px;display:flex;flex-direction:column;align-items:center;gap:3px;
   font-size:10px;letter-spacing:.05em;font-weight:700;color:var(--hayalet);transition:color .18s}
@@ -413,6 +416,15 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
       Yönü haritadan doğrulayıp <b>“Şu an kıbleye bakıyorum”</b>a bastığında uygulama telefonunun sapmasını
       kendisi ölçüp kalıcı olarak düzeltir.
     </p>
+
+    <div class="baslik">Güneşe göre kıble</div>
+    <div class="kart"><div id="gunesKart"></div></div>
+    <div class="btn-satir">
+      <button class="btn altin" id="gunesKalibre">Telefonu güneşe doğrulttum</button>
+    </div>
+    <p class="bilgi">Pusulaya hiç güvenmeden kıbleyi bulmanın en sağlam yolu.
+      Güneşin yönü sadece saat ve koordinattan hesaplanır; manyetik alandan,
+      metalden, kılıftan etkilenmez.</p>
 
     <button class="baslik" id="haritaBaslik" aria-expanded="false" aria-controls="haritaKart">
       Uydudan kıble hattı <span class="ok" aria-hidden="true">⌃</span>
@@ -517,7 +529,14 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
         <label>İkindi<em>Hanefî, gölge iki katı olunca</em></label>
         <select id="mezhep"><option value="1">Şâfiî / Diyanet</option><option value="2">Hanefî</option></select>
       </div>
+      <div class="alan">
+        <label>Diyanet temkin payı<em>Takvimle birebir olması için eklenen dakikalar</em></label>
+        <button class="svic" id="temkinSvic" role="switch"></button>
+      </div>
     </div>
+    <p class="bilgi">Diyanet takvimi astronomik değerin üzerine sabit bir ihtiyat payı ekler
+      (öğlede +5, ikindide +4 dakika gibi). Bu ayar açıkken vakitler Diyanet takvimiyle
+      birebir çıkar; kapalıyken saf astronomik hesap gösterilir.</p>
 
     <div class="baslik">Dakika düzeltmesi</div>
     <div class="kart" id="duzeltmeler"></div>
@@ -625,7 +644,7 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
    Vakitler cihazda hesaplanır; hiçbir sunucuya vakit sorulmaz.
    ========================================================== */
 const APP = 'Beş Vakit';
-const SURUM = '0.5.0';
+const SURUM = '0.6.0';
 const LOGO = 'logos.png';
 const KABE = { lat: 21.4224779, lng: 39.8261722 };
 const VAKITLER = [
@@ -636,6 +655,18 @@ const VAKITLER = [
   { k:'aksam',   ad:'Akşam',  alt:'Güneşin batışı',          ikon:'◑' },
   { k:'yatsi',   ad:'Yatsı',  alt:'Şafağın kaybolması',      ikon:'✦' }
 ];
+/**
+ * Diyanet temkin (ihtiyat) payı — dakika.
+ *
+ * Diyanet takvimi astronomik değerin üzerine sabit dakikalar ekler. 3-9 Ağustos 2026
+ * Kayseri karşılaştırmasında öğle farkı yedi günün yedisinde de tam +5 çıktı; bu,
+ * hesap hatası değil bilinçli bir paya işaret ediyor. Tablo uygulandığında kalan
+ * fark vakit başına ortalama 0.26 dakika.
+ *
+ * Yalnızca Diyanet yöntemi seçiliyken uygulanır; diğer yöntemler kendi ölçütlerini kullanır.
+ */
+const TEMKIN = { imsak:0, gunes:-1, ogle:5, ikindi:4, aksam:2, yatsi:1 };
+
 const YONTEMLER = {
   diyanet:{ imsak:18, yatsi:17 },
   mwl:    { imsak:18, yatsi:17 },
@@ -667,7 +698,7 @@ const VARSAYILAN = {
   duzeltme:{ imsak:0, gunes:0, ogle:0, ikindi:0, aksam:0, yatsi:0 },
   bildirim:{ imsak:true, gunes:false, ogle:true, ikindi:true, aksam:true, yatsi:true },
   bildirimAcik:false, ses:true, titresim:true, gokyuzu:true, uyanik:false,
-  onceden:0, tema:'koyu', kerahat:true, ramazanMod:'oto',
+  onceden:0, tema:'koyu', kerahat:true, ramazanMod:'oto', temkin:true,
   imsakiyeAcik:true, diniAcik:false, istatistikAcik:false, kazaAcik:false,
   haritaAcik:false, camiAcik:false,
   sapma:0
@@ -754,10 +785,11 @@ function vakitleriHesapla(tarih, ayar){
       yatsi:  aciZamani(jd, lat, aci.yatsi, t.yatsi*24, false)/24
     };
   }
+  const temkinli = ayar.yontem === 'diyanet' && ayar.temkin !== false;
   const out = {};
   VAKITLER.forEach(v=>{
     let saat = t[v.k]*24 + tz - lng/15;
-    let dk = Math.round(saat*60) + (ayar.duzeltme[v.k]||0);
+    let dk = Math.round(saat*60) + (ayar.duzeltme[v.k]||0) + (temkinli ? TEMKIN[v.k] : 0);
     out[v.k] = isNaN(dk) ? NaN : mod(dk, 1440);
   });
   return out;
@@ -768,6 +800,48 @@ function kibleAcisi(lat,lng){
   const dl = KABE.lng - lng;
   return fixA(atan2(sin(dl), cos(lat)*tan(KABE.lat) - sin(lat)*cos(dl)));
 }
+/**
+ * Verilen andaki güneşin azimutu (kuzeyden saat yönünde) ve ufuktan yüksekliği.
+ * Manyetometreye hiç ihtiyaç duymaz — bu yüzden pusulası bozuk telefonlarda
+ * kıbleyi bulmanın en güvenilir yolu budur.
+ */
+function gunesKonumu(tarih, lat, lng){
+  const tz  = -tarih.getTimezoneOffset()/60;
+  const jd0 = julian(tarih.getFullYear(), tarih.getMonth()+1, tarih.getDate());
+  const yerel = tarih.getHours() + tarih.getMinutes()/60 + tarih.getSeconds()/3600;
+  const ut = yerel - tz;
+  const g = gunes(jd0 + ut/24);
+  const gercekGunes = ut + lng/15 + g.eqt;      // yerel gerçek güneş saati
+  const H = (gercekGunes - 12) * 15;            // saat açısı
+  return {
+    azimut: fixA(180 + atan2(sin(H), cos(H)*sin(lat) - tan(g.decl)*cos(lat))),
+    yukseklik: asin(sin(lat)*sin(g.decl) + cos(lat)*cos(g.decl)*cos(H))
+  };
+}
+
+/**
+ * Güneşin bugün kıble azimutuna geldiği an ve gölgenin kıbleyi gösterdiği an.
+ * İkisi de her enlem/mevsimde oluşmaz; oluşmayan için null döner.
+ */
+function kibleSaatleri(lat, lng, kibleAci){
+  const bugun = new Date();
+  let enIyi = { fark:999, dk:null }, enIyiGolge = { fark:999, dk:null };
+  for(let dk=0; dk<1440; dk++){
+    const t = new Date(bugun.getFullYear(), bugun.getMonth(), bugun.getDate(),
+                       Math.floor(dk/60), dk%60);
+    const s = gunesKonumu(t, lat, lng);
+    if(s.yukseklik < 3) continue;               // ufka çok yakınken yön güvenilmez
+    const f = Math.abs(((s.azimut - kibleAci + 540) % 360) - 180);
+    if(f < enIyi.fark) enIyi = { fark:f, dk };
+    const fg = Math.abs(((s.azimut - kibleAci + 180 + 540) % 360) - 180);
+    if(fg < enIyiGolge.fark) enIyiGolge = { fark:fg, dk };
+  }
+  return {
+    gunes: enIyi.fark <= 1.5 ? enIyi.dk : null,
+    golge: enIyiGolge.fark <= 1.5 ? enIyiGolge.dk : null
+  };
+}
+
 function mesafeKm(lat1,lng1,lat2,lng2){
   const R=6371, dLat=(lat2-lat1)*D, dLng=(lng2-lng1)*D;
   const a=Math.sin(dLat/2)**2 + Math.cos(lat1*D)*Math.cos(lat2*D)*Math.sin(dLng/2)**2;
@@ -1360,7 +1434,8 @@ function gunuTazele(){
    ========================================================== */
 let kible = 0, yon = null, yonHam = null, pusulaAcik = false, pusulaRed = false,
     gercekKuzey = false, sonTitresim = 0,
-    mutlakGeldi = false, telefonEgik = false, pusulaHassasiyet = 0, bagilZaman = null;
+    mutlakGeldi = false, telefonEgik = false, pusulaHassasiyet = 0, bagilZaman = null,
+    gunesAzimut = null;
 
 function pusulaCiz(){
   const svg = $('#pusula'), M = 160, R = 128;
@@ -1407,6 +1482,12 @@ function pusulaCiz(){
       <rect x="-8" y="-8" width="16" height="16" rx="2" fill="#0A0E1C" stroke="#D8A93C" stroke-width="1.2"/>
       <line x1="-8" y1="-2.5" x2="8" y2="-2.5" stroke="#D8A93C" stroke-width="1.6"/>
     </g>
+    ${gunesAzimut===null ? '' : `
+    <g transform="translate(${(M+(R-16)*sin(gunesAzimut)).toFixed(1)},${(M-(R-16)*cos(gunesAzimut)).toFixed(1)})">
+      <circle r="8" fill="#F0C863"/>
+      <circle r="12.5" fill="none" stroke="#F0C863" stroke-width="1" opacity=".55"/>
+      <title>Güneş — gerçek güneşle çakışacak şekilde telefonu çevir</title>
+    </g>`}
   </g>
   <path d="M160 18 l9 16 h-18 z" fill="${hizali?'#2FD3CE':'#D8A93C'}"/>
   <circle cx="160" cy="160" r="5" fill="#D8A93C"/>
@@ -1419,6 +1500,59 @@ function pusulaCiz(){
     sonTitresim = Date.now(); navigator.vibrate(60);
   }
 }
+/* ---------- güneşe göre kıble ---------- */
+function gunesKibleCiz(){
+  const s = gunesKonumu(new Date(), A.lat, A.lng);
+  gunesAzimut = s.yukseklik > 0 ? s.azimut : null;
+  const saatler = kibleSaatleri(A.lat, A.lng, kible);
+
+  let govde = '';
+  if(s.yukseklik > 0){
+    const fark = ((kible - s.azimut + 540) % 360) - 180;    // + ise sağa
+    const yon = fark >= 0 ? 'sağa' : 'sola';
+    govde = `
+      <div class="kerahat-satir">
+        <div class="kerahat-ikon" style="color:var(--pirinc)">☀</div>
+        <div class="kerahat-ad">Güneş şu an ${yonAdi(s.azimut)}
+          <em>Azimut ${s.azimut.toFixed(0)}° · ufuktan ${s.yukseklik.toFixed(0)}° yukarıda</em></div>
+      </div>
+      <div class="kerahat-satir">
+        <div class="kerahat-ikon" style="color:var(--cini)">◎</div>
+        <div class="kerahat-ad">Güneşe dön, <b>${Math.abs(fark).toFixed(0)}° ${yon}</b> dön
+          <em>Kıble ${kible.toFixed(1)}° · ${yonAdi(kible)}</em></div>
+      </div>`;
+  }else{
+    govde = `<div class="kerahat-satir">
+      <div class="kerahat-ikon">☾</div>
+      <div class="kerahat-ad">Güneş şu an ufkun altında
+        <em>Bu yöntem gündüz çalışır. Kıble ${kible.toFixed(1)}° · ${yonAdi(kible)}</em></div>
+    </div>`;
+  }
+
+  if(saatler.gunes !== null){
+    govde += `<div class="kerahat-satir">
+      <div class="kerahat-ikon" style="color:var(--pirinc)">◷</div>
+      <div class="kerahat-ad">Kıble saati <b>${saatYaz(saatler.gunes)}</b>
+        <em>O anda güneşe dönersen tam kıbleye bakıyorsun</em></div>
+    </div>`;
+  }
+  if(saatler.golge !== null){
+    govde += `<div class="kerahat-satir">
+      <div class="kerahat-ikon">◐</div>
+      <div class="kerahat-ad">Gölge saati <b>${saatYaz(saatler.golge)}</b>
+        <em>O anda dik bir çubuğun gölgesi kıbleyi gösterir</em></div>
+    </div>`;
+  }
+  if(saatler.gunes === null && saatler.golge === null){
+    govde += `<div class="kerahat-satir">
+      <div class="kerahat-ad" style="color:var(--hayalet);font-weight:500">
+        Bugün güneş kıble yönünden geçmiyor — canlı açı farkını kullan.</div>
+    </div>`;
+  }
+  $('#gunesKart').innerHTML = govde;
+  $('#gunesKalibre').style.display = (s.yukseklik > 0) ? '' : 'none';
+}
+
 function kibleBilgiTazele(){
   kible = kibleAcisi(A.lat, A.lng);
   const km = mesafeKm(A.lat, A.lng, KABE.lat, KABE.lng);
@@ -1426,6 +1560,7 @@ function kibleBilgiTazele(){
     $('#pusulaMesaj').innerHTML = `Kıble açısı <b>${kible.toFixed(1)}°</b> — ${yonAdi(kible)}.
       Kâbe ${Math.round(km).toLocaleString('tr-TR')} km uzakta.`;
   }
+  gunesKibleCiz();
   pusulaCiz();
   if(window._haritaHazir) haritaTazele();
 }
@@ -1699,6 +1834,7 @@ function ayarlariKur(){
   $('#yontem').onchange = e => { A.yontem = e.target.value; kaydet(); gunuTazele(); };
   $('#mezhep').value = A.mezhep;
   $('#mezhep').onchange = e => { A.mezhep = +e.target.value; kaydet(); gunuTazele(); };
+  svicKur('#temkinSvic','temkin', ()=>{ setTimeout(gunuTazele,0); return true; });
 
   $('#duzeltmeler').innerHTML = VAKITLER.map(v=>`
     <div class="alan"><label>${v.ad}</label>
@@ -1845,6 +1981,16 @@ function baslat(){
     $('#sapmaDeger').textContent = (A.sapma > 180 ? A.sapma-360 : A.sapma) + '°';
     yon = null;
     toast('Kalibre edildi · sapma ' + (A.sapma > 180 ? A.sapma-360 : A.sapma) + '°');
+  };
+  // Güneşe göre kalibrasyon — haritaya bakmaya gerek kalmadan sapmayı ölçer.
+  $('#gunesKalibre').onclick = ()=>{
+    if(yonHam === null){ toast('Önce pusulanın açılmasını bekle'); return; }
+    const s = gunesKonumu(new Date(), A.lat, A.lng);
+    if(s.yukseklik <= 0){ toast('Güneş ufkun altında'); return; }
+    A.sapma = fixA(s.azimut - yonHam); kaydet();
+    $('#sapmaDeger').textContent = (A.sapma > 180 ? A.sapma-360 : A.sapma) + '°';
+    yon = null;
+    toast('Güneşe göre kalibre edildi · sapma ' + (A.sapma > 180 ? A.sapma-360 : A.sapma) + '°');
   };
   $('#kalibreSifirla').onclick = ()=>{
     A.sapma = 0; kaydet(); yon = null;

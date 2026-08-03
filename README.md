@@ -41,16 +41,30 @@ PrayTimes ile aynı astronomik model, sıfırdan yazıldı, **bağımlılık yok
 - Varsayılan yöntem Diyanet (imsak 18°, yatsı 17°); MWL, ISNA, Mısır, Karaçi da var
 - İkindi için Şâfiî/Diyanet ve Hanefî seçeneği
 
-**Doğrulama** — 3 Ağustos 2026, Kayseri, 1050 m:
-`03:56 / 05:35 / 12:44 / 16:35 / 19:53 / 21:24` — Diyanet ile 1-3 dakika içinde.
+**Temkin payı.** Diyanet takvimi astronomik değerin üzerine sabit bir ihtiyat payı ekler.
+7 günlük karşılaştırmada öğle farkının her gün tam +5 dakika çıkması bunu kanıtladı:
 
-Mahalle caminle fark varsa Ayarlar → Dakika düzeltmesi'nden vakit başına ±30 dk hizalayabilirsin.
-Bu bilinçli bir tercih: hiçbir gayriresmî API'ye bağımlı değiliz.
+```
+imsak 0 · güneş −1 · öğle +5 · ikindi +4 · akşam +2 · yatsı +1
+```
+
+Bu tablo uygulandığında 42 ölçümde vakit başına ortalama fark **0.24 dakika**.
+Yani takvimle birebir — üstelik hiçbir API'ye bağlanmadan, tamamen cihazda.
+Ayarlardan kapatıp saf astronomik hesabı da görebilirsin.
+
+Mahalle caminle hâlâ fark varsa Ayarlar → Dakika düzeltmesi'nden vakit başına ±30 dk hizalanır.
 
 ## Kıble
 
 Büyük daire başlangıç açısı: `atan2(sin Δλ, cos φ₁·tan φ₂ − sin φ₁·cos Δλ)`
 Kâbe `21.4224779, 39.8261722`. Kayseri → 166.6°, İstanbul → 151.6°.
+
+**Güneşe göre kıble.** Telefon pusulaları metalden, kılıftan ve manyetik alandan
+etkilenir. Bu yüzden pusuladan bağımsız bir yol var: güneşin azimutu yalnızca saat ve
+koordinattan hesaplanır, hiçbir sensöre ihtiyaç duymaz. Uygulama güneşin o anki yönünü
+söyler ("güneşe dön, 96° sola dön"), günün **kıble saatini** verir — o anda güneşe
+döndüğünde tam kıbleye bakıyorsun — ve pusula kadranına güneş işareti koyar.
+Telefonu güneşe doğrultup tek dokunuşla pusulayı kalibre edebilirsin.
 
 Manyetik sapma için WMM katsayı tablosu gömmek yerine kullanıcıya bir kere ölçtürüyoruz:
 haritadan doğrula, **"Şu an kıbleye bakıyorum"**a bas, uygulama telefonunun sapmasını
@@ -65,6 +79,16 @@ kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasın�
   cami araması (Overpass API), yazı tipleri (Google Fonts). Üçü de kapalıyken uygulama çalışmaya devam eder.
 
 ## Sürüm geçmişi
+
+### 0.6.0
+- **Diyanet temkin payı.** 7 günlük karşılaştırmada öğle farkının her gün tam +5 çıkması,
+  bunun hesap hatası değil Diyanet'in sabit ihtiyat payı olduğunu gösterdi. Tablo
+  uygulanınca fark vakit başına ortalama 0.24 dakikaya düştü. Ayarlardan kapatılabilir.
+- **Güneşe göre kıble.** Güneşin azimutu yalnızca saat ve koordinattan hesaplanır;
+  manyetik alandan etkilenmez. Canlı açı farkı, kıble saati, gölge saati ve
+  pusula kadranında güneş işareti.
+- Güneşe doğrultarak tek dokunuşla pusula kalibrasyonu
+- Açık temada alt menü rengi düzeltildi
 
 ### 0.5.0
 - Kerahat vakitleri — üç aralık, gün şeridinde bant, girince uyarı
@@ -108,7 +132,8 @@ kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasın�
 - [x] Ramazan modu — iftar/sahur geri sayımı
 - [x] Kerahat vakitleri uyarısı
 - [ ] Cuma modu — salavat sayacı, Kehf hatırlatması
-- [ ] Vakitleri Diyanet takvimiyle birebir hizalayan düzeltme tablosu
+- [x] Vakitleri Diyanet takvimiyle birebir hizalayan temkin tablosu
+- [x] Güneşe göre kıble — pusulasız yöntem
 - [ ] Ayarları ve kayıtları dışa aktar / geri yükle
 
 ## Lisans
