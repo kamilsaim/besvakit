@@ -279,6 +279,33 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
   border:1px solid var(--cizgi);font-size:12.5px;font-weight:600;color:var(--sis);white-space:nowrap}
 .zikir-sec button.acik{background:var(--cini-koyu);border-color:transparent;color:var(--kagit)}
 
+/* zikir istatistiği */
+.zikir-satir{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--cizgi)}
+.zikir-satir:last-child{border-bottom:0}
+.zikir-satir.acik{background:linear-gradient(90deg,rgba(34,178,174,.12),transparent)}
+.zikir-satir .ad{flex:1;font-weight:600;font-size:13.5px}
+.zikir-satir .ad em{display:block;font-style:normal;font-size:11px;color:var(--hayalet);font-weight:500}
+.zikir-sayi{text-align:right;flex:none;min-width:52px}
+.zikir-sayi b{display:block;font-family:'Antonio',sans-serif;font-size:20px;font-weight:400;
+  line-height:1;font-variant-numeric:tabular-nums}
+.zikir-sayi span{display:block;font-size:9px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--hayalet);margin-top:3px}
+
+/* cuma */
+.cuma{display:flex;align-items:center;gap:14px;padding:16px}
+.cuma-ikon{width:52px;height:52px;flex:none;border-radius:15px;background:var(--kat2);
+  display:grid;place-items:center;font-size:22px;color:var(--pirinc);
+  border:1px solid rgba(216,169,60,.35)}
+.cuma-bilgi{flex:1;font-size:13px;color:var(--sis);line-height:1.6}
+.cuma-bilgi b{color:var(--kagit);font-weight:700;font-variant-numeric:tabular-nums}
+
+/* tanılama */
+.tani{font-family:ui-monospace,'Cascadia Mono',Consolas,monospace;font-size:11.5px;
+  padding:14px 16px;line-height:1.85;color:var(--sis);word-break:break-all}
+.tani b{color:var(--kagit);font-weight:600}
+.tani .iyi{color:var(--cini)}
+.tani .kotu{color:var(--gul)}
+
 /* ---------- kıble ---------- */
 .pusula-sar{display:grid;place-items:center;padding:8px 0 4px}
 #pusula{width:min(86vw,340px);height:min(86vw,340px);display:block}
@@ -380,6 +407,11 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
     <div class="baslik">Bugün</div>
     <div class="kart" id="vakitListe"></div>
 
+    <div id="cumaKutu" style="display:none">
+      <div class="baslik">Cuma</div>
+      <div class="kart"><div class="cuma" id="cumaKart"></div></div>
+    </div>
+
     <div id="kerahatKutu">
       <div class="baslik">Kerahat vakitleri</div>
       <div class="kart" id="kerahatListe"></div>
@@ -416,6 +448,14 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
       Yönü haritadan doğrulayıp <b>“Şu an kıbleye bakıyorum”</b>a bastığında uygulama telefonunun sapmasını
       kendisi ölçüp kalıcı olarak düzeltir.
     </p>
+
+    <button class="baslik" id="taniBaslik" aria-expanded="false" aria-controls="taniKart">
+      Pusula tanılama <span class="ok" aria-hidden="true">⌃</span>
+    </button>
+    <div class="kart katlanir gizli" id="taniKart">
+      <div class="tani" id="taniGovde">Pusula verisi bekleniyor…</div>
+      <div style="padding:0 16px 16px"><button class="btn ikincil" id="taniKopyala">Değerleri kopyala</button></div>
+    </div>
 
     <div class="baslik">Güneşe göre kıble</div>
     <div class="kart"><div id="gunesKart"></div></div>
@@ -489,6 +529,11 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
       <button class="btn ikincil" id="tesbihGeri">Bir geri</button>
       <button class="btn ikincil" id="tesbihSifirla">Sıfırla</button>
     </div>
+
+    <button class="baslik" id="zikirIstBaslik" aria-expanded="true" aria-controls="zikirIstKart">
+      Çekilen zikirler <span class="ok" aria-hidden="true">⌃</span>
+    </button>
+    <div class="kart katlanir" id="zikirIstKart"></div>
     <p class="bilgi" id="zikirGunluk"></p>
   </section>
 
@@ -584,6 +629,14 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
         <button class="svic" id="kerahatSvic" role="switch"></button>
       </div>
       <div class="alan">
+        <label>Cuma modu<em>Cuma hatırlatması ve Kehf Suresi</em></label>
+        <button class="svic" id="cumaSvic" role="switch"></button>
+      </div>
+      <div class="alan">
+        <label>Cuma hatırlatma saati<em>Cuma günü bu saatte uyarır</em></label>
+        <input type="time" id="cumaSaat">
+      </div>
+      <div class="alan">
         <label>Ramazan modu<em>İftar ve sahur geri sayımı</em></label>
         <select id="ramazanMod">
           <option value="oto">Otomatik</option>
@@ -644,7 +697,7 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
    Vakitler cihazda hesaplanır; hiçbir sunucuya vakit sorulmaz.
    ========================================================== */
 const APP = 'Beş Vakit';
-const SURUM = '0.6.0';
+const SURUM = '0.7.0';
 const LOGO = 'logos.png';
 const KABE = { lat: 21.4224779, lng: 39.8261722 };
 const VAKITLER = [
@@ -699,8 +752,9 @@ const VARSAYILAN = {
   bildirim:{ imsak:true, gunes:false, ogle:true, ikindi:true, aksam:true, yatsi:true },
   bildirimAcik:false, ses:true, titresim:true, gokyuzu:true, uyanik:false,
   onceden:0, tema:'koyu', kerahat:true, ramazanMod:'oto', temkin:true,
+  cuma:true, cumaSaat:'11:30',
   imsakiyeAcik:true, diniAcik:false, istatistikAcik:false, kazaAcik:false,
-  haritaAcik:false, camiAcik:false,
+  haritaAcik:false, camiAcik:false, zikirIstAcik:true, taniAcik:false,
   sapma:0
 };
 let A = yukle();
@@ -722,7 +776,8 @@ function depoOku(anahtar, varsayilan){
 function depoYaz(anahtar, veri){ try{ localStorage.setItem(anahtar, JSON.stringify(veri)); }catch(e){} }
 
 let TAKIP = depoOku('besvakit_takip', { gunler:{}, kaza:{}, oruc:{} });
-let ZIKIR = depoOku('besvakit_zikir', { sayac:0, secili:0, gunluk:{} });
+/* gecmis: { 'YYYY-MM-DD': { 'Sübhânallâh': 33, ... } } — zikir başına ayrı sayım */
+let ZIKIR = depoOku('besvakit_zikir', { sayac:0, secili:0, gunluk:{}, gecmis:{} });
 
 /* ---------- açı yardımcıları ---------- */
 const D = Math.PI/180;
@@ -1019,6 +1074,12 @@ function heroNotTazele(dk){
     el.innerHTML = `☾ <span>Ramazan <b>${r.gun}</b>. gün · İftar <b>${saatYaz(r.iftar)}</b></span>`;
     return;
   }
+  const c = cumaBilgi();
+  if(c.aktif && c.tur === 'cuma'){
+    el.className = 'hero-not';
+    el.innerHTML = `☪ <span>Cuma · namaz <b>${saatYaz(bugunVakit.ogle)}</b></span>`;
+    return;
+  }
   el.className = 'hero-not gizli';
 }
 
@@ -1109,6 +1170,7 @@ function tikTak(){
   gokyuzuCiz(dk);
   heroNotTazele(dk);
   kerahatUyari(dk);
+  cumaUyari(dk);
   bildirimKontrol(dk);
   if(Math.floor(dk) % 60 === 0 && sn === 0) gunuTazele();
 }
@@ -1401,16 +1463,126 @@ function tesbihCiz(){
   $('#tesbihSayi').textContent = ZIKIR.sayac;
   $('#tesbihHedef').textContent = z.hedef ? 'hedef ' + z.hedef : 'serbest';
   const bugunZikir = ZIKIR.gunluk[gunAnahtar(new Date())] || 0;
-  $('#zikirGunluk').textContent = 'Bugün toplam ' + bugunZikir + ' zikir.';
+  $('#zikirGunluk').textContent = 'Bugün toplam ' + bugunZikir +
+    ' zikir. Sayaç zikir değiştirince sıfırlanır, toplamlar korunur.';
+  if(A.zikirIstAcik) zikirIstatistikCiz();
 }
 function tesbihArtir(){
   const z = ZIKIRLER[ZIKIR.secili] || ZIKIRLER[0];
   ZIKIR.sayac++;
   const a = gunAnahtar(new Date());
   ZIKIR.gunluk[a] = (ZIKIR.gunluk[a]||0) + 1;
+  ZIKIR.gecmis = ZIKIR.gecmis || {};
+  ZIKIR.gecmis[a] = ZIKIR.gecmis[a] || {};
+  ZIKIR.gecmis[a][z.ad] = (ZIKIR.gecmis[a][z.ad]||0) + 1;
   if(A.titresim && navigator.vibrate) navigator.vibrate(z.hedef && ZIKIR.sayac === z.hedef ? [60,60,60] : 12);
   if(z.hedef && ZIKIR.sayac === z.hedef) toast(z.ad + ' · ' + z.hedef + ' tamamlandı');
   zikirKaydet(); tesbihCiz();
+}
+function zikirEksilt(ad){
+  const a = gunAnahtar(new Date());
+  if(ZIKIR.gecmis && ZIKIR.gecmis[a] && ZIKIR.gecmis[a][ad]){
+    ZIKIR.gecmis[a][ad]--;
+    if(!ZIKIR.gecmis[a][ad]) delete ZIKIR.gecmis[a][ad];
+  }
+}
+
+/** Zikir başına bugünkü ve toplam sayılar. */
+function zikirToplamlari(){
+  const bugunA = gunAnahtar(new Date());
+  const g = ZIKIR.gecmis || {};
+  const bugun = {}, toplam = {};
+  for(const [tarih, kayit] of Object.entries(g)){
+    for(const [ad, n] of Object.entries(kayit)){
+      toplam[ad] = (toplam[ad]||0) + n;
+      if(tarih === bugunA) bugun[ad] = (bugun[ad]||0) + n;
+    }
+  }
+  return { bugun, toplam };
+}
+function zikirIstatistikCiz(){
+  const { bugun, toplam } = zikirToplamlari();
+  const z = ZIKIRLER[ZIKIR.secili] || ZIKIRLER[0];
+  const satirlar = ZIKIRLER.filter(x => bugun[x.ad] || toplam[x.ad] || x.ad === z.ad);
+  if(!satirlar.length){
+    $('#zikirIstKart').innerHTML = kutu('Henüz zikir çekilmedi. Yukarıdaki daireye dokunarak başla.');
+    return;
+  }
+  $('#zikirIstKart').innerHTML = satirlar.map(x=>`
+    <div class="zikir-satir ${x.ad===z.ad?'acik':''}">
+      <div class="ad">${x.ad}<em>${x.anlam}</em></div>
+      <div class="zikir-sayi"><b style="color:var(--cini)">${bugun[x.ad]||0}</b><span>bugün</span></div>
+      <div class="zikir-sayi"><b style="color:var(--pirinc)">${toplam[x.ad]||0}</b><span>toplam</span></div>
+    </div>`).join('') +
+    `<div class="zikir-satir" style="border-top:1px solid var(--cizgi)">
+      <div class="ad">Tümü</div>
+      <div class="zikir-sayi"><b style="color:var(--cini)">${Object.values(bugun).reduce((a,b)=>a+b,0)}</b><span>bugün</span></div>
+      <div class="zikir-sayi"><b style="color:var(--pirinc)">${Object.values(toplam).reduce((a,b)=>a+b,0)}</b><span>toplam</span></div>
+    </div>`;
+}
+
+/* ==========================================================
+   CUMA MODU
+   ========================================================== */
+function cumaBilgi(){
+  if(!A.cuma) return { aktif:false };
+  const g = new Date().getDay();
+  if(g === 5) return { aktif:true, tur:'cuma' };
+  if(g === 4) return { aktif:true, tur:'arefe' };   // perşembe akşamı Kehf vakti
+  return { aktif:false };
+}
+function cumaCiz(){
+  const c = cumaBilgi();
+  $('#cumaKutu').style.display = c.aktif ? '' : 'none';
+  if(!c.aktif) return;
+  const { toplam } = zikirToplamlari();
+  const salavat = toplam['Salâvat'] || 0;
+
+  if(c.tur === 'cuma'){
+    $('#cumaKart').innerHTML = `
+      <div class="cuma-ikon">☪</div>
+      <div class="cuma-bilgi">
+        <b>Cuma mübarek olsun.</b><br>
+        Cuma namazı öğle vaktinde: <b>${saatYaz(bugunVakit.ogle)}</b><br>
+        Kehf Suresi'ni okumak ve salâvat getirmek sünnettir · <b>${salavat}</b> salâvat
+      </div>
+      <button class="btn ikincil" id="salavatBtn" style="width:auto;padding:10px 14px;flex:none">Salâvat</button>`;
+  }else{
+    $('#cumaKart').innerHTML = `
+      <div class="cuma-ikon">☾</div>
+      <div class="cuma-bilgi">
+        <b>Yarın Cuma.</b><br>
+        Kehf Suresi perşembe akşamından cuma akşamına kadar okunur.<br>
+        Şimdiye kadar <b>${salavat}</b> salâvat getirdin.
+      </div>
+      <button class="btn ikincil" id="salavatBtn" style="width:auto;padding:10px 14px;flex:none">Salâvat</button>`;
+  }
+  $('#salavatBtn').onclick = ()=>{
+    const i = ZIKIRLER.findIndex(x => x.ad === 'Salâvat');
+    if(i >= 0){ ZIKIR.secili = i; ZIKIR.sayac = 0; zikirKaydet(); tesbihCiz(); }
+    sekmeAc('ibadet');
+  };
+}
+/** Cuma günü belirlenen saatte bir kez hatırlatır. */
+function cumaUyari(dk){
+  if(!A.cuma || !A.bildirimAcik) return;
+  const g = new Date().getDay();
+  const hedef = cumaSaatDk();
+  if(g === 5 && hedef !== null){
+    const anahtar = new Date().toDateString() + 'cuma';
+    if(dk >= hedef && dk < hedef + 1 && !uyariVerildi[anahtar]){
+      uyariVerildi[anahtar] = true;
+      const metin = 'Cuma namazı vakti yaklaşıyor · öğle ' + saatYaz(bugunVakit.ogle);
+      try{ if(Notification.permission==='granted') new Notification(APP,{ body:metin, tag:'cuma' }); }catch(e){}
+      if(A.titresim && navigator.vibrate) navigator.vibrate([200,100,200]);
+      toast(metin);
+    }
+  }
+}
+function cumaSaatDk(){
+  const s = (A.cumaSaat || '11:30').split(':');
+  const dk = (+s[0])*60 + (+s[1]);
+  return isNaN(dk) ? null : dk;
 }
 
 /* ---------- günü tazele ---------- */
@@ -1424,6 +1596,7 @@ function gunuTazele(){
   if(A.diniAcik) diniGunleriCiz();
   kerahatCiz();
   ramazanCiz();
+  cumaCiz();
   takipCiz();
   tikTak();
   kibleBilgiTazele();
@@ -1435,7 +1608,7 @@ function gunuTazele(){
 let kible = 0, yon = null, yonHam = null, pusulaAcik = false, pusulaRed = false,
     gercekKuzey = false, sonTitresim = 0,
     mutlakGeldi = false, telefonEgik = false, pusulaHassasiyet = 0, bagilZaman = null,
-    gunesAzimut = null;
+    gunesAzimut = null, sonOlay = null, olaySayisi = 0;
 
 function pusulaCiz(){
   const svg = $('#pusula'), M = 160, R = 128;
@@ -1493,6 +1666,7 @@ function pusulaCiz(){
   <circle cx="160" cy="160" r="5" fill="#D8A93C"/>
   ${yon===null?'':`<path d="M160 160 L152 174 L160 208 L168 174 Z" fill="url(#ok)" opacity=".9"/>`}`;
 
+  if(A.taniAcik && olaySayisi % 8 === 0) taniCiz();
   $('#sapmaYazi').textContent = (sapma===null) ? kible.toFixed(0)+'°' :
       (hizali ? 'Kıble' : (sapma>180 ? '◀ '+Math.round(360-sapma)+'°' : Math.round(sapma)+'° ▶'));
   $('.pusula-durum').classList.toggle('hizali', hizali);
@@ -1576,6 +1750,7 @@ function kibleBilgiTazele(){
  */
 function yonOlayi(e){
   let h = null, mutlak = false;
+  olaySayisi++;
 
   if(typeof e.webkitCompassHeading === 'number' && !isNaN(e.webkitCompassHeading)){
     h = e.webkitCompassHeading; mutlak = true;               // iOS: zaten gerçek kuzey
@@ -1592,6 +1767,9 @@ function yonOlayi(e){
 
   gercekKuzey = mutlak;
   yonHam = h;
+  sonOlay = { tur:e.type, absolute:!!e.absolute, alpha:e.alpha ?? null,
+              beta:e.beta ?? null, gamma:e.gamma ?? null,
+              wk:e.webkitCompassHeading, wkA:e.webkitCompassAccuracy, ham:h };
 
   // Telefon dike yakınsa alpha'dan çıkan yön güvenilmez olur.
   const egik = (typeof e.beta === 'number') && Math.abs(e.beta) > 45;
@@ -1605,6 +1783,49 @@ function yonOlayi(e){
     yon = fixA(yon + fark*0.22);
   }
   pusulaCiz();
+}
+
+/* ---------- tanılama ----------
+   Pusula sorunlarını tahminle değil ölçüyle çözmek için: gelen olayın türü,
+   ham açılar, mutlaklık bayrağı ve hesaplanan yön yan yana gösterilir.
+   Güneş referansı en kıymetlisi — güneş görünürken telefonu güneşe doğrultunca
+   "pusulaya göre güneş" ile "hesaba göre güneş" aynı çıkmalı. */
+function taniCiz(){
+  if(!A.taniAcik) return;
+  const t = sonOlay;
+  const s = gunesKonumu(new Date(), A.lat, A.lng);
+  const ekran = (screen.orientation && screen.orientation.angle) || window.orientation || 0;
+  const sat = (ad, deger, sinif) =>
+    `<div><b>${ad}</b>: <span class="${sinif||''}">${deger}</span></div>`;
+
+  let g = '';
+  g += sat('durum', pusulaAcik ? 'çalışıyor' : 'kapalı', pusulaAcik ? 'iyi' : 'kotu');
+  if(!t){
+    g += sat('olay', 'henüz veri gelmedi', 'kotu');
+  }else{
+    g += sat('olay türü', t.tur, t.tur === 'deviceorientationabsolute' ? 'iyi' : 'kotu');
+    g += sat('e.absolute', String(t.absolute), t.absolute ? 'iyi' : 'kotu');
+    g += sat('alpha', t.alpha === null ? 'null' : t.alpha.toFixed(1));
+    g += sat('beta / gamma', (t.beta===null?'-':t.beta.toFixed(1)) + ' / ' + (t.gamma===null?'-':t.gamma.toFixed(1)));
+    g += sat('webkitCompassHeading', t.wk === undefined ? 'yok (Android)' : String(t.wk));
+    g += sat('webkitCompassAccuracy', t.wkA === undefined ? 'yok' : String(t.wkA));
+    g += sat('ekran açısı', ekran + '°');
+    g += sat('ham yön', t.ham.toFixed(1) + '°');
+    g += sat('uygulanan sapma', (A.sapma > 180 ? A.sapma-360 : A.sapma) + '°');
+    g += sat('yumuşatılmış yön', yon === null ? 'null' : yon.toFixed(1) + '°');
+    g += sat('olay sayısı', olaySayisi);
+  }
+  g += sat('kıble (hesap)', kible.toFixed(2) + '°');
+  g += sat('güneş azimutu (hesap)', s.yukseklik > 0 ? s.azimut.toFixed(2) + '°' : 'ufkun altında');
+  if(t && s.yukseklik > 0 && yon !== null){
+    const gunesEkranda = fixA(s.azimut - yon);
+    g += sat('güneş ekranda', gunesEkranda.toFixed(1) + '° yönünde');
+    g += `<div style="margin-top:8px;color:var(--hayalet)">Telefonu güneşe doğrult:
+      bu değer <b>0°</b>'ye yakın olmalı. Değilse sapma o kadardır.</div>`;
+  }
+  g += sat('konum', A.lat.toFixed(4) + ', ' + A.lng.toFixed(4));
+  g += sat('tarayıcı', navigator.userAgent.slice(0, 90));
+  $('#taniGovde').innerHTML = g;
 }
 
 function pusulaUyariTazele(){
@@ -1863,6 +2084,9 @@ function ayarlariKur(){
   svicKur('#titresimSvic','titresim');
   $('#tema').value = A.tema;
   $('#tema').onchange = e => { A.tema = e.target.value; kaydet(); temaUygula(); };
+  svicKur('#cumaSvic','cuma', ()=>{ setTimeout(gunuTazele,0); return true; });
+  $('#cumaSaat').value = A.cumaSaat || '11:30';
+  $('#cumaSaat').onchange = e => { A.cumaSaat = e.target.value || '11:30'; kaydet(); };
   $('#ramazanMod').value = A.ramazanMod;
   $('#ramazanMod').onchange = e => { A.ramazanMod = e.target.value; kaydet(); gunuTazele(); };
   svicKur('#kerahatSvic','kerahat', ()=>{ setTimeout(gunuTazele,0); return true; });
@@ -1959,8 +2183,16 @@ function baslat(){
       ZIKIR.sayac--;
       const a = gunAnahtar(new Date());
       ZIKIR.gunluk[a] = Math.max(0, (ZIKIR.gunluk[a]||0) - 1);
+      zikirEksilt((ZIKIRLER[ZIKIR.secili] || ZIKIRLER[0]).ad);
       zikirKaydet(); tesbihCiz();
     }
+  };
+  katlamaKur('#zikirIstBaslik', '#zikirIstKart', 'zikirIstAcik', zikirIstatistikCiz);
+  katlamaKur('#taniBaslik', '#taniKart', 'taniAcik', taniCiz);
+  $('#taniKopyala').onclick = ()=>{
+    const metin = $('#taniGovde').innerText;
+    try{ navigator.clipboard.writeText(metin); toast('Tanılama değerleri kopyalandı'); }
+    catch(e){ toast('Kopyalanamadı — ekran görüntüsü alabilirsin'); }
   };
   $('#tesbihSifirla').onclick = ()=>{ ZIKIR.sayac = 0; zikirKaydet(); tesbihCiz(); toast('Sayaç sıfırlandı'); };
   gunuTazele();

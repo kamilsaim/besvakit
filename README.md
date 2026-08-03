@@ -27,7 +27,8 @@ API anahtarı gerekmez, hiçbir veri dışarı çıkmaz. Tek bir HTML dosyası; 
 | **Ramazan** | İftar ve sahur geri sayımı, gün sayacı, oruç takibi |
 | **Dini günler** | Kandiller, bayramlar, üç aylar — hicri takvimden otomatik |
 | **Kıble** | Sekmeye girince başlayan pusula, kalibrasyon, uydu haritasında kıble hattı |
-| **İbadet** | Namaz takibi, seri gün, aylık istatistik, kaza sayacı, zikirmatik |
+| **İbadet** | Namaz takibi, seri gün, aylık istatistik, kaza sayacı, zikir başına sayaç |
+| **Cuma** | Cuma hatırlatması, Kehf Suresi uyarısı, salâvat sayacı |
 | **Camiler** | 3 km çevrendeki camiler, yön ve yürüme mesafesiyle |
 | **Bildirim** | Vakit girince ve istersen X dakika öncesinde uyarı, ses, titreşim |
 | **Çevrimdışı** | Servis işçisiyle uygulama kabuğu; vakitler zaten cihazda hesaplanıyor |
@@ -80,6 +81,13 @@ kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasın�
 
 ## Sürüm geçmişi
 
+### 0.7.0
+- **Cuma modu** — cuma günü kartı ve hatırlatma, perşembe akşamı Kehf Suresi uyarısı,
+  tek dokunuşla salâvat sayacına geçiş. Hatırlatma saati ayarlanabilir.
+- **Zikirler ayrı ayrı toplanıyor** — her zikrin bugünkü ve tüm zamanlar toplamı
+- **Pusula tanılama paneli** — ham sensör değerleri (olay türü, alpha/beta/gamma,
+  `e.absolute`, hesaplanan yön) ve güneş referansıyla sapma ölçümü
+
 ### 0.6.0
 - **Diyanet temkin payı.** 7 günlük karşılaştırmada öğle farkının her gün tam +5 çıkması,
   bunun hesap hatası değil Diyanet'in sabit ihtiyat payı olduğunu gösterdi. Tablo
@@ -131,7 +139,7 @@ kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasın�
 - [x] Açık tema ve AMOLED tema
 - [x] Ramazan modu — iftar/sahur geri sayımı
 - [x] Kerahat vakitleri uyarısı
-- [ ] Cuma modu — salavat sayacı, Kehf hatırlatması
+- [x] Cuma modu — salâvat sayacı, Kehf hatırlatması
 - [x] Vakitleri Diyanet takvimiyle birebir hizalayan temkin tablosu
 - [x] Güneşe göre kıble — pusulasız yöntem
 - [ ] Ayarları ve kayıtları dışa aktar / geri yükle
