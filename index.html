@@ -35,6 +35,31 @@
   --safe-b:env(safe-area-inset-bottom,0px);
   --safe-t:env(safe-area-inset-top,0px);
 }
+
+/* Açık tema — Selçuklu paleti korunur, zemin/metin ters çevrilir.
+   Turkuaz ve pirinç açık zeminde soluk kaldığı için koyulaştırılır. */
+:root[data-tema=acik]{
+  --gece:#F4F1E8;
+  --lacivert:#E7E1D2;
+  --kat:#FFFFFF;
+  --kat2:#EDE8DA;
+  --cini:#0E8F8B;
+  --cini-koyu:#0B6E6B;
+  --pirinc:#9A7118;
+  --gul:#A8394C;
+  --kagit:#18302D;
+  --sis:rgba(24,48,45,.70);
+  --hayalet:rgba(24,48,45,.45);
+  --cizgi:rgba(24,48,45,.14);
+}
+/* AMOLED — tam siyah, pikseller sönük kalsın */
+:root[data-tema=amoled]{
+  --gece:#000000;
+  --lacivert:#000000;
+  --kat:#0A0A0A;
+  --kat2:#161616;
+  --cizgi:rgba(242,238,226,.14);
+}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
 body{
@@ -57,6 +82,13 @@ button{background:none;border:0;cursor:pointer}
   background:var(--gokyuzu);
   transition:background 1.2s linear;
   overflow:hidden;
+  /* Gökyüzü her temada koyu kalır — arkasındaki gradyan gerçek vakti anlatıyor.
+     Değişkenler burada yeniden tanımlanınca tüm alt öğeler açık metne döner. */
+  --kagit:#F2EEE2;
+  --sis:rgba(242,238,226,.62);
+  --hayalet:rgba(242,238,226,.34);
+  --cizgi:rgba(242,238,226,.12);
+  color:var(--kagit);
 }
 #gokyuzu::after{
   content:'';position:absolute;inset:auto 0 0 0;height:70px;
@@ -92,7 +124,35 @@ button{background:none;border:0;cursor:pointer}
 .serit-nokta.aktif i{background:var(--pirinc);transform:scale(1.6);box-shadow:0 0 12px var(--pirinc)}
 .serit-nokta.aktif span{color:var(--pirinc);font-weight:700}
 .serit-simdi{position:absolute;top:6px;width:2px;height:20px;margin-left:-1px;background:var(--cini);
-  border-radius:2px;box-shadow:0 0 10px var(--cini)}
+  border-radius:2px;box-shadow:0 0 10px var(--cini);z-index:2}
+.serit-kerahat{position:absolute;top:14px;height:4px;background:repeating-linear-gradient(
+  45deg,rgba(194,89,107,.85) 0 3px,rgba(194,89,107,.35) 3px 6px);border-radius:2px}
+
+/* kerahat / ramazan şeridi */
+.hero-not{position:relative;z-index:2;margin:12px auto 0;max-width:340px;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:8px 14px;border-radius:20px;font-size:12.5px;font-weight:600;
+  background:rgba(242,238,226,.10);border:1px solid rgba(242,238,226,.16)}
+.hero-not.uyari{background:rgba(194,89,107,.20);border-color:rgba(194,89,107,.45)}
+.hero-not.gizli{display:none}
+.hero-not b{font-variant-numeric:tabular-nums}
+
+.kerahat-satir{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--cizgi)}
+.kerahat-satir:last-child{border-bottom:0}
+.kerahat-satir.simdi{background:linear-gradient(90deg,rgba(194,89,107,.16),transparent)}
+.kerahat-ikon{width:26px;text-align:center;font-size:15px;color:var(--gul);flex:none}
+.kerahat-ad{flex:1;font-weight:600;font-size:14px}
+.kerahat-ad em{display:block;font-style:normal;font-size:11.5px;color:var(--hayalet);font-weight:500;margin-top:1px}
+.kerahat-saat{font-family:'Antonio',sans-serif;font-size:19px;color:var(--sis);font-variant-numeric:tabular-nums}
+
+/* ramazan */
+.ramazan{display:flex;align-items:center;gap:14px;padding:16px}
+.ramazan-gun{width:56px;height:56px;flex:none;border-radius:16px;background:var(--kat2);
+  display:grid;place-items:center;border:1px solid rgba(216,169,60,.35)}
+.ramazan-gun b{font-family:'Antonio',sans-serif;font-size:26px;line-height:1;color:var(--pirinc)}
+.ramazan-gun span{font-size:9px;letter-spacing:.1em;color:var(--hayalet);text-transform:uppercase}
+.ramazan-bilgi{flex:1;font-size:13px;color:var(--sis);line-height:1.6}
+.ramazan-bilgi b{color:var(--kagit);font-weight:700;font-variant-numeric:tabular-nums}
 
 /* ---------- genel yerleşim ---------- */
 main{padding:4px 16px 24px;max-width:640px;margin:0 auto}
@@ -297,6 +357,7 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
     <div class="siradaki-etiket" id="siradakiEtiket">vakte kalan</div>
     <div class="geri-sayim" id="geriSayim">--:--<small>:--</small></div>
     <div class="siradaki-vakit" id="siradakiVakit">&nbsp;</div>
+    <div class="hero-not gizli" id="heroNot"></div>
   </div>
   <div class="serit" id="serit">
     <div class="serit-hat"></div>
@@ -308,8 +369,20 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
 <main>
   <!-- VAKİTLER -->
   <section class="sayfa acik" id="sayfa-vakit">
+    <div id="ramazanKutu" style="display:none">
+      <div class="baslik">Ramazan</div>
+      <div class="kart"><div class="ramazan" id="ramazanKart"></div></div>
+    </div>
+
     <div class="baslik">Bugün</div>
     <div class="kart" id="vakitListe"></div>
+
+    <div id="kerahatKutu">
+      <div class="baslik">Kerahat vakitleri</div>
+      <div class="kart" id="kerahatListe"></div>
+      <p class="bilgi">Bu üç aralıkta nafile namaz kılınmaz. Kaçırılan farz namaz
+        her vakitte kılınabilir.</p>
+    </div>
     <button class="baslik" id="imsakiyeBaslik" aria-expanded="true" aria-controls="imsakiyeKart">
       Bu ayın imsakiyesi <span class="ok" aria-hidden="true">⌃</span>
     </button>
@@ -476,8 +549,28 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
         <button class="svic" id="titresimSvic" role="switch"></button>
       </div>
       <div class="alan">
+        <label>Tema</label>
+        <select id="tema">
+          <option value="koyu">Koyu (Selçuklu)</option>
+          <option value="acik">Açık</option>
+          <option value="amoled">AMOLED siyah</option>
+        </select>
+      </div>
+      <div class="alan">
         <label>Gökyüzü rengi<em>Vakte göre arka plan</em></label>
         <button class="svic" id="gokSvic" role="switch"></button>
+      </div>
+      <div class="alan">
+        <label>Kerahat vakitleri<em>Girince uyarır, gün şeridinde gösterir</em></label>
+        <button class="svic" id="kerahatSvic" role="switch"></button>
+      </div>
+      <div class="alan">
+        <label>Ramazan modu<em>İftar ve sahur geri sayımı</em></label>
+        <select id="ramazanMod">
+          <option value="oto">Otomatik</option>
+          <option value="acik">Her zaman açık</option>
+          <option value="kapali">Kapalı</option>
+        </select>
       </div>
       <div class="alan">
         <label>Ekranı açık tut<em>Kıble ve geri sayım için</em></label>
@@ -532,7 +625,7 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
    Vakitler cihazda hesaplanır; hiçbir sunucuya vakit sorulmaz.
    ========================================================== */
 const APP = 'Beş Vakit';
-const SURUM = '0.4.0';
+const SURUM = '0.5.0';
 const LOGO = 'logos.png';
 const KABE = { lat: 21.4224779, lng: 39.8261722 };
 const VAKITLER = [
@@ -574,7 +667,7 @@ const VARSAYILAN = {
   duzeltme:{ imsak:0, gunes:0, ogle:0, ikindi:0, aksam:0, yatsi:0 },
   bildirim:{ imsak:true, gunes:false, ogle:true, ikindi:true, aksam:true, yatsi:true },
   bildirimAcik:false, ses:true, titresim:true, gokyuzu:true, uyanik:false,
-  onceden:0,
+  onceden:0, tema:'koyu', kerahat:true, ramazanMod:'oto',
   imsakiyeAcik:true, diniAcik:false, istatistikAcik:false, kazaAcik:false,
   haritaAcik:false, camiAcik:false,
   sapma:0
@@ -597,7 +690,7 @@ function depoOku(anahtar, varsayilan){
 }
 function depoYaz(anahtar, veri){ try{ localStorage.setItem(anahtar, JSON.stringify(veri)); }catch(e){} }
 
-let TAKIP = depoOku('besvakit_takip', { gunler:{}, kaza:{} });
+let TAKIP = depoOku('besvakit_takip', { gunler:{}, kaza:{}, oruc:{} });
 let ZIKIR = depoOku('besvakit_zikir', { sayac:0, secili:0, gunluk:{} });
 
 /* ---------- açı yardımcıları ---------- */
@@ -752,6 +845,115 @@ function yildizlariCiz(){
   svg.innerHTML = s;
 }
 
+/* ==========================================================
+   KERAHAT VAKİTLERİ
+   Üç aralık: güneş doğuşundan sonra, istiva öncesi, güneş batışından önce.
+   Süreler Diyanet'in yaygın uygulamasına göre; hepsi mevcut vakitlerden türetilir.
+   ========================================================== */
+const KERAHAT = [
+  { ad:'İşrak',   ikon:'☀', bas:'gunes', basEk:0,   son:'gunes', sonEk:45,
+    alt:'Güneş doğduktan sonra yükselene kadar' },
+  { ad:'İstiva',  ikon:'◍', bas:'ogle',  basEk:-10, son:'ogle',  sonEk:0,
+    alt:'Güneş tam tepedeyken' },
+  { ad:'Gurub',   ikon:'◑', bas:'aksam', basEk:-45, son:'aksam', sonEk:0,
+    alt:'Güneş batmadan önce sararırken' }
+];
+function kerahatAraliklari(){
+  return KERAHAT.map(k=>{
+    const bas = bugunVakit[k.bas] + k.basEk, son = bugunVakit[k.son] + k.sonEk;
+    return { ...k, bas, son };
+  }).filter(k => !isNaN(k.bas) && !isNaN(k.son));
+}
+function kerahatSimdi(dk){
+  return kerahatAraliklari().find(k => dk >= k.bas && dk < k.son) || null;
+}
+/** Kerahat aralığına girildiği dakikada bir kez uyarır. */
+function kerahatUyari(dk){
+  if(!A.kerahat || !A.bildirimAcik) return;
+  const k = kerahatSimdi(dk);
+  if(!k) return;
+  const anahtar = new Date().toDateString() + 'ker' + k.ad;
+  if(dk >= k.bas && dk < k.bas + 1 && !uyariVerildi[anahtar]){
+    uyariVerildi[anahtar] = true;
+    const metin = k.ad + ' kerahat vakti başladı · ' + Math.round(k.son - k.bas) + ' dk sürer';
+    try{ if(Notification.permission==='granted') new Notification(APP,{ body:metin, tag:'kerahat' }); }catch(e){}
+    if(A.titresim && navigator.vibrate) navigator.vibrate([120,80,120]);
+    toast(metin);
+  }
+}
+function kerahatCiz(){
+  $('#kerahatKutu').style.display = A.kerahat ? '' : 'none';
+  if(!A.kerahat) return;
+  const dk = simdiDk();
+  $('#kerahatListe').innerHTML = kerahatAraliklari().map(k=>`
+    <div class="kerahat-satir ${(dk>=k.bas && dk<k.son)?'simdi':''}">
+      <div class="kerahat-ikon">${k.ikon}</div>
+      <div class="kerahat-ad">${k.ad}<em>${k.alt}</em></div>
+      <div class="kerahat-saat">${saatYaz(k.bas)} – ${saatYaz(k.son)}</div>
+    </div>`).join('');
+}
+
+/* ==========================================================
+   RAMAZAN MODU
+   ========================================================== */
+function ramazanBilgi(){
+  if(A.ramazanMod === 'kapali') return { aktif:false };
+  let gun = 0;
+  try{
+    const h = hicriParcala(new Date());
+    if(h.month === 9) gun = h.day;
+  }catch(e){}
+  if(A.ramazanMod === 'acik' && !gun) gun = 1;      // deneme için
+  if(!gun) return { aktif:false };
+  return { aktif:true, gun, imsak:bugunVakit.imsak, iftar:bugunVakit.aksam };
+}
+function ramazanCiz(){
+  const r = ramazanBilgi();
+  $('#ramazanKutu').style.display = r.aktif ? '' : 'none';
+  if(!r.aktif) return;
+  const a = gunAnahtar(new Date()), tutuldu = !!(TAKIP.oruc && TAKIP.oruc[a]);
+  const toplam = Object.keys(TAKIP.oruc || {}).length;
+  $('#ramazanKart').innerHTML = `
+    <div class="ramazan-gun"><div><b>${r.gun}</b><span>gün</span></div></div>
+    <div class="ramazan-bilgi">
+      Sahur <b>${saatYaz(r.imsak)}</b> · İftar <b>${saatYaz(r.iftar)}</b><br>
+      Bu Ramazan <b>${toplam}</b> gün oruç tuttun.
+    </div>
+    <button class="kutucuk" id="orucBtn" aria-label="Bugün oruç tuttum"
+      style="${tutuldu?'background:var(--cini-koyu);border-color:transparent;color:var(--kagit)':''}">✓</button>`;
+  $('#orucBtn').onclick = ()=>{
+    TAKIP.oruc = TAKIP.oruc || {};
+    if(TAKIP.oruc[a]) delete TAKIP.oruc[a]; else TAKIP.oruc[a] = 1;
+    depoYaz('besvakit_takip', TAKIP);
+    if(A.titresim && navigator.vibrate) navigator.vibrate(25);
+    ramazanCiz();
+  };
+}
+
+/* ---------- hero şeridi: kerahat / iftar-sahur ---------- */
+function heroNotTazele(dk){
+  const el = $('#heroNot');
+  const k = A.kerahat ? kerahatSimdi(dk) : null;
+  if(k){
+    el.className = 'hero-not uyari';
+    el.innerHTML = `⊘ <span>Kerahat vakti · <b>${k.ad}</b> · ${Math.ceil(k.son-dk)} dk kaldı</span>`;
+    return;
+  }
+  const r = ramazanBilgi();
+  if(r.aktif){
+    el.className = 'hero-not';
+    el.innerHTML = `☾ <span>Ramazan <b>${r.gun}</b>. gün · İftar <b>${saatYaz(r.iftar)}</b></span>`;
+    return;
+  }
+  el.className = 'hero-not gizli';
+}
+
+/* ---------- tema ---------- */
+function temaUygula(){
+  document.documentElement.setAttribute('data-tema', A.tema || 'koyu');
+  gokyuzuCiz(simdiDk());
+}
+
 /* ---------- vakit listesi ---------- */
 function vakitListesiCiz(){
   const simdi = simdiDk();
@@ -779,10 +981,21 @@ const simdiDk = ()=>{ const d=new Date(); return d.getHours()*60 + d.getMinutes(
 /* ---------- gün şeridi ---------- */
 function seritCiz(dk){
   const s = $('#serit');
-  s.querySelectorAll('.serit-nokta').forEach(n=>n.remove());
+  s.querySelectorAll('.serit-nokta, .serit-kerahat').forEach(n=>n.remove());
   const bas = bugunVakit.imsak, son = bugunVakit.yatsi;
   const oran = t => Math.max(0, Math.min(1, (t - bas) / (son - bas)));
   const aktif = aktifVakit(dk);
+
+  if(A.kerahat) kerahatAraliklari().forEach(k=>{
+    const sol = oran(k.bas)*100, gen = (oran(k.son) - oran(k.bas))*100;
+    if(gen <= 0) return;
+    const b = document.createElement('div');
+    b.className = 'serit-kerahat';
+    b.style.left = sol.toFixed(2)+'%';
+    b.style.width = Math.max(gen, 1.2).toFixed(2)+'%';
+    b.title = k.ad + ' kerahat vakti';
+    s.appendChild(b);
+  });
   VAKITLER.forEach(v=>{
     const d = document.createElement('div');
     d.className = 'serit-nokta' + (dk >= bugunVakit[v.k] ? ' gecti':'') + (aktif===v.k?' aktif':'');
@@ -812,8 +1025,16 @@ function tikTak(){
   const s = Math.floor(kalan/3600), d = Math.floor(kalan%3600/60), sn = Math.floor(kalan%60);
   $('#geriSayim').innerHTML = (s>0 ? iki(s)+':'+iki(d) : '00:'+iki(d)) + `<small>:${iki(sn)}</small>`;
   $('#siradakiVakit').innerHTML = `<b>${siradaki.ad}</b> · ${saatYaz(siradaki.dk)}${siradaki.yarin?' (yarın)':''}`;
+
+  const r = ramazanBilgi();
+  $('#siradakiEtiket').textContent =
+    (r.aktif && siradaki.k === 'aksam') ? 'iftara kalan' :
+    (r.aktif && siradaki.k === 'imsak') ? 'sahura kalan' : 'vakte kalan';
+
   seritCiz(dk);
   gokyuzuCiz(dk);
+  heroNotTazele(dk);
+  kerahatUyari(dk);
   bildirimKontrol(dk);
   if(Math.floor(dk) % 60 === 0 && sn === 0) gunuTazele();
 }
@@ -1127,6 +1348,8 @@ function gunuTazele(){
   vakitListesiCiz();
   if(A.imsakiyeAcik) imsakiyeCiz();
   if(A.diniAcik) diniGunleriCiz();
+  kerahatCiz();
+  ramazanCiz();
   takipCiz();
   tikTak();
   kibleBilgiTazele();
@@ -1502,6 +1725,11 @@ function ayarlariKur(){
   $('#onceden').onchange = e => { A.onceden = +e.target.value; kaydet(); };
   svicKur('#sesSvic','ses');
   svicKur('#titresimSvic','titresim');
+  $('#tema').value = A.tema;
+  $('#tema').onchange = e => { A.tema = e.target.value; kaydet(); temaUygula(); };
+  $('#ramazanMod').value = A.ramazanMod;
+  $('#ramazanMod').onchange = e => { A.ramazanMod = e.target.value; kaydet(); gunuTazele(); };
+  svicKur('#kerahatSvic','kerahat', ()=>{ setTimeout(gunuTazele,0); return true; });
   svicKur('#gokSvic','gokyuzu', ()=>{ setTimeout(()=>gokyuzuCiz(simdiDk()),0); return true; });
   svicKur('#uyanikSvic','uyanik', v=>{ uyanikAyarla(v); return true; });
 
@@ -1577,6 +1805,7 @@ function manifestKur(){
 }
 function baslat(){
   manifestKur();
+  temaUygula();
   yildizlariCiz();
   ayarlariKur();
   $('#surumYazi').textContent = SURUM;

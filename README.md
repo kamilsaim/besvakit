@@ -23,7 +23,8 @@ API anahtarı gerekmez, hiçbir veri dışarı çıkmaz. Tek bir HTML dosyası; 
 
 | | |
 |---|---|
-| **Vakitler** | Altı vakit, canlı geri sayım, gün şeridi, aylık imsakiye |
+| **Vakitler** | Altı vakit, canlı geri sayım, gün şeridi, aylık imsakiye, kerahat vakitleri |
+| **Ramazan** | İftar ve sahur geri sayımı, gün sayacı, oruç takibi |
 | **Dini günler** | Kandiller, bayramlar, üç aylar — hicri takvimden otomatik |
 | **Kıble** | Sekmeye girince başlayan pusula, kalibrasyon, uydu haritasında kıble hattı |
 | **İbadet** | Namaz takibi, seri gün, aylık istatistik, kaza sayacı, zikirmatik |
@@ -55,20 +56,6 @@ Manyetik sapma için WMM katsayı tablosu gömmek yerine kullanıcıya bir kere 
 haritadan doğrula, **"Şu an kıbleye bakıyorum"**a bas, uygulama telefonunun sapmasını
 kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasını da kapsıyor.
 
-## Çalıştırma
-
-Dosyayı tarayıcıda açman yeterli. Ancak pusula, konum ve bildirim API'leri
-**HTTPS zorunlu tutar** — `file://` ile bunlar çalışmaz.
-
-```bash
-git clone https://github.com/kamilsaim/besvakit.git
-cd besvakit
-npx serve .        # http — pusula çalışmaz, vakitler çalışır
-```
-
-Pusulayı yerelde test etmek için https tüneli gerekir (`ngrok`, `cloudflared`)
-ya da doğrudan [yayındaki sürümü](https://kamilsaim.github.io/besvakit/) kullan.
-
 ## Gizlilik
 
 - Konum cihazdan çıkmaz, hesap tarayıcıda yapılır
@@ -76,6 +63,38 @@ ya da doğrudan [yayındaki sürümü](https://kamilsaim.github.io/besvakit/) ku
 - Sunucu, hesap, takip, analitik, reklam — hiçbiri yok
 - Yalnızca **isteğe bağlı** olarak dışarı bağlanılan yerler: harita karoları (Esri / OpenStreetMap),
   cami araması (Overpass API), yazı tipleri (Google Fonts). Üçü de kapalıyken uygulama çalışmaya devam eder.
+
+## Sürüm geçmişi
+
+### 0.5.0
+- Kerahat vakitleri — üç aralık, gün şeridinde bant, girince uyarı
+- Açık tema ve AMOLED siyah tema
+- Ramazan modu — iftar/sahur geri sayımı, gün sayacı, oruç takibi
+
+### 0.4.0
+- **Pusula sapması düzeltildi.** Android'de mutlak ve bağıl yön olayları aynı anda
+  dinleniyordu; bağıl olan pusula için anlamsız olduğundan ibre iki okuma arasında
+  salınıyordu. Artık mutlak geldiyse bağıl tamamen yok sayılıyor.
+- Telefon eğikse ve pusula hassasiyeti düşükse kullanıcıya uyarı
+- Harita ve cami listesi Kıble sekmesine taşındı, alt menü 4 sekmeye döndü
+
+### 0.3.0
+- İbadet sekmesi: namaz takibi, seri gün, 30 günlük ızgara, aylık istatistik
+- Kaza namazı sayacı ve zikirmatik
+- Servis işçisiyle çevrimdışı kabuk
+- Vakit öncesi hatırlatma (5–45 dk)
+- Cami sonuçları 24 saat önbellekli
+
+### 0.2.0
+- Dini günler ve geceler — kandiller, bayramlar, üç aylar
+- İmsakiye katlanabilir hale geldi
+- Kıble sekmesine girince pusula kendiliğinden başlıyor
+- Logo, favicon ve manifest ikonu
+
+### 0.1.0
+- İlk sürüm: altı vakit, geri sayım, gün şeridi, imsakiye
+- Kıble pusulası ve kalibrasyon, uydu haritasında kıble hattı
+- Yakındaki camiler, vakit bildirimleri
 
 ## Yol haritası
 
@@ -85,10 +104,11 @@ ya da doğrudan [yayındaki sürümü](https://kamilsaim.github.io/besvakit/) ku
 - [ ] Capacitor kabuk (APK) — uygulama kapalıyken de bildirim
 - [ ] Gerçek ezan sesi
 - [ ] Android ana ekran widget'ı
-- [ ] Açık tema ve AMOLED tema
-- [ ] Ramazan modu — iftar/sahur geri sayımı
+- [x] Açık tema ve AMOLED tema
+- [x] Ramazan modu — iftar/sahur geri sayımı
+- [x] Kerahat vakitleri uyarısı
 - [ ] Cuma modu — salavat sayacı, Kehf hatırlatması
-- [ ] Kerahat vakitleri uyarısı
+- [ ] Vakitleri Diyanet takvimiyle birebir hizalayan düzeltme tablosu
 - [ ] Ayarları ve kayıtları dışa aktar / geri yükle
 
 ## Lisans
