@@ -453,6 +453,15 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
       Pusula tanılama <span class="ok" aria-hidden="true">⌃</span>
     </button>
     <div class="kart katlanir gizli" id="taniKart">
+      <div id="taniOlcum" style="padding:16px;border-bottom:1px solid var(--cizgi)">
+        <p class="bilgi" style="margin:0 0 12px">
+          <b>Ölçüm:</b> telefonu <b>yere paralel</b> tut (yatay, ekran yukarı).
+          Üst kenarını güneşin bulunduğu yöne çevir — güneşe değil,
+          <b>ufukta güneşin altına düşen noktaya</b>. Sonra ölç.
+        </p>
+        <button class="btn altin" id="taniOlc">Güneşe doğrulttum, ölç</button>
+        <div id="taniSonuc" style="margin-top:12px"></div>
+      </div>
       <div class="tani" id="taniGovde">Pusula verisi bekleniyor…</div>
       <div style="padding:0 16px 16px"><button class="btn ikincil" id="taniKopyala">Değerleri kopyala</button></div>
     </div>
@@ -697,7 +706,7 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
    Vakitler cihazda hesaplanır; hiçbir sunucuya vakit sorulmaz.
    ========================================================== */
 const APP = 'Beş Vakit';
-const SURUM = '0.7.0';
+const SURUM = '0.7.1';
 const LOGO = 'logos.png';
 const KABE = { lat: 21.4224779, lng: 39.8261722 };
 const VAKITLER = [
@@ -1816,7 +1825,9 @@ function taniCiz(){
     g += sat('olay sayısı', olaySayisi);
   }
   g += sat('kıble (hesap)', kible.toFixed(2) + '°');
-  g += sat('güneş azimutu (hesap)', s.yukseklik > 0 ? s.azimut.toFixed(2) + '°' : 'ufkun altında');
+  g += sat('güneş azimutu (hesap)', s.yukseklik > 0
+    ? s.azimut.toFixed(2) + '° · ' + yonAdi(s.azimut) + ' · ufuktan ' + s.yukseklik.toFixed(0) + '° yukarıda'
+    : 'ufkun altında');
   if(t && s.yukseklik > 0 && yon !== null){
     const gunesEkranda = fixA(s.azimut - yon);
     g += sat('güneş ekranda', gunesEkranda.toFixed(1) + '° yönünde');
@@ -1826,6 +1837,63 @@ function taniCiz(){
   g += sat('konum', A.lat.toFixed(4) + ', ' + A.lng.toFixed(4));
   g += sat('tarayıcı', navigator.userAgent.slice(0, 90));
   $('#taniGovde').innerHTML = g;
+}
+
+/**
+ * Tek dokunuşta sapma ölçümü.
+ * Telefon güneşin yatay yönüne çevrilmişken pusulanın söylediği yön ile
+ * gökmekaniğinden hesaplanan güneş azimutu karşılaştırılır. Aradaki fark,
+ * telefonun manyetik sapmasıdır — başka hiçbir referansa ihtiyaç yok.
+ */
+function taniOlcum(){
+  if(yonHam === null){ toast('Önce pusulanın veri vermesini bekle'); return; }
+  const s = gunesKonumu(new Date(), A.lat, A.lng);
+  if(s.yukseklik <= 0){ toast('Güneş ufkun altında — bu ölçüm gündüz yapılır'); return; }
+
+  const yonSimdi = fixA(yonHam + A.sapma);
+  const fark = ((s.azimut - yonSimdi + 540) % 360) - 180;
+  const mutlakFark = Math.abs(fark);
+  const beta = sonOlay && sonOlay.beta !== null ? Math.abs(sonOlay.beta) : 0;
+  const hassas = pusulaHassasiyet;
+
+  let hukum, sinif;
+  if(beta > 20){
+    hukum = `Telefon ${beta.toFixed(0)}° eğikti. iOS pusulası eğik tutulunca sapar —
+             yere paralel tutup tekrar ölç.`;
+    sinif = 'kotu';
+  }else if(mutlakFark < 10){
+    hukum = 'Pusula doğru çalışıyor. Sapma ölçüm hatası sınırları içinde.';
+    sinif = 'iyi';
+  }else if(mutlakFark < 30){
+    hukum = `Pusulan ${mutlakFark.toFixed(0)}° sapıyor. Aşağıdaki düğmeyle düzeltebilirsin.`;
+    sinif = '';
+  }else{
+    hukum = `Pusulan ${mutlakFark.toFixed(0)}° sapıyor — bu kadar büyük sapma genelde
+             mıknatıslı kılıf, metal masa ya da kalibrasyonsuz manyetometreden olur.
+             Kılıfı çıkarıp telefonu 8 çizerek çevir, sonra tekrar ölç.`;
+    sinif = 'kotu';
+  }
+
+  $('#taniSonuc').innerHTML = `
+    <div class="tani" style="padding:12px 0 0">
+      <div><b>pusula diyor</b>: ${yonSimdi.toFixed(1)}°</div>
+      <div><b>güneş gerçekte</b>: ${s.azimut.toFixed(1)}° (ufuktan ${s.yukseklik.toFixed(0)}° yukarıda)</div>
+      <div><b>sapma</b>: <span class="${sinif}">${fark >= 0 ? '+' : ''}${fark.toFixed(1)}°</span></div>
+      <div><b>telefon eğimi</b>: <span class="${beta>20?'kotu':'iyi'}">${beta.toFixed(0)}°</span>
+        · <b>iOS hassasiyeti</b>: ${hassas ? '±'+hassas.toFixed(0)+'°' : 'bildirilmedi'}</div>
+      <div style="margin-top:10px;color:var(--kagit)">${hukum}</div>
+    </div>
+    ${(beta <= 20 && mutlakFark >= 10) ? `<button class="btn" id="taniUygula"
+        style="margin-top:12px">Bu sapmayı kalıcı olarak uygula</button>` : ''}`;
+
+  const uygula = $('#taniUygula');
+  if(uygula) uygula.onclick = ()=>{
+    A.sapma = fixA(s.azimut - yonHam); kaydet();
+    $('#sapmaDeger').textContent = (A.sapma > 180 ? A.sapma-360 : A.sapma) + '°';
+    yon = null;
+    toast('Sapma uygulandı · ' + (A.sapma > 180 ? A.sapma-360 : A.sapma) + '°');
+    taniOlcum();
+  };
 }
 
 function pusulaUyariTazele(){
@@ -2189,6 +2257,7 @@ function baslat(){
   };
   katlamaKur('#zikirIstBaslik', '#zikirIstKart', 'zikirIstAcik', zikirIstatistikCiz);
   katlamaKur('#taniBaslik', '#taniKart', 'taniAcik', taniCiz);
+  $('#taniOlc').onclick = taniOlcum;
   $('#taniKopyala').onclick = ()=>{
     const metin = $('#taniGovde').innerText;
     try{ navigator.clipboard.writeText(metin); toast('Tanılama değerleri kopyalandı'); }

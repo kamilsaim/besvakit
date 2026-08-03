@@ -81,6 +81,17 @@ kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasın�
 
 ## Sürüm geçmişi
 
+### 0.7.1
+- **Tek dokunuşla sapma ölçümü.** Telefon güneşin yatay yönüne çevrilmişken pusulanın
+  söylediği yön ile hesaplanan güneş azimutu karşılaştırılır; fark doğrudan telefonun
+  manyetik sapmasıdır. Ölçüm anında telefon 20°'den fazla eğikse uyarır, çünkü
+  iOS pusulası eğik tutulunca zaten sapar.
+- Sonuç yorumlanıp gösteriliyor ve tek düğmeyle kalıcı düzeltmeye çevrilebiliyor
+
+> **iOS notu:** Safari'de `deviceorientationabsolute` olayı yoktur ve `e.absolute`
+> her zaman `false` gelir; buna rağmen `webkitCompassHeading` gerçek kuzeye göredir.
+> Yani iPhone'da bu iki değerin "yanlış" görünmesi normaldir, hata göstergesi değildir.
+
 ### 0.7.0
 - **Cuma modu** — cuma günü kartı ve hatırlatma, perşembe akşamı Kehf Suresi uyarısı,
   tek dokunuşla salâvat sayacına geçiş. Hatırlatma saati ayarlanabilir.
