@@ -267,7 +267,7 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
   font-variant-numeric:tabular-nums}
 
 /* ---------- tab bar ---------- */
-.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:60;display:grid;grid-template-columns:repeat(5,1fr);
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:60;display:grid;grid-template-columns:repeat(4,1fr);
   background:rgba(10,14,28,.88);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
   border-top:1px solid var(--cizgi);padding-bottom:var(--safe-b)}
 .tabbar button{padding:9px 0 8px;display:flex;flex-direction:column;align-items:center;gap:3px;
@@ -340,6 +340,28 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
       Yönü haritadan doğrulayıp <b>“Şu an kıbleye bakıyorum”</b>a bastığında uygulama telefonunun sapmasını
       kendisi ölçüp kalıcı olarak düzeltir.
     </p>
+
+    <button class="baslik" id="haritaBaslik" aria-expanded="false" aria-controls="haritaKart">
+      Uydudan kıble hattı <span class="ok" aria-hidden="true">⌃</span>
+    </button>
+    <div class="katlanir gizli" id="haritaKart">
+      <div id="harita"><div class="harita-yer" id="haritaYer">Harita yükleniyor…</div></div>
+      <div class="btn-satir">
+        <button class="btn ikincil" id="uyduBtn">Uydu / sokak</button>
+        <button class="btn ikincil" id="camiAraBtn">Yakındaki camiler</button>
+      </div>
+      <p class="bilgi">Turkuaz hat, bulunduğun noktadan Kâbe'ye giden gerçek kıble yönü. Binanın duvarına veya
+        çatı hattına göre bakarak seccadeni pusulasız da doğru yerleştirebilirsin.</p>
+    </div>
+
+    <button class="baslik" id="camiBaslik" aria-expanded="false" aria-controls="camiKart">
+      Yakındaki camiler <span class="ok" aria-hidden="true">⌃</span>
+    </button>
+    <div class="katlanir gizli" id="camiKart">
+      <div class="kart" id="camiListe"><div style="padding:18px 16px;color:var(--hayalet);font-size:13px">
+        Yukarıdaki haritayı açıp “Yakındaki camiler”e dokun; 3 km çevrendeki camileri
+        OpenStreetMap'ten getirir.</div></div>
+    </div>
   </section>
 
   <!-- İBADET -->
@@ -383,21 +405,6 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
       <button class="btn ikincil" id="tesbihSifirla">Sıfırla</button>
     </div>
     <p class="bilgi" id="zikirGunluk"></p>
-  </section>
-
-  <!-- HARİTA & CAMİLER -->
-  <section class="sayfa" id="sayfa-harita">
-    <div class="baslik">Uydudan kıble hattı</div>
-    <div id="harita"><div class="harita-yer" id="haritaYer">Harita yükleniyor…</div></div>
-    <div class="btn-satir">
-      <button class="btn ikincil" id="uyduBtn">Uydu / sokak</button>
-      <button class="btn ikincil" id="camiAraBtn">Yakındaki camiler</button>
-    </div>
-    <p class="bilgi">Turkuaz hat, bulunduğun noktadan Kâbe'ye giden gerçek kıble yönü. Binanın duvarına veya
-      çatı hattına göre bakarak seccadeni pusulasız da doğru yerleştirebilirsin.</p>
-    <div class="baslik">Yakındaki camiler</div>
-    <div class="kart" id="camiListe"><div style="padding:18px 16px;color:var(--hayalet);font-size:13px">
-      “Yakındaki camiler”e dokun; 3 km çevrendeki camileri OpenStreetMap'ten getirir.</div></div>
   </section>
 
   <!-- AYARLAR -->
@@ -514,7 +521,6 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
   <button data-sayfa="vakit" class="acik"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Vakitler</button>
   <button data-sayfa="kible"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 5.3-5.3 2.2 2.2-5.3z"/></svg>Kıble</button>
   <button data-sayfa="ibadet"><svg viewBox="0 0 24 24"><path d="M12 3.5l2.3 4.9 5.2.7-3.8 3.7.9 5.3-4.6-2.5-4.6 2.5.9-5.3-3.8-3.7 5.2-.7z"/></svg>İbadet</button>
-  <button data-sayfa="harita"><svg viewBox="0 0 24 24"><path d="M9 4L3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5z"/><path d="M9 4v13M15 6.5v13"/></svg>Harita</button>
   <button data-sayfa="ayar"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 14.5a1.6 1.6 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.6 1.6 0 00-2.7 1.1v.3a2 2 0 11-4 0v-.2a1.6 1.6 0 00-2.8-1.1l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.6 1.6 0 00-1.1-2.7H3.3a2 2 0 110-4h.2a1.6 1.6 0 001.1-2.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.6 1.6 0 002.7-1.1V3.3a2 2 0 114 0v.2a1.6 1.6 0 002.8 1.1l.1-.1a2 2 0 112.8 2.8l-.1.1a1.6 1.6 0 001.1 2.7h.3a2 2 0 110 4h-.2a1.6 1.6 0 00-1.4 1z"/></svg>Ayarlar</button>
 </nav>
 
@@ -526,7 +532,7 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
    Vakitler cihazda hesaplanır; hiçbir sunucuya vakit sorulmaz.
    ========================================================== */
 const APP = 'Beş Vakit';
-const SURUM = '0.3.0';
+const SURUM = '0.4.0';
 const LOGO = 'logos.png';
 const KABE = { lat: 21.4224779, lng: 39.8261722 };
 const VAKITLER = [
@@ -570,6 +576,7 @@ const VARSAYILAN = {
   bildirimAcik:false, ses:true, titresim:true, gokyuzu:true, uyanik:false,
   onceden:0,
   imsakiyeAcik:true, diniAcik:false, istatistikAcik:false, kazaAcik:false,
+  haritaAcik:false, camiAcik:false,
   sapma:0
 };
 let A = yukle();
@@ -1129,7 +1136,8 @@ function gunuTazele(){
    KIBLE PUSULASI
    ========================================================== */
 let kible = 0, yon = null, yonHam = null, pusulaAcik = false, pusulaRed = false,
-    gercekKuzey = false, sonTitresim = 0;
+    gercekKuzey = false, sonTitresim = 0,
+    mutlakGeldi = false, telefonEgik = false, pusulaHassasiyet = 0, bagilZaman = null;
 
 function pusulaCiz(){
   const svg = $('#pusula'), M = 160, R = 128;
@@ -1199,17 +1207,38 @@ function kibleBilgiTazele(){
   if(window._haritaHazir) haritaTazele();
 }
 
+/**
+ * Yön okuması.
+ *
+ * Kritik nokta: Android'de hem `deviceorientationabsolute` hem `deviceorientation`
+ * dinlenirse ikisi de bu fonksiyona düşer. İkincisi çoğu cihazda **bağıl** açıdır
+ * (sayfa açıldığı andaki rastgele yöne göre), yani pusula için anlamsızdır.
+ * İkisi karışınca ibre iki okuma arasında gidip gelir ve sapar.
+ * Bu yüzden bir kez mutlak okuma geldiyse bağıl olanlar tamamen yok sayılır.
+ */
 function yonOlayi(e){
-  let h = null, gercek = false;
+  let h = null, mutlak = false;
+
   if(typeof e.webkitCompassHeading === 'number' && !isNaN(e.webkitCompassHeading)){
-    h = e.webkitCompassHeading; gercek = true;               // iOS: zaten gerçek kuzey
+    h = e.webkitCompassHeading; mutlak = true;               // iOS: zaten gerçek kuzey
+    if(typeof e.webkitCompassAccuracy === 'number' && e.webkitCompassAccuracy > 0)
+      pusulaHassasiyet = e.webkitCompassAccuracy;
   }else if(e.alpha !== null && e.alpha !== undefined){
     const ekran = (screen.orientation && screen.orientation.angle) || window.orientation || 0;
-    h = fixA(360 - e.alpha + ekran); gercek = !!e.absolute;
+    h = fixA(360 - e.alpha + ekran); mutlak = !!e.absolute;
   }
   if(h === null) return;
-  gercekKuzey = gercek;
+
+  if(mutlak) mutlakGeldi = true;
+  else if(mutlakGeldi) return;        // mutlak varken bağıl okumaya bakma
+
+  gercekKuzey = mutlak;
   yonHam = h;
+
+  // Telefon dike yakınsa alpha'dan çıkan yön güvenilmez olur.
+  const egik = (typeof e.beta === 'number') && Math.abs(e.beta) > 45;
+  if(egik !== telefonEgik){ telefonEgik = egik; pusulaUyariTazele(); }
+
   const hedef = fixA(h + A.sapma);
   // yumuşatma (düşük geçiren filtre) — 360° geçişi güvenli
   if(yon === null) yon = hedef;
@@ -1218,6 +1247,22 @@ function yonOlayi(e){
     yon = fixA(yon + fark*0.22);
   }
   pusulaCiz();
+}
+
+function pusulaUyariTazele(){
+  if(!pusulaAcik) return;
+  const m = $('#pusulaMesaj');
+  if(telefonEgik){
+    m.innerHTML = '<b>Telefonu yere paralel tut.</b> Dik tutulunca pusula okuması sapar.';
+  }else if(pusulaHassasiyet > 20){
+    m.innerHTML = 'Pusula hassasiyeti düşük (±' + Math.round(pusulaHassasiyet) + '°). ' +
+      'Telefonu elinde <b>8 çizerek</b> birkaç saniye çevir.';
+  }else if(!gercekKuzey){
+    m.innerHTML = 'Pusula manyetik kuzeye göre çalışıyor olabilir. Haritadan doğrulayıp ' +
+      '<b>“Şu an kıbleye bakıyorum”</b> ile kalibre et.';
+  }else{
+    m.innerHTML = 'Telefonu yere paralel tut. Kâbe işareti üstteki üçgene gelince kıbleye bakıyorsun.';
+  }
 }
 
 /**
@@ -1241,18 +1286,29 @@ async function pusulaBaslat(elle){
     }
   }catch(err){ pusulaRed = true; $('#pusulaMesaj').textContent = 'Pusula izni alınamadı: ' + err.message; return; }
 
-  if('ondeviceorientationabsolute' in window)
-    window.addEventListener('deviceorientationabsolute', yonOlayi, true);
-  window.addEventListener('deviceorientation', yonOlayi, true);
+  // Sıfırdan başla: önceki oturumun yumuşatılmış açısı yeni okumayı kirletmesin.
+  yon = null; mutlakGeldi = false; pusulaHassasiyet = 0; telefonEgik = false;
   pusulaAcik = true;
+
+  // Önce yalnızca mutlak yön. Bağıl `deviceorientation` sadece mutlak hiç gelmezse
+  // yedek olarak devreye girer; ikisi aynı anda dinlenirse ibre sapar.
+  if('ondeviceorientationabsolute' in window){
+    window.addEventListener('deviceorientationabsolute', yonOlayi, true);
+    bagilZaman = setTimeout(()=>{
+      if(!mutlakGeldi) window.addEventListener('deviceorientation', yonOlayi, true);
+    }, 1200);
+  }else{
+    window.addEventListener('deviceorientation', yonOlayi, true);
+  }
+
   $('#pusulaBtn').textContent = 'Pusula çalışıyor';
   $('#pusulaBtn').classList.add('ikincil');
-  $('#pusulaMesaj').innerHTML = 'Telefonu yere paralel tut. Kâbe işareti üstteki üçgene gelince kıbleye bakıyorsun.';
+  $('#pusulaMesaj').innerHTML = 'Pusula okunuyor…';
   setTimeout(()=>{
     if(yon === null) $('#pusulaMesaj').innerHTML =
-      'Cihazdan pusula verisi gelmiyor. Manyetometresi olmayan telefonlarda çalışmaz — <b>Harita</b> sekmesindeki kıble hattını kullan.';
-    else if(!gercekKuzey) $('#pusulaMesaj').innerHTML =
-      'Pusula manyetik kuzeye göre çalışıyor olabilir. Haritadan doğrulayıp <b>“Şu an kıbleye bakıyorum”</b> ile kalibre et.';
+      'Cihazdan pusula verisi gelmiyor. Manyetometresi olmayan telefonlarda çalışmaz — ' +
+      'aşağıdaki <b>uydu haritasındaki</b> kıble hattını kullan.';
+    else pusulaUyariTazele();
   }, 2500);
 }
 
@@ -1287,6 +1343,22 @@ function buyukDaire(a, b, n=96){
   }
   return p;
 }
+/** Katlanmış harita bölümünü açıp haritayı kurar. */
+function haritaAc(){
+  if(!A.haritaAcik){
+    A.haritaAcik = true; kaydet();
+    $('#haritaBaslik').setAttribute('aria-expanded', 'true');
+    $('#haritaKart').classList.remove('gizli');
+  }
+  return haritaKur();
+}
+function bolumAc(anahtar, btnSel, kartSel){
+  if(A[anahtar]) return;
+  A[anahtar] = true; kaydet();
+  $(btnSel).setAttribute('aria-expanded', 'true');
+  $(kartSel).classList.remove('gizli');
+}
+
 async function haritaKur(){
   if(harita) { setTimeout(()=>harita.invalidateSize(), 60); return; }
   try{ await leafletYukle(); }
@@ -1359,6 +1431,7 @@ async function camileriBul(){
 }
 
 function camileriYaz(liste){
+  bolumAc('camiAcik', '#camiBaslik', '#camiKart');
   $('#camiListe').innerHTML = liste.map((c,i)=>`
     <button class="cami" data-i="${i}">
       <div class="cami-yon" style="transform:rotate(${c.aci.toFixed(0)}deg)">↑</div>
@@ -1367,8 +1440,10 @@ function camileriYaz(liste){
     </button>`).join('');
   $$('#camiListe .cami').forEach(el => el.onclick = ()=>{
     const c = liste[+el.dataset.i];
-    sekmeAc('harita');
-    haritaKur().then(()=>{ harita.setView([c.lat,c.lng], 18); });
+    haritaAc().then(()=>{
+      harita.setView([c.lat,c.lng], 18);
+      $('#haritaKart').scrollIntoView({ behavior:'smooth', block:'start' });
+    });
   });
   if(harita){
     camiKatman.clearLayers();
@@ -1482,8 +1557,10 @@ function konumBul(){
 function sekmeAc(ad){
   $$('.sayfa').forEach(s => s.classList.toggle('acik', s.id === 'sayfa-'+ad));
   $$('#tabbar button').forEach(b => b.classList.toggle('acik', b.dataset.sayfa === ad));
-  if(ad === 'harita') haritaKur();
-  if(ad === 'kible') pusulaBaslat(false);
+  if(ad === 'kible'){
+    pusulaBaslat(false);
+    if(A.haritaAcik) haritaKur();      // sekme dönüşünde harita boyutunu tazeler
+  }
   window.scrollTo({top:0, behavior:'instant'});
 }
 function manifestKur(){
@@ -1507,6 +1584,9 @@ function baslat(){
   katlamaKur('#diniBaslik', '#diniKart', 'diniAcik', diniGunleriCiz);
   katlamaKur('#istatistikBaslik', '#istatistikKart', 'istatistikAcik', istatistikCiz);
   katlamaKur('#kazaBaslik', '#kazaKart', 'kazaAcik', kazaCiz);
+  // Leaflet yalnızca bölüm açılınca indirilir — kapalıyken hiç ağ isteği yok.
+  katlamaKur('#haritaBaslik', '#haritaKart', 'haritaAcik', haritaKur);
+  katlamaKur('#camiBaslik', '#camiKart', 'camiAcik', ()=>{});
   tesbihCiz();
   $('#tesbihBtn').onclick = tesbihArtir;
   $('#tesbihGeri').onclick = ()=>{

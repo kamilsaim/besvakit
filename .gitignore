@@ -5,3 +5,7 @@ android/
 ios/
 .DS_Store
 Thumbs.db
+
+# yerel proje notlari - GitHub'a gitmez
+BESVAKIT.md
+*.pdf
