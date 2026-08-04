@@ -567,7 +567,30 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
       <div class="alan"><button class="btn" id="gpsBtn" style="padding:11px">Konumumu bul</button></div>
     </div>
 
+    <div class="baslik">Diyanet takvimi</div>
+    <div class="kart">
+      <div class="alan">
+        <label>Resmi vakitleri kullan<em>Diyanet takvimiyle birebir</em></label>
+        <button class="svic" id="resmiSvic" role="switch"></button>
+      </div>
+      <div class="alan">
+        <label>İl</label>
+        <select id="resmiIl"><option value="">Yükleniyor…</option></select>
+      </div>
+      <div class="alan">
+        <label>İlçe<em>Vakitler ilçeye göre değişir</em></label>
+        <select id="resmiIlce"><option value="">Önce il seç</option></select>
+      </div>
+      <div class="alan"><label id="resmiDurum" style="font-weight:500;font-size:12.5px;color:var(--hayalet)">—</label></div>
+    </div>
+    <p class="bilgi">Vakitler Diyanet takviminden alınıp depoya kaydedilir, ayda iki kez
+      tazelenir. Uygulama çalışırken hiçbir servise bağlanmaz; veri indirildikten sonra
+      çevrimdışı da çalışır. Kapsam dışı bir gün veya konum olursa uygulama kendi
+      astronomik hesabına düşer.</p>
+
     <div class="baslik">Hesaplama</div>
+    <p class="bilgi" style="margin:-4px 0 10px">Aşağıdakiler yalnızca resmi takvim
+      kullanılmadığında geçerlidir.</p>
     <div class="kart">
       <div class="alan">
         <label>Yöntem<em>Diyanet: imsak 18°, yatsı 17°</em></label>
@@ -706,7 +729,7 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
    Vakitler cihazda hesaplanır; hiçbir sunucuya vakit sorulmaz.
    ========================================================== */
 const APP = 'Beş Vakit';
-const SURUM = '0.7.2';
+const SURUM = '0.8.0';
 const LOGO = 'logos.png';
 const KABE = { lat: 21.4224779, lng: 39.8261722 };
 const VAKITLER = [
@@ -761,6 +784,7 @@ const VARSAYILAN = {
   bildirim:{ imsak:true, gunes:false, ogle:true, ikindi:true, aksam:true, yatsi:true },
   bildirimAcik:false, ses:true, titresim:true, gokyuzu:true, uyanik:false,
   onceden:0, tema:'koyu', kerahat:true, ramazanMod:'oto', temkin:true,
+  resmi:true, ilce:null, resmiIl:null,
   cuma:true, cumaSaat:'11:30',
   imsakiyeAcik:true, diniAcik:false, istatistikAcik:false, kazaAcik:false,
   haritaAcik:false, camiAcik:false, zikirIstAcik:true, taniAcik:false,
@@ -859,6 +883,51 @@ function vakitleriHesapla(tarih, ayar){
   return out;
 }
 
+/* ==========================================================
+   RESMİ TAKVİM (Diyanet)
+   Vakitler depodaki statik JSON'dan okunur; dosya GitHub Actions ile
+   ayda iki kez tazelenir. Uygulama hiçbir API'ye bağlanmaz — anahtar,
+   CORS ve oran sınırı derdi yok, kaynak kapansa bile elimizdeki veri çalışır.
+   Veri yoksa (liste dışı konum, kapsam dışı tarih, çevrimdışı ilk açılış)
+   sessizce astronomik hesaba düşülür.
+   ========================================================== */
+let RESMI = null;
+
+function resmiVakit(tarih){
+  if(!RESMI || !A.resmi || !RESMI.v) return null;
+  const i = Math.round(
+    (Date.parse(gunAnahtar(tarih) + 'T00:00:00Z') - Date.parse(RESMI.bas + 'T00:00:00Z')) / 86400000);
+  const s = RESMI.v[i];
+  if(!s || s.length < 6) return null;
+  const o = {};
+  VAKITLER.forEach((v, k) => { o[v.k] = mod(s[k] + (A.duzeltme[v.k] || 0), 1440); });
+  return o;
+}
+
+/** Tek giriş noktası: resmi veri varsa onu, yoksa hesabı döndürür. */
+function vakitAl(tarih){
+  return resmiVakit(tarih) || vakitleriHesapla(tarih, A);
+}
+const resmiKullaniliyorMu = () => !!resmiVakit(new Date());
+
+async function resmiYukle(){
+  if(!A.resmi || !A.ilce){ RESMI = null; return; }
+  try{
+    const c = JSON.parse(localStorage.getItem('besvakit_resmi') || 'null');
+    if(c && String(c.ilce) === String(A.ilce)) RESMI = c;      // önce önbellek: çevrimdışı da açılsın
+  }catch(e){}
+  try{
+    const r = await fetch('vakitler/' + A.ilce + '.json', { cache:'no-cache' });
+    if(r.ok){
+      const d = await r.json();
+      if(d && d.bas && Array.isArray(d.v)){
+        RESMI = d;
+        try{ localStorage.setItem('besvakit_resmi', JSON.stringify(d)); }catch(e){}
+      }
+    }
+  }catch(e){ /* çevrimdışı — önbellek varsa o kullanılır */ }
+}
+
 /* ---------- kıble ---------- */
 function kibleAcisi(lat,lng){
   const dl = KABE.lng - lng;
@@ -937,7 +1006,7 @@ function hicriYaz(d){
    ========================================================== */
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
-let bugunVakit = {}, siradaki = null, uyariVerildi = {}, uyanikKilit = null;
+let bugunVakit = {}, siradaki = null, uyariVerildi = {}, uyanikKilit = null, sonTazeleme = null;
 
 function toast(msg){
   const t = $('#toast'); t.textContent = msg; t.classList.add('gor');
@@ -1159,7 +1228,7 @@ function siradakiBul(){
     if(bugunVakit[v.k] > dk) return { ad:v.ad, k:v.k, dk:bugunVakit[v.k], kalan:bugunVakit[v.k]-dk };
   }
   const yarin = new Date(); yarin.setDate(yarin.getDate()+1);
-  const y = vakitleriHesapla(yarin, A);
+  const y = vakitAl(yarin);
   return { ad:'İmsak', k:'imsak', dk:y.imsak, kalan:(1440 - dk) + y.imsak, yarin:true };
 }
 function tikTak(){
@@ -1181,8 +1250,16 @@ function tikTak(){
   kerahatUyari(dk);
   cumaUyari(dk);
   bildirimKontrol(dk);
-  if(Math.floor(dk) % 60 === 0 && sn === 0) gunuTazele();
+
+  // Saat başı (ve gece yarısı) günü tazele.
+  // Dikkat: gunuTazele() yine tikTak() çağırıyor. Eskiden burada doğrudan
+  // gunuTazele() çağrılıyordu ve saat tam xx:00:00 iken ikisi birbirini
+  // sonsuz çağırıp yığını taşırıyordu. Damga gunuTazele içinde önce
+  // güncellendiği için bu kurgu özyinelemeye girmez.
+  const damga = saatDamgasi();
+  if(damga !== sonTazeleme) setTimeout(gunuTazele, 0);
 }
+const saatDamgasi = ()=>{ const d = new Date(); return d.toDateString() + '#' + d.getHours(); };
 
 /* ---------- bildirim ---------- */
 function bildirimKontrol(dk){
@@ -1238,7 +1315,7 @@ function imsakiyeCiz(){
   let s = '<thead><tr><th>Gün</th>' + VAKITLER.map(v=>`<th>${v.ad.slice(0,3)}</th>`).join('') + '</tr></thead><tbody>';
   for(let g=1; g<=gunSayisi; g++){
     const t = new Date(yil, ay, g);
-    const v = vakitleriHesapla(t, A);
+    const v = vakitAl(t);
     const bu = g === bugun.getDate();
     s += `<tr class="${bu?'bugun':''}"><td>${g} ${GUNLER[t.getDay()].slice(0,3)}</td>` +
          VAKITLER.map(x=>`<td>${saatYaz(v[x.k])}</td>`).join('') + '</tr>';
@@ -1615,7 +1692,7 @@ async function widgetVeriYaz(){
   const gunler = {};
   for(let i=0; i<30; i++){
     const d = new Date(bugun); d.setDate(d.getDate() + i);
-    const v = vakitleriHesapla(d, A);
+    const v = vakitAl(d);
     gunler[gunAnahtar(d)] = VAKITLER.map(x => isNaN(v[x.k]) ? 0 : Math.round(v[x.k]));
   }
   try{
@@ -1628,8 +1705,9 @@ async function widgetVeriYaz(){
 
 /* ---------- günü tazele ---------- */
 function gunuTazele(){
+  sonTazeleme = saatDamgasi();          // tikTak'ın yeniden tetiklememesi için önce yaz
   const bugun = new Date();
-  bugunVakit = vakitleriHesapla(bugun, A);
+  bugunVakit = vakitAl(bugun);
   $('#konumAd').textContent = A.sehir;
   $('#tarih').innerHTML = `${bugun.getDate()} ${AYLAR[bugun.getMonth()]} ${GUNLER[bugun.getDay()]}<br>${hicriYaz(bugun)}`;
   vakitListesiCiz();
@@ -1862,10 +1940,13 @@ function taniCiz(){
     ? s.azimut.toFixed(2) + '° · ' + yonAdi(s.azimut) + ' · ufuktan ' + s.yukseklik.toFixed(0) + '° yukarıda'
     : 'ufkun altında');
   if(t && s.yukseklik > 0 && yon !== null){
-    const gunesEkranda = fixA(s.azimut - yon);
-    g += sat('güneş ekranda', gunesEkranda.toFixed(1) + '° yönünde');
-    g += `<div style="margin-top:8px;color:var(--hayalet)">Telefonu güneşe doğrult:
-      bu değer <b>0°</b>'ye yakın olmalı. Değilse sapma o kadardır.</div>`;
+    // İşaretli göster: 357° değil −3°. Sıfıra yakınlık okunabilir olmalı.
+    const fark = ((s.azimut - yon + 540) % 360) - 180;
+    const mutlak = Math.abs(fark);
+    g += sat('güneşe göre sapma', (fark >= 0 ? '+' : '') + fark.toFixed(1) + '°',
+             mutlak < 10 ? 'iyi' : (mutlak < 30 ? '' : 'kotu'));
+    g += `<div style="margin-top:8px;color:var(--hayalet)">Telefon güneşe doğrultulmuşken
+      bu değer <b>0°</b>'ye yakın olmalı. Doğrultulmadıysa anlamsızdır.</div>`;
   }
   g += sat('konum', A.lat.toFixed(4) + ', ' + A.lng.toFixed(4));
   g += sat('tarayıcı', navigator.userAgent.slice(0, 90));
@@ -2157,6 +2238,11 @@ function ayarlariKur(){
   $('#mezhep').value = A.mezhep;
   $('#mezhep').onchange = e => { A.mezhep = +e.target.value; kaydet(); gunuTazele(); };
   svicKur('#temkinSvic','temkin', ()=>{ setTimeout(gunuTazele,0); return true; });
+  svicKur('#resmiSvic','resmi', ()=>{
+    setTimeout(async()=>{ await resmiYukle(); gunuTazele(); resmiDurumYaz(); }, 0);
+    return true;
+  });
+  yerleriKur();
 
   $('#duzeltmeler').innerHTML = VAKITLER.map(v=>`
     <div class="alan"><label>${v.ad}</label>
@@ -2201,6 +2287,66 @@ function ayarlariKur(){
   });
   alanlariDoldur();
 }
+/* ---------- il / ilçe seçimi ----------
+   yerler.json (ülke → il → ilçe ağacı) yalnızca ayarlar açılınca indirilir. */
+let YERLER = null;
+async function yerleriKur(){
+  const ilSec = $('#resmiIl'), ilceSec = $('#resmiIlce');
+  if(!YERLER){
+    try{
+      const r = await fetch('vakitler/yerler.json', { cache:'no-cache' });
+      YERLER = r.ok ? await r.json() : null;
+    }catch(e){ YERLER = null; }
+  }
+  if(!YERLER){
+    ilSec.innerHTML = '<option value="">Liste indirilemedi</option>';
+    resmiDurumYaz();
+    return;
+  }
+  // Şimdilik yalnızca Türkiye; ağaçta diğer ülkeler de var, ileride açılabilir.
+  const tr = YERLER.find(u => String(u.id) === '2') || YERLER[0];
+  const iller = (tr.sehirler || []).slice().sort((a,b)=> a.ad.localeCompare(b.ad,'tr'));
+
+  ilSec.innerHTML = '<option value="">Seç…</option>' +
+    iller.map(s => `<option value="${s.id}">${s.ad}</option>`).join('');
+  if(A.resmiIl) ilSec.value = A.resmiIl;
+
+  const ilceleriDoldur = ()=>{
+    const il = iller.find(s => String(s.id) === String(ilSec.value));
+    const liste = (il ? il.ilceler : []).slice().sort((a,b)=> a.ad.localeCompare(b.ad,'tr'));
+    ilceSec.innerHTML = liste.length
+      ? '<option value="">Seç…</option>' + liste.map(i => `<option value="${i.id}">${i.ad}</option>`).join('')
+      : '<option value="">Önce il seç</option>';
+    if(A.ilce) ilceSec.value = A.ilce;
+  };
+  ilceleriDoldur();
+
+  ilSec.onchange = ()=>{ A.resmiIl = ilSec.value || null; A.ilce = null; kaydet(); ilceleriDoldur(); resmiDurumYaz(); };
+  ilceSec.onchange = async ()=>{
+    A.ilce = ilceSec.value || null; kaydet();
+    RESMI = null;
+    await resmiYukle();
+    gunuTazele();
+    resmiDurumYaz();
+    if(A.ilce) toast(resmiKullaniliyorMu() ? 'Diyanet takvimi yüklendi' : 'Bu ilçe için veri bulunamadı');
+  };
+  resmiDurumYaz();
+}
+function resmiDurumYaz(){
+  const el = $('#resmiDurum');
+  if(!el) return;
+  if(!A.resmi){ el.textContent = 'Kapalı — vakitler cihazda hesaplanıyor.'; return; }
+  if(!A.ilce){ el.textContent = 'İlçe seçilmedi — vakitler cihazda hesaplanıyor.'; return; }
+  if(resmiKullaniliyorMu()){
+    const son = RESMI && RESMI.v ? RESMI.v.length : 0;
+    const bit = new Date(Date.parse(RESMI.bas + 'T00:00:00Z') + (son - 1) * 86400000);
+    el.innerHTML = `<b style="color:var(--cini)">Etkin</b> — ${RESMI.ad} · ${son} günlük takvim, ` +
+                   `${bit.getDate()} ${AYLAR[bit.getMonth()]} tarihine kadar.`;
+  }else{
+    el.textContent = 'Bu tarih için veri yok — cihazdaki hesap kullanılıyor.';
+  }
+}
+
 function alanlariDoldur(){
   $('#enlem').value = A.lat.toFixed(4);
   $('#boylam').value = A.lng.toFixed(4);
@@ -2269,6 +2415,8 @@ function baslat(){
   temaUygula();
   yildizlariCiz();
   ayarlariKur();
+  // Resmi takvim önbellekten anında, ağdan gelince tazelenir.
+  resmiYukle().then(()=>{ gunuTazele(); resmiDurumYaz(); });
   $('#surumYazi').textContent = SURUM;
   katlamaKur('#imsakiyeBaslik', '#imsakiyeKart', 'imsakiyeAcik', imsakiyeCiz);
   katlamaKur('#diniBaslik', '#diniKart', 'diniAcik', diniGunleriCiz);

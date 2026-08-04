@@ -1,0 +1,74 @@
+name: Namaz vakitlerini tazele
+
+# Veri kaynağı ayda bir aylık takvim yayınlıyor. Ayın 1'i ve 15'inde çalışıp
+# hem içinde bulunulan ayı hem gelecek ayın başını elde tutuyoruz.
+# Elle de tetiklenebilir: Actions → bu iş akışı → Run workflow.
+on:
+  schedule:
+    - cron: '17 2 1,15 * *'
+  workflow_dispatch:
+    inputs:
+      kapsam:
+        description: 'Kapsam'
+        required: true
+        default: 'turkiye'
+        type: choice
+        options:
+          - turkiye
+          - dunya
+
+permissions:
+  contents: write
+
+concurrency:
+  group: vakit-tazele
+  cancel-in-progress: false
+
+jobs:
+  cek:
+    runs-on: ubuntu-latest
+    # Kaynağa nazik davranmak için sıralı ve yavaş çekiyoruz; dünya geneli ~40 dk sürer.
+    timeout-minutes: 120
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Vakitleri çek
+        run: |
+          if [ "${{ github.event.inputs.kapsam }}" = "dunya" ]; then
+            echo "kapsam: tüm dünya"
+            node araclar/vakit-cek.mjs
+          else
+            echo "kapsam: Türkiye"
+            node araclar/vakit-cek.mjs --ulke 2
+          fi
+
+      - name: Değişikliği doğrula
+        run: |
+          test -f vakitler/dizin.json || { echo "dizin.json yok, çekim başarısız"; exit 1; }
+          node -e "
+            const d = require('./vakitler/dizin.json');
+            if (!d.ilceSayisi || d.ilceSayisi < 100) {
+              console.error('beklenenden az ilçe:', d.ilceSayisi);
+              process.exit(1);
+            }
+            console.log('doğrulandı:', d.ilceSayisi, 'ilçe,', d.cekim);
+          "
+
+      - name: Commit'le ve push'la
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add vakitler
+          if git diff --staged --quiet; then
+            echo "değişiklik yok"
+          else
+            SAYI=$(node -p "require('./vakitler/dizin.json').ilceSayisi")
+            git commit -m "Namaz vakitleri tazelendi ($SAYI ilce)" \
+                       -m "Otomatik cekim - araclar/vakit-cek.mjs"
+            git push
+          fi
