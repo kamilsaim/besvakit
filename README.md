@@ -8,7 +8,7 @@
 
 [**→ Uygulamayı aç**](https://kamilsaim.github.io/besvakit/)
 
-![sürüm](https://img.shields.io/badge/sürüm-0.8.3-22B2AE?style=flat-square)
+![sürüm](https://img.shields.io/badge/sürüm-0.9.0-22B2AE?style=flat-square)
 ![bağımlılık](https://img.shields.io/badge/bağımlılık-yok-D8A93C?style=flat-square)
 ![tek dosya](https://img.shields.io/badge/tek%20dosya-HTML-080C18?style=flat-square)
 
@@ -27,7 +27,7 @@ olmadan da, kaynak kapansa da çalışır. Anahtar yok, hesap yok, veri dışar�
 |---|---|
 | **Vakitler** | Altı vakit, canlı geri sayım, gün şeridi, aylık imsakiye, kerahat vakitleri |
 | **Ramazan** | İftar ve sahur geri sayımı, gün sayacı, oruç takibi |
-| **Dini günler** | Kandiller, bayramlar, üç aylar — hicri takvimden otomatik |
+| **Dini günler** | Kandiller, bayramlar, üç aylar, ay evresi — hicri takvimden otomatik |
 | **Kıble** | Sekmeye girince başlayan pusula, kalibrasyon, uydu haritasında kıble hattı |
 | **İbadet** | Namaz takibi, seri gün, aylık istatistik, kaza sayacı, zikir başına sayaç |
 | **Cuma** | Cuma hatırlatması, Kehf Suresi uyarısı, salâvat sayacı |
@@ -96,6 +96,13 @@ kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasın�
   cami araması (Overpass API), yazı tipleri (Google Fonts). Üçü de kapalıyken uygulama çalışmaya devam eder.
 
 ## Sürüm geçmişi
+
+### 0.9.0
+- **Ay durumu.** Gece gökyüzünde ayın o geceki gerçek evresi çizilir; dini günler
+  kartının başında hicri ayın neresinde olunduğu ve ayın aydınlık oranı yazar.
+- Hicri ayın 29'unda bilgilendirme: ayın 29'da mı biteceği yoksa 30'a mı uzayacağı
+  Diyanet'in ilanıyla belli olur — **uygulama ay başlangıcı ilan etmez**
+- Hesap hicri günle yarım günden iyi örtüşüyor (Ramazan 1447 → 8 Şubat 2027, ay yaşı 1.6 gün)
 
 ### 0.8.3
 - **Diyanet takvimi artık varsayılan olarak etkin.** Önceden ilçe seçilmediği için

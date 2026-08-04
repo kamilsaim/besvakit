@@ -712,7 +712,7 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
    Vakitler cihazda hesaplanır; hiçbir sunucuya vakit sorulmaz.
    ========================================================== */
 const APP = 'Beş Vakit';
-const SURUM = '0.8.3';
+const SURUM = '0.9.0';
 const LOGO = 'logos.png';
 const KABE = { lat: 21.4224779, lng: 39.8261722 };
 const VAKITLER = [
@@ -911,6 +911,66 @@ async function resmiYukle(){
   }catch(e){ /* çevrimdışı — önbellek varsa o kullanılır */ }
 }
 
+/* ==========================================================
+   AY EVRESİ
+   Hicri takvim ay takvimi olduğu için ayın evresi, gösterdiğimiz hicri
+   tarihin fiziksel karşılığıdır. Kısaltılmış ELP serisi — dört ana terim
+   yarım günden iyi tutuyor (hicri gün ile karşılaştırıldı).
+
+   DİKKAT: Bu bir görülebilirlik (rüyet) hesabı DEĞİLDİR. Ay başlangıcını
+   Diyanet imkân-ı rüyet ölçütüyle ilan eder; uygulama ay başlattığını
+   iddia etmez, yalnızca ayın o anki durumunu bildirir.
+   ========================================================== */
+const AY_DEVRI = 29.530588853;
+
+function ayDurumu(tarih){
+  const jd = julian(tarih.getFullYear(), tarih.getMonth()+1, tarih.getDate()) + 0.5;
+  const T = jd - 2451545.0;
+
+  const gunesOrt = fixA(357.529 + 0.98560028*T);
+  const gunesBoylam = fixA(280.459 + 0.98564736*T) + 1.915*sin(gunesOrt) + 0.020*sin(2*gunesOrt);
+
+  const L  = fixA(218.316 + 13.176396*T);   // ay ortalama boylamı
+  const M  = fixA(134.963 + 13.064993*T);   // ay ortalama anomalisi
+  const Dl = fixA(297.850 + 12.190749*T);   // elongasyon
+  const ayBoylam = L + 6.289*sin(M) - 1.274*sin(2*Dl - M) + 0.658*sin(2*Dl) - 0.186*sin(gunesOrt);
+
+  const faz = fixA(ayBoylam - gunesBoylam);       // 0 yeni ay, 180 dolunay
+  return {
+    faz,
+    aydinlik: (1 - cos(faz)) / 2,                 // 0..1
+    yas: faz / 360 * AY_DEVRI,                    // gün
+    buyuyor: faz < 180,
+    yeniAyaKalan: (360 - faz) / 360 * AY_DEVRI
+  };
+}
+
+function ayAdi(faz){
+  if(faz < 12 || faz >= 348) return 'Yeni ay';
+  if(faz < 78)  return 'Hilal';
+  if(faz < 102) return 'İlk dördün';
+  if(faz < 168) return 'Şişkin ay';
+  if(faz < 192) return 'Dolunay';
+  if(faz < 258) return 'Solan şişkin ay';
+  if(faz < 282) return 'Son dördün';
+  return 'Solan hilal';
+}
+
+/**
+ * Ayı verilen evrede çizer. Terminatör bir yarım daire + bir yarım elips;
+ * elipsin genişliği aydınlanma oranından gelir, böylece hilalden dolunaya
+ * kadar tek formülle doğru şekil çıkar.
+ */
+function ayYolu(cx, cy, r, faz){
+  const k = cos(faz);                       // −1 dolunay, +1 yeni ay
+  const rx = Math.abs(k) * r;
+  const sagAydinlik = faz < 180;            // büyürken sağ taraf aydınlık
+  const dis = sagAydinlik ? 1 : 0;
+  const ic  = (k > 0) === sagAydinlik ? 0 : 1;
+  return `M ${cx} ${cy-r} A ${r} ${r} 0 0 ${dis} ${cx} ${cy+r} ` +
+         `A ${rx.toFixed(2)} ${r} 0 0 ${ic} ${cx} ${cy-r} Z`;
+}
+
 /* ---------- kıble ---------- */
 function kibleAcisi(lat,lng){
   const dl = KABE.lng - lng;
@@ -1031,6 +1091,24 @@ function yildizlariCiz(){
   for(let i=0;i<46;i++){
     const x=Math.random()*100, y=Math.random()*70, r=Math.random()*1.1+.4;
     s += `<circle cx="${x}%" cy="${y}%" r="${r}" fill="#F2EEE2" opacity="${(Math.random()*.6+.25).toFixed(2)}"/>`;
+  }
+  // Gerçek evresinde ay — gökyüzü şeridi gibi bu da bilgi, dekorasyon değil.
+  const ay = ayDurumu(new Date());
+  if(ay.aydinlik > 0.02){
+    const r = 15;
+    s += `<g transform="translate(0,0)" opacity=".92">
+      <circle cx="86%" cy="26" r="${r + 7}" fill="#F2EEE2" opacity=".05"/>
+      <g id="ayGrup"></g>
+    </g>`;
+    svg.innerHTML = s;
+    // Yüzde konumu piksele çevirmek için ölçüyü çizimden sonra al
+    const genislik = svg.clientWidth || 380;
+    const cx = genislik * 0.86;
+    $('#ayGrup').innerHTML =
+      `<circle cx="${cx}" cy="26" r="${r}" fill="#F2EEE2" opacity=".10"/>` +
+      `<path d="${ayYolu(cx, 26, r, ay.faz)}" fill="#F2EEE2" opacity=".82"/>` +
+      `<title>${ayAdi(ay.faz)} · %${Math.round(ay.aydinlik*100)}</title>`;
+    return;
   }
   svg.innerHTML = s;
 }
@@ -1380,6 +1458,37 @@ function diniGunListesi(){
   return liste;
 }
 
+/** Hicri ayın neresindeyiz — ayın evresiyle birlikte. */
+function ayDurumSatiri(){
+  let h;
+  try{ h = hicriParcala(new Date()); }catch(e){ return ''; }
+  const ay = ayDurumu(new Date());
+  const HICRI_AYLAR = ['Muharrem','Safer','Rebiülevvel','Rebiülahir','Cemaziyelevvel',
+    'Cemaziyelahir','Recep','Şaban','Ramazan','Şevval','Zilkade','Zilhicce'];
+  const adi = HICRI_AYLAR[(h.month-1) % 12] || '';
+  const kalan = Math.round(ay.yeniAyaKalan);
+
+  const sonGun = h.day >= 29;
+  return `
+    <div class="kerahat-satir ${sonGun ? 'simdi' : ''}">
+      <div class="kerahat-ikon" style="color:var(--kagit);opacity:.9">
+        <svg viewBox="0 0 32 32" width="22" height="22" aria-hidden="true">
+          <circle cx="16" cy="16" r="13" fill="#F2EEE2" opacity=".12"/>
+          <path d="${ayYolu(16,16,13,ay.faz)}" fill="#F2EEE2" opacity=".85"/>
+        </svg>
+      </div>
+      <div class="kerahat-ad">${adi} ${h.day} · ${ayAdi(ay.faz)}
+        <em>Ay %${Math.round(ay.aydinlik*100)} aydınlık · ${ay.yas.toFixed(0)} günlük${
+          kalan > 0 ? ` · yeni ay ${kalan} gün sonra` : ''}</em></div>
+    </div>
+    ${sonGun ? `<div class="kerahat-satir">
+      <div class="kerahat-ikon">☾</div>
+      <div class="kerahat-ad">Hicri ayın son günlerindeyiz
+        <em>Ayın 29'da mı biteceği yoksa 30'a mı uzayacağı Diyanet'in ilanıyla belli olur —
+        uygulama bunu ilan etmez, gösterdiği takvim hesaba dayalıdır.</em></div>
+    </div>` : ''}`;
+}
+
 function diniGunleriCiz(){
   const liste = diniGunListesi();
   if(!liste.length){
@@ -1387,7 +1496,7 @@ function diniGunleriCiz(){
     return;
   }
   const bugun = gunBasi(new Date());
-  $('#diniKart').innerHTML = liste.map(x=>{
+  $('#diniKart').innerHTML = ayDurumSatiri() + liste.map(x=>{
     const fark = Math.round((x.tarih - bugun)/86400000);
     const kalan = fark === 0 ? ['Bugün',''] : fark === 1 ? ['Yarın',''] : [String(fark),'gün'];
     return `<div class="dini-satir ${fark <= 7 ? 'yakin':''}">
