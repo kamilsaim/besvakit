@@ -3,7 +3,7 @@
    Vakitler zaten cihazda hesaplandığı için kabuk açıldığında uygulama tam çalışır.
    Harita karoları ve Overpass sorguları bilinçli olarak önbelleğe alınmaz;
    onlar zaten isteğe bağlı ve büyük. */
-const SURUM = 'besvakit-v3';
+const SURUM = 'besvakit-v4';
 const KABUK = ['./', './index.html', './logos.png'];
 
 self.addEventListener('install', e=>{

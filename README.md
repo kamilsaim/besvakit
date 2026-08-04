@@ -8,7 +8,7 @@
 
 [**→ Uygulamayı aç**](https://kamilsaim.github.io/besvakit/)
 
-![sürüm](https://img.shields.io/badge/sürüm-0.8.1-22B2AE?style=flat-square)
+![sürüm](https://img.shields.io/badge/sürüm-0.8.2-22B2AE?style=flat-square)
 ![bağımlılık](https://img.shields.io/badge/bağımlılık-yok-D8A93C?style=flat-square)
 ![tek dosya](https://img.shields.io/badge/tek%20dosya-HTML-080C18?style=flat-square)
 
@@ -96,6 +96,11 @@ kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasın�
   cami araması (Overpass API), yazı tipleri (Google Fonts). Üçü de kapalıyken uygulama çalışmaya devam eder.
 
 ## Sürüm geçmişi
+
+### 0.8.2
+- Yeni logo. Kaynak beyaz zeminliydi; köşelerden taşma dolgusuyla şeffaflaştırıldı
+  (düz eşik kemerin iç boşluğunu da açardı), kırpılıp kareye oturtuldu.
+  Uygulama simgeleri, açılış ekranı ve favicon yeniden üretildi.
 
 ### 0.8.1
 - Temkin ayarı kaldırıldı — resmi takvim geldiğinden beri yalnızca yedek hesapta
