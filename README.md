@@ -8,7 +8,7 @@
 
 [**→ Uygulamayı aç**](https://kamilsaim.github.io/besvakit/)
 
-![sürüm](https://img.shields.io/badge/sürüm-0.8.2-22B2AE?style=flat-square)
+![sürüm](https://img.shields.io/badge/sürüm-0.8.3-22B2AE?style=flat-square)
 ![bağımlılık](https://img.shields.io/badge/bağımlılık-yok-D8A93C?style=flat-square)
 ![tek dosya](https://img.shields.io/badge/tek%20dosya-HTML-080C18?style=flat-square)
 
@@ -96,6 +96,13 @@ kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasın�
   cami araması (Overpass API), yazı tipleri (Google Fonts). Üçü de kapalıyken uygulama çalışmaya devam eder.
 
 ## Sürüm geçmişi
+
+### 0.8.3
+- **Diyanet takvimi artık varsayılan olarak etkin.** Önceden ilçe seçilmediği için
+  herkes yedek astronomik hesabı görüyordu; bu da Diyanet'e göre günlerin üçte ikisinde
+  ±1 dakika sapıyordu. Varsayılan ilçe, uygulamanın varsayılan şehriyle (Kayseri) hizalandı.
+- Konum bulununca ilçe kendiliğinden eşleşiyor — ayarlara girmeye gerek yok
+- Yedek hesap devredeyse artık bu görünür yazıyor; sessizce düşmüyor
 
 ### 0.8.2
 - Yeni logo. Kaynak beyaz zeminliydi; köşelerden taşma dolgusuyla şeffaflaştırıldı

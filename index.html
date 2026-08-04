@@ -406,6 +406,7 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
 
     <div class="baslik">Bugün</div>
     <div class="kart" id="vakitListe"></div>
+    <p class="bilgi" id="kaynakNotu" style="display:none"></p>
 
     <div id="cumaKutu" style="display:none">
       <div class="baslik">Cuma</div>
@@ -711,7 +712,7 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
    Vakitler cihazda hesaplanır; hiçbir sunucuya vakit sorulmaz.
    ========================================================== */
 const APP = 'Beş Vakit';
-const SURUM = '0.8.2';
+const SURUM = '0.8.3';
 const LOGO = 'logos.png';
 const KABE = { lat: 21.4224779, lng: 39.8261722 };
 const VAKITLER = [
@@ -766,7 +767,7 @@ const VARSAYILAN = {
   bildirim:{ imsak:true, gunes:false, ogle:true, ikindi:true, aksam:true, yatsi:true },
   bildirimAcik:false, ses:true, titresim:true, gokyuzu:true, uyanik:false,
   onceden:0, tema:'koyu', kerahat:true, ramazanMod:'oto',
-  resmi:true, ilce:null, resmiIl:null,
+  resmi:true, ilce:'9620', resmiIl:'546',   // varsayılan şehir Kayseri ile tutarlı
   cuma:true, cumaSaat:'11:30',
   imsakiyeAcik:true, diniAcik:false, istatistikAcik:false, kazaAcik:false,
   haritaAcik:false, camiAcik:false, zikirIstAcik:true,
@@ -1166,6 +1167,19 @@ function vakitListesiCiz(){
     toast(VAKITLER.find(v=>v.k===k).ad + (A.bildirim[k]?' bildirimi açık':' bildirimi kapalı'));
   });
 }
+/** Hangi kaynağın kullanıldığını görünür kılar — yanlış vakit izlenimi oluşmasın. */
+function kaynakNotuYaz(){
+  const el = $('#kaynakNotu');
+  if(!el) return;
+  if(resmiKullaniliyorMu()){ el.style.display = 'none'; return; }
+  el.style.display = '';
+  el.innerHTML =
+    !A.resmi ? 'Diyanet takvimi kapalı — vakitler cihazda hesaplanıyor (±1 dk sapabilir).'
+    : !A.ilce ? 'Vakitler cihazda hesaplanıyor (±1 dk sapabilir). Birebir Diyanet takvimi için ' +
+                '<b>Ayarlar → Diyanet takvimi</b>’nden ilçeni seç.'
+    : 'Bu tarih Diyanet takviminin kapsamı dışında; vakitler cihazda hesaplanıyor (±1 dk sapabilir).';
+}
+
 function aktifVakit(dk){
   let son = null;
   VAKITLER.forEach(v=>{ if(dk >= bugunVakit[v.k]) son = v.k; });
@@ -1693,6 +1707,7 @@ function gunuTazele(){
   $('#konumAd').textContent = A.sehir;
   $('#tarih').innerHTML = `${bugun.getDate()} ${AYLAR[bugun.getMonth()]} ${GUNLER[bugun.getDay()]}<br>${hicriYaz(bugun)}`;
   vakitListesiCiz();
+  kaynakNotuYaz();
   if(A.imsakiyeAcik) imsakiyeCiz();
   if(A.diniAcik) diniGunleriCiz();
   kerahatCiz();
@@ -2269,6 +2284,37 @@ async function yerleriKur(){
   };
   resmiDurumYaz();
 }
+/**
+ * GPS ile bulunan şehri Diyanet ilçesine bağlar (il merkezi).
+ * Böylece kullanıcı ayarlara hiç girmeden resmi takvimi görür.
+ * Yalnızca kullanıcı elle bir ilçe seçmemişse ya da şehir değiştiyse çalışır.
+ */
+async function ilceEslestir(sehirAdi){
+  if(!A.resmi || !sehirAdi) return;
+  if(!YERLER){
+    try{
+      const r = await fetch('vakitler/yerler.json', { cache:'no-cache' });
+      YERLER = r.ok ? await r.json() : null;
+    }catch(e){ return; }
+  }
+  if(!YERLER) return;
+  const tr = YERLER.find(u => String(u.id) === '2') || YERLER[0];
+  const sadelestir = s => s.replace(/İ/g,'I').replace(/ı/g,'i').replace(/Ş/g,'S')
+    .replace(/Ğ/g,'G').replace(/Ü/g,'U').replace(/Ö/g,'O').replace(/Ç/g,'C').toUpperCase();
+  const hedef = sadelestir(sehirAdi);
+  const il = (tr.sehirler || []).find(s => sadelestir(s.ad) === hedef);
+  if(!il) return;
+  const merkez = (il.ilceler || []).find(i => sadelestir(i.ad) === hedef) || (il.ilceler || [])[0];
+  if(!merkez || String(merkez.id) === String(A.ilce)) return;
+
+  A.resmiIl = String(il.id); A.ilce = String(merkez.id); kaydet();
+  RESMI = null;
+  await resmiYukle();
+  gunuTazele();
+  if($('#resmiIl')) yerleriKur();
+  if(resmiKullaniliyorMu()) toast(il.ad + ' Diyanet takvimi yüklendi');
+}
+
 function resmiDurumYaz(){
   const el = $('#resmiDurum');
   if(!el) return;
@@ -2318,6 +2364,7 @@ function konumBul(){
     const y = SEHIRLER.slice(1).map(s=>[s[0], mesafeKm(A.lat,A.lng,s[1],s[2])]).sort((a,b)=>a[1]-b[1])[0];
     if(y && y[1] < 60) A.sehir = y[0];
     kaydet(); alanlariDoldur(); gunuTazele(); toast(A.sehir + ' · konum güncellendi');
+    ilceEslestir(A.sehir);
   }, err=>{
     toast('Konum alınamadı — şehri elle seçebilirsin');
   }, { enableHighAccuracy:true, timeout:12000, maximumAge:60000 });
