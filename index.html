@@ -1096,17 +1096,21 @@ function yildizlariCiz(){
   const ay = ayDurumu(new Date());
   if(ay.aydinlik > 0.02){
     const r = 15;
-    s += `<g transform="translate(0,0)" opacity=".92">
-      <circle cx="86%" cy="26" r="${r + 7}" fill="#F2EEE2" opacity=".05"/>
-      <g id="ayGrup"></g>
-    </g>`;
+    s += `<g opacity=".92"><g id="ayGrup"></g></g>`;
     svg.innerHTML = s;
-    // Yüzde konumu piksele çevirmek için ölçüyü çizimden sonra al
+    // Konumu çizimden sonra ölç: yüzde/px karışımı ve safe-area burada çözülüyor.
     const genislik = svg.clientWidth || 380;
-    const cx = genislik * 0.86;
+    const cx = genislik - (r + 10) - 20;   // sağ kenardan 20px iç boşluk
+    // Hicri tarihin hemen altına in; durum çubuğunun arkasına kaçmasın.
+    const svgUst = svg.getBoundingClientRect().top;
+    const tarih  = $('#tarih').getBoundingClientRect();
+    // Tarih henüz yazılmadıysa (ilk çizim) üst iç boşluk + iki satır tahmini
+    const ustBosluk = parseFloat(getComputedStyle($('#gokyuzu')).paddingTop) || 18;
+    const cy = (tarih.height ? tarih.bottom - svgUst : ustBosluk + 30) + r + 12;
     $('#ayGrup').innerHTML =
-      `<circle cx="${cx}" cy="26" r="${r}" fill="#F2EEE2" opacity=".10"/>` +
-      `<path d="${ayYolu(cx, 26, r, ay.faz)}" fill="#F2EEE2" opacity=".82"/>` +
+      `<circle cx="${cx}" cy="${cy}" r="${r + 7}" fill="#F2EEE2" opacity=".05"/>` +
+      `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#F2EEE2" opacity=".10"/>` +
+      `<path d="${ayYolu(cx, cy, r, ay.faz)}" fill="#F2EEE2" opacity=".82"/>` +
       `<title>${ayAdi(ay.faz)} · %${Math.round(ay.aydinlik*100)}</title>`;
     return;
   }
