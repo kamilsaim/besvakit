@@ -1098,23 +1098,33 @@ function yildizlariCiz(){
     const r = 15;
     s += `<g opacity=".92"><g id="ayGrup"></g></g>`;
     svg.innerHTML = s;
-    // Konumu çizimden sonra ölç: yüzde/px karışımı ve safe-area burada çözülüyor.
-    const genislik = svg.clientWidth || 380;
-    const cx = genislik - (r + 10) - 20;   // sağ kenardan 20px iç boşluk
-    // Hicri tarihin hemen altına in; durum çubuğunun arkasına kaçmasın.
-    const svgUst = svg.getBoundingClientRect().top;
-    const tarih  = $('#tarih').getBoundingClientRect();
-    // Tarih henüz yazılmadıysa (ilk çizim) üst iç boşluk + iki satır tahmini
-    const ustBosluk = parseFloat(getComputedStyle($('#gokyuzu')).paddingTop) || 18;
-    const cy = (tarih.height ? tarih.bottom - svgUst : ustBosluk + 30) + r + 12;
-    $('#ayGrup').innerHTML =
-      `<circle cx="${cx}" cy="${cy}" r="${r + 7}" fill="#F2EEE2" opacity=".05"/>` +
-      `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#F2EEE2" opacity=".10"/>` +
-      `<path d="${ayYolu(cx, cy, r, ay.faz)}" fill="#F2EEE2" opacity=".82"/>` +
-      `<title>${ayAdi(ay.faz)} · %${Math.round(ay.aydinlik*100)}</title>`;
+    ayiKonumla();
     return;
   }
   svg.innerHTML = s;
+}
+
+/* Ayı hicri tarihin altına yerleştir.
+   Ayrı fonksiyon: tarih yazısı açılışta henüz boş olduğu için gunuTazele()
+   sonrasında ve pencere yeniden boyutlanınca tekrar ölçmek gerekiyor. */
+function ayiKonumla(){
+  const grup = $('#ayGrup'); if(!grup) return;
+  const ay = ayDurumu(new Date());
+  const svg = $('#yildizlar'), r = 15;
+  // Konumu çizimden sonra ölç: yüzde/px karışımı ve safe-area burada çözülüyor.
+  const genislik = svg.clientWidth || 380;
+  const cx = genislik - (r + 10) - 20;   // sağ kenardan 20px iç boşluk
+  // Hicri tarihin hemen altına in; durum çubuğunun arkasına kaçmasın.
+  const svgUst = svg.getBoundingClientRect().top;
+  const tarih  = $('#tarih').getBoundingClientRect();
+  // Tarih henüz yazılmadıysa (ilk çizim) üst iç boşluk + iki satır tahmini
+  const ustBosluk = parseFloat(getComputedStyle($('#gokyuzu')).paddingTop) || 18;
+  const cy = (tarih.height ? tarih.bottom - svgUst : ustBosluk + 30) + r + 12;
+  grup.innerHTML =
+    `<circle cx="${cx}" cy="${cy}" r="${r + 7}" fill="#F2EEE2" opacity=".05"/>` +
+    `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#F2EEE2" opacity=".10"/>` +
+    `<path d="${ayYolu(cx, cy, r, ay.faz)}" fill="#F2EEE2" opacity=".82"/>` +
+    `<title>${ayAdi(ay.faz)} · %${Math.round(ay.aydinlik*100)}</title>`;
 }
 
 /* ==========================================================
@@ -1819,6 +1829,7 @@ function gunuTazele(){
   bugunVakit = vakitAl(bugun);
   $('#konumAd').textContent = A.sehir;
   $('#tarih').innerHTML = `${bugun.getDate()} ${AYLAR[bugun.getMonth()]} ${GUNLER[bugun.getDay()]}<br>${hicriYaz(bugun)}`;
+  ayiKonumla();                         // tarih yazıldı, ay artık altına hizalanabilir
   vakitListesiCiz();
   kaynakNotuYaz();
   if(A.imsakiyeAcik) imsakiyeCiz();
@@ -2511,6 +2522,7 @@ function baslat(){
   manifestKur();
   temaUygula();
   yildizlariCiz();
+  addEventListener('resize', ayiKonumla);   // ekran dönünce sağ kenar boşluğu kaysın
   ayarlariKur();
   // Resmi takvim önbellekten anında, ağdan gelince tazelenir.
   resmiYukle().then(()=>{ gunuTazele(); resmiDurumYaz(); });
