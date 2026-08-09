@@ -275,7 +275,9 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
 .tesbih-zikir b{display:block;font-size:17px;font-weight:700;letter-spacing:.01em}
 .tesbih-zikir em{display:block;font-style:normal;font-size:12.5px;color:var(--hayalet);margin-top:3px}
 .zikir-sec-sar{display:flex;align-items:center;gap:8px}
-.zikir-sec{display:flex;gap:8px;overflow-x:auto;padding:2px 0 6px;-webkit-overflow-scrolling:touch;flex:1}
+.zikir-sec{display:flex;gap:8px;overflow-x:auto;padding:2px 0 6px;-webkit-overflow-scrolling:touch;flex:1;
+  scrollbar-width:none;-ms-overflow-style:none}
+.zikir-sec::-webkit-scrollbar{display:none}
 .zikir-sec button{flex:none;padding:8px 14px;border-radius:20px;background:var(--kat);
   border:1px solid var(--cizgi);font-size:12.5px;font-weight:600;color:var(--sis);white-space:nowrap}
 .zikir-sec button.acik{background:var(--cini-koyu);border-color:transparent;color:var(--kagit)}
