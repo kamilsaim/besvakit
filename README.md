@@ -8,7 +8,7 @@
 
 [**→ Uygulamayı aç**](https://kamilsaim.github.io/besvakit/)
 
-![sürüm](https://img.shields.io/badge/sürüm-0.9.0-22B2AE?style=flat-square)
+![sürüm](https://img.shields.io/badge/sürüm-0.10.0-22B2AE?style=flat-square)
 ![bağımlılık](https://img.shields.io/badge/bağımlılık-yok-D8A93C?style=flat-square)
 ![tek dosya](https://img.shields.io/badge/tek%20dosya-HTML-080C18?style=flat-square)
 
@@ -27,9 +27,9 @@ olmadan da, kaynak kapansa da çalışır. Anahtar yok, hesap yok, veri dışar�
 |---|---|
 | **Vakitler** | Altı vakit, canlı geri sayım, gün şeridi, aylık imsakiye, kerahat vakitleri |
 | **Ramazan** | İftar ve sahur geri sayımı, gün sayacı, oruç takibi |
-| **Dini günler** | Kandiller, bayramlar, üç aylar, ay evresi — hicri takvimden otomatik |
+| **Dini günler** | Kandiller, bayramlar, üç aylar, ay evresi + doğuş/batış saatleri — hicri takvimden otomatik |
 | **Kıble** | Sekmeye girince başlayan pusula, kalibrasyon, uydu haritasında kıble hattı |
-| **İbadet** | Namaz takibi, seri gün, aylık istatistik, kaza sayacı, zikir başına sayaç |
+| **İbadet** | Namaz takibi, seri gün, aylık istatistik, kaza sayacı, zikirmatik (tesbih seti, özel zikir), Esmâ-ül Hüsnâ, Nasûh Tövbesi takibi |
 | **Cuma** | Cuma hatırlatması, Kehf Suresi uyarısı, salâvat sayacı |
 | **Camiler** | 3 km çevrendeki camiler, yön ve yürüme mesafesiyle |
 | **Bildirim** | Vakit girince ve istersen X dakika öncesinde uyarı, ses, titreşim |
@@ -96,6 +96,23 @@ kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasın�
   cami araması (Overpass API), yazı tipleri (Google Fonts). Üçü de kapalıyken uygulama çalışmaya devam eder.
 
 ## Sürüm geçmişi
+
+### 0.10.0
+- **Ay doğuş/batış saatleri.** Dini günler kartındaki ay durumu satırına eklendi;
+  ayın günlük ~50 dk gecikmesi yüzünden bazı günlerde doğuş ya da batış hiç
+  olmayabilir, o alan sessizce atlanır.
+- **Zikirmatik'e namaz sonrası tesbih seti.** Sübhânallâh 33 · Elhamdülillâh 33 ·
+  Allâhüekber 34 arasında hedefe ulaşınca otomatik geçiyor, tamamlanınca başa dönüyor.
+- **Kullanıcı kendi zikrini ekleyebiliyor** — ad ve hedef sayı ile; seçiliyken
+  tekrar dokununca silinir.
+- **Esmâ-ül Hüsnâ.** İbadet sekmesine, 99 ismi ve kısa anlamlarını listeleyen
+  katlanır bir kart eklendi.
+- **Nasûh Tövbesi takibi.** Tam metin + günlük okuma sayacı (kaç kez okundu),
+  kullanıcının belirlediği hedef gün sayısına göre ilerleme ve geri sayım,
+  başlangıç/bitiş tarihi, gün atlanırsa uyarı.
+- Gökyüzündeki ay artık hicri tarih yazısının sağ kenarıyla tam hizalı — SVG'ye
+  eksik olan `width`/`height` eklenince (önceden tarayıcı varsayılan 300×150px
+  kutuya sığdırıyordu) hem yıldızlar hem ay doğru genişlikte konumlanıyor.
 
 ### 0.9.0
 - **Ay durumu.** Gece gökyüzünde ayın o geceki gerçek evresi çizilir; dini günler
@@ -212,6 +229,7 @@ kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasın�
 - [x] Vakitleri Diyanet takvimiyle birebir hizalayan temkin tablosu
 - [x] Güneşe göre kıble — pusulasız yöntem
 - [ ] Ayarları ve kayıtları dışa aktar / geri yükle
+- [ ] Cami temalı yeni logo — büyük boy taslak hazır, 22px favicon için sade varyant bekliyor
 
 ## Lisans
 
