@@ -244,6 +244,11 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
 .takip-ad em{display:block;font-style:normal;font-size:11.5px;color:var(--hayalet);font-weight:500;margin-top:1px}
 .takip-satir.kilindi .takip-ad{color:var(--cini)}
 
+.tovbe-metin{padding:16px;font-size:13.5px;line-height:1.75;color:var(--sis);
+  border-top:1px solid var(--cizgi)}
+.tovbe-metin p{margin:0 0 14px}
+.tovbe-metin p:last-child{margin-bottom:0}
+
 .izgara{display:grid;grid-template-columns:repeat(15,1fr);gap:4px;padding:16px}
 .izgara i{aspect-ratio:1;border-radius:3px;background:var(--kat2);display:block}
 .izgara i[data-n="1"]{background:rgba(34,178,174,.25)}
@@ -523,6 +528,11 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
     </button>
     <div class="kart katlanir gizli" id="kazaKart"></div>
 
+    <button class="baslik" id="tovbeBaslik" aria-expanded="false" aria-controls="tovbeKart">
+      Nasûh Tövbesi <span class="ok" aria-hidden="true">⌃</span>
+    </button>
+    <div class="kart katlanir gizli" id="tovbeKart"></div>
+
     <div class="baslik">Zikirmatik</div>
     <button class="tesbih-set-btn" id="setModuBtn">Namaz sonrası tesbih seti
       <em>Sübhânallâh 33 · Elhamdülillâh 33 · Allâhüekber 34 — hedefe ulaşınca otomatik geçer</em></button>
@@ -800,7 +810,7 @@ const VARSAYILAN = {
   resmi:true, ilce:'9620', resmiIl:'546',   // varsayılan şehir Kayseri ile tutarlı
   cuma:true, cumaSaat:'11:30',
   imsakiyeAcik:true, diniAcik:false, istatistikAcik:false, kazaAcik:false,
-  haritaAcik:false, camiAcik:false, zikirIstAcik:true, esmaAcik:false,
+  haritaAcik:false, camiAcik:false, zikirIstAcik:true, esmaAcik:false, tovbeAcik:false,
   sapma:0
 };
 let A = yukle();
@@ -824,6 +834,9 @@ function depoYaz(anahtar, veri){ try{ localStorage.setItem(anahtar, JSON.stringi
 let TAKIP = depoOku('besvakit_takip', { gunler:{}, kaza:{}, oruc:{} });
 /* gecmis: { 'YYYY-MM-DD': { 'Sübhânallâh': 33, ... } } — zikir başına ayrı sayım */
 let ZIKIR = depoOku('besvakit_zikir', { sayac:0, secili:0, gunluk:{}, gecmis:{}, ozel:[], setModu:false });
+/* gunler: { 'YYYY-MM-DD': [true,false,false] } — o gün yapılan okumalar.
+   hedefGun ve gunlukSayi kullanıcı tarafından değiştirilebilir. */
+let TOVBE = depoOku('besvakit_tovbe', { gunler:{}, hedefGun:21, gunlukSayi:3, baslangic:null });
 
 /* ---------- açı yardımcıları ---------- */
 const D = Math.PI/180;
@@ -1865,6 +1878,163 @@ function kazaCiz(){
   });
 }
 
+/* ---------- Nasûh Tövbesi ---------- */
+const TOVBE_METIN = `E'ûzu billâhi mine'ş-şeytâni'r-racîm. Bismillahirrahmanirrahîm. Elhamdu lillahi Rabb'il-âlemîn. Allahümme salli ve sellim ve bârik 'alâ seyyidinâ Muhammedin ve 'alâ âlihi 'adede in'âmillahi ve ifdalih.
+
+Elif Lâm Mîm Kâf Ha Yâ Ayn Sâd
+
+Yâ eyyuhelleżîne âmenû tûbû ilallâhi tevbeten nasûhâ, 'asâ rabbukum en yukeffira 'ankum seyyiâtikum ve yudhilekum cennâtin tecrî min tahtihe'l-enhâru yevme lâ yuhzillâhu-nnebiyye vellezîne âmenû me'ah, nûruhum yes'â beyne eydîhim ve bi-eymânihim yekûlûne rabbenâ etmim lenâ nûranâ vağfir lenâ, inneke 'alâ kulli şey-in kadîr. (Tahrim Sûresi, 8)
+
+Ey iman edenler! Samimi bir tövbe ile Allah'a dönün. Umulur ki Rabb'iniz sizin kötülüklerinizi örter. Peygamber'i ve onunla birlikte iman edenleri utandırmayacağı günde Allah sizi, içlerinden ırmaklar akan cennetlere sokar. Onların önlerinden ve sağlarından (amellerinin) nurları aydınlatıp gider de «Ey Rabb'imiz! Nurumuzu bizim için tamamla, bizi bağışla; çünkü Sen her şeye kadîrsin.» derler.
+
+Allah'ım! Senin rızan ve Resûlullah Efendi'mizin (s.a.v.) hoşnutluğu için tüm mahlukata (insler, cinsler, hayvanlar, bitkiler, yaratmış olduğun bilmediğim tüm kullara) Ümmet-i Muhammed'e (s.a.v.), Senin izin verdiğin tüm kullara, dünya ve ahirette, onların da üzerlerindeki tüm kul haklarımızı, Seni de şahit tutarak ebediyen helal ediyorum. Allah'ım! Göz, dil, el, kulak, ayak, mide vesair azalarımızla işlediğim açık ya da gizli şirklerden; maddi ve manevi isyanlardan; lanet, ah ve kınamalar nedeniyle bedenimi hasta eden şeytanlardan, şeytani varlıklardan, şeytanların organlarıma yerleşmesinden ve bana vesveseler vermesinden; hatalarımdan ve günahlarımdan temizlenmek adına Sana el açtım. Hz. Adem'e (a.s.) kadar gelmiş ve geçmiş tüm atalar, Ümmet-i Muhammed, arafta kalan kullar ve diğer tüm yaratılmışlar adına bedenen, kalben ve nefsen pişmanım.
+
+Evvelinden ahirine, tüm zerrelerimle ilmin adedince tövbe ettim ya Rabbi! Estağfirullâh. Estağfirullâh. Estağfirullâhe'l-'azîm el-kerîm, ellezî lâ ilâhe illâ hû, el-Hayye'l-Kayyûm ve etûbu ileyh (Azamet sahibi, kendisinden başka ilah olmayan, diri ve her şeyin sahibi olan Allah'tan af diler ve ona tövbe ederim).
+
+Allahu Teâlâ'ya eş koşmamak ve O'nu zikretmek, Allah'a ve Peygamber'ine inanmak; yetecek kadar rızık kazanmak, kişinin rızkına Allah'ın kefil olduğunu bilmek, helalinden kazanıp yemek içmek, içki içmemek, helalinden temiz elbise giymek; nimete şükretmek; abdest almak, beş vakit namaza devam etmek; oruç tutmak; zekâtı vermek ve fakirlere yardım etmek, Allah yolunda yemek yedirmek, haksız yere kimsenin malını yememek, buluğa ermemiş yetimin malını korumak; (gücü yetenler için) hacca gitmek; Allah'a tevekkül etmek, kanaat etmek, Allah'tan gelen kazaya razı olmak, Allah'tan gelen belaya sabretmek, günahlardan kaçıp Allah'a sığınmak, günahlardan tövbe etmek; kendini büyük görmemek; şeytanı düşman bilmek; ihlasla Allah'a ibadet etmek, delil ve hüccet ile amel etmek (dünyada yapacağı her işin İslam'a uygun olup olmadığını sorup araştırmak ve ona göre hareket etmek); Allah'ın sevdiğini sevip sevmediğinden uzak durmak; ana babaya iyilik etmek, akrabayı ziyaret etmek; iyiliği emretmek, kötülükten sakındırmak; emanete hıyanet etmemek; Müslüman idarecilere itaat etmek; ibret almak (her şeyi, canlı ve cansız âlemi, kâinatın düzenini ibret ve tefekkür gözüyle müşahede eden kimse Allah'ın varlığını, birliğini ve kudretini anlar.), tefekkür etmek; yalan konuşmamak, yalan yere yemin etmemek, dili kötü sözlerden korumak, alay etmemek, sözünde doğru olmak; harama bakmamak; kulağı yasak şeyleri dinlemekten alıkoymak; ölçü ve tartıyı doğru yapmak; ilim öğrenmek; Allah uğrunda cihat etmek; Allah'ın azabından korkmak, Allah'ın rahmetinden ümit kesmemek; nefsin arzularına uymamak, zinadan sakınmak, livatadan (cinsi sapıklıktan) sakınmak, hayız ve nifas hâllerinde zevceye yaklaşmamak, cünüplükten yıkanmak; bütün günahlardan kalbi arındırmak; ölüme hazırlanmak (ölümü düşünmek ve hesap gününde müflis olmamak için hayırlı ve yararlı işler yapmaya çalışmak, azgınlıktan vazgeçmek) Allah'ım! Elli dört farzın terki ile işlenmiş ve işlenecek olan tüm hata ve günahlardan temizlenmek maksadıyla bedenen, kalben ve nefsen pişmanım.
+
+Evvelinden ahirine, tüm zerrelerimle ilmin adedince tövbe ettim ya Rabbi! Estağfirullâh. Estağfirullâh. Estağfirullâhe'l-'azîm el-kerîm, ellezî lâ ilâhe illâ hû, el-Hayye'l-Kayyûm ve etûbu ileyh (Azamet sahibi, kendisinden başka ilah olmayan, diri ve her şeyin sahibi olan Allah'tan af diler ve ona tövbe ederim).
+
+Allah'ım! Senin sevginin önüne başka sevgiler koymaktan, ilmini ve kudretini aklım ve bilgilerimle sınırlamaktan, uluhiyetini ve hikmetlerini yok ve imkânsız saymaktan; gizli veya açık şirk koşmaktan, sahip olduklarımı (eş, evlat, mal vb.) put edinmekten, Sen'den değil de kullarından korkmaktan; başıma gelen bela ve tersliklerde haşa Seni sorumlu tutmaktan; itikadî ve amelî münafıklıktan; anne babama lanet ve beddua etmekten, onların ahlarını almaktan, helallik ve razılık almamaktan, evlat hasreti çektirmekten, "Anne babasını razı eden, Allah'ı razı etmiştir." hadisini dikkate almamaktan, sılayırahimi terk etmekten; hayatıma lanet okumaktan; Sana ve kullarına verdiğim söz ve yeminleri tutmamaktan; hakkım olmayana el uzatmaktan; tüm mahlukata zarar vermekten, zarar verdiğim kullar adına sadaka vermemekten; ilgilenmekle yükümlü olduğum öksüz, yetim, yoksul, dul, komşu, yaşlı, engelli ve Ümmet-i Muhammed'in (s.a.v.) ihtiyaçlarını görmezden gelmekten, imkânlarımı onlarla paylaşmamaktan; faizin her türlüsünü yemekten ve yedirilmesine vesile olmaktan, tefecilik yapmaktan; rızkıma haram karıştırmaktan; rızkı Sen'den değil de kullardan bilmekten, kula kulluk etmekten; Sana ve kefil olduğun rızkına güvenmemekten, rızık endişesine düşmekten; haram, mundar, adak ve besmelesiz yiyecekleri yemekten ve içmekten; işe besmelesiz başlamaktan; abdestsiz ve gusülsüz dolaşmaktan; Allah'ın azabından emin olmaktan, günahlarımı rahmetinden büyük tutup Sen'den ümidi kesmekten; "Çok günahım var, Allah beni affetmez." diyerek, haşa, suizanda bulunmaktan bedenen, kalben ve nefsen pişmanım.
+
+Evvelinden ahirine, tüm zerrelerimle ilmin adedince tövbe ettim ya Rabbi! Estağfirullâh. Estağfirullâh. Estağfirullâhe'l-'azîm el-kerîm, ellezî lâ ilâhe illâ hû, el-Hayye'l-Kayyûm ve etûbu ileyh (Azamet sahibi, kendisinden başka ilah olmayan, diri ve her şeyin sahibi olan Allah'tan af diler ve ona tövbe ederim).
+
+Allah'ım! Gıybet etmekten, gıybetin her türlüsünden, ölenin arkasından gıybet etmekten, gıybete zemin hazırlamaktan, gıybeti küçük ve önemsiz görmekten, yapılan gıybetten hoşnut olmaktan, gıybet edenleri ikaz etmemekten; vefasızlıktan, sevgisizlikten, merhametsizlikten; "Kınamayınız, kınadığınız şey başınıza gelmedikçe ölmezsiniz." hadisine uymamaktan; insanların ve diğer mahlukatın kabiliyetlerini, fıtratlarını ve özürlerini sorgulayıp eleştirerek onlarla alay etmekten, onları beğenmemekten ve kınamaktan; kalp kırmaktan, kötü sözler söylemekten, zikrettiğim günahları işlemekten, günah işleyenleri kınamaktan, kınamanın her türlüsünden; lanet, ah, kınama ve Allah'a havale etmelerden; bunları geri çekmeyerek kulların ve zürriyetlerinin başına gelecek her türlü sıkıntı, musibet ve hastalıklara sebep olmaktan; dil ve zerrelerimle işlenmiş ve işlenecek günahlardan; "Af ve afiyetle hayırlısını en kolayı ile kolaylaştır." diye istemeyerek başka imtihanlara sebep olmaktan bedenen, kalben ve nefsen pişmanım.
+
+Evvelinden ahirine, tüm zerrelerimle ilmin adedince tövbe ettim ya Rabbi! Estağfirullâh. Estağfirullâh. Estağfirullâhe'l-'azîm el-kerîm, ellezî lâ ilâhe illâ hû, el-Hayye'l-Kayyûm ve etûbu ileyh (Azamet sahibi, kendisinden başka ilah olmayan, diri ve her şeyin sahibi olan Allah'tan af diler ve ona tövbe ederim).
+
+Allah'ım! Ümmet-i Muhammed'in (s.a.v.) tüm azalarıyla işlediği veya işlenmesine sebep olduğu günahlardan; zinanın her türlüsünden, nikâhı önemsemeyerek zinayı meşru hâle getirmekten, nikâhı şer'an bozacak söz ve ifadelerde bulunmaktan, sonrasında nikâh tazelemeyerek aile boyu sıkıntılara sebep olmaktan, nikâh bozulduğu hâlde bilerek evliliğe devam ederek eşle haram ilişkiye girmekten; eşlerimizi kıskanmamaktan, evlilikteki mahremiyetleri başkalarına anlatmaktan; eşimizle yatağı ayırmaktan; besmelesiz ve gusülsüz münasebette bulunmaktan; gusülsüz, besmelesiz ve zinayla çocuklar dünyaya getirmekten, buna vesile olmaktan; rızık endişesiyle çocuk yapmamaktan; düşük ve kürtaj yaptırmaktan, bunlara vesile olmaktan, bunları tavsiye etmekten ve bundan pişman olmamaktan; sakat çocuklara ve bebek ölümlerine sebep olmaktan; şeytanın ve avanesinin sahiplenmesine bilerek bilmeyerek izin vererek zürriyet üretmesine sebep olmaktan; verdiğin çocukları beğenmemekten, terk etmekten ve aralarında ayrım yapmaktan; tesettürü kabul etmemekten, bedenimizi teşhir ederek başkalarının günaha girmesine sebep olmaktan; şeytana hizmet eden kimselere gitmekten; helalleşme ve tövbeyle çıkış yolu aramak yerine muskalara başvurmaktan; onları doğrulamak ve gelecekten haber verdiklerine inanmaktan; Ümmet-i Muhammed'in (s.a.v.) yaşayacağı her türlü sıkıntı, musibet ve hastalıklara sebep olmaktan; tövbe namazı kılmayarak, sadaka vermeyerek ve kefaretleri yapmayarak kendimin ve zürriyetimin sıkıntı çekmesine sebep olmaktan; soydan bize akan sirayetlerin etkileri için bedenen, kalben ve nefsen pişmanım.
+
+Evvelinden ahirine, tüm zerrelerimle ilmin adedince tövbe ettim ya Rabbi! Estağfirullâh. Estağfirullâh. Estağfirullâhe'l-'azîm el-kerîm, ellezî lâ ilâhe illâ hû, el-Hayye'l-Kayyûm ve etûbu ileyh (Azamet sahibi, kendisinden başka ilah olmayan, diri ve her şeyin sahibi olan Allah'tan af diler ve ona tövbe ederim).
+
+"Ey Rabb'imiz! "Sen benim Rabb'imsin. Sen'den başka ilah yoktur. Beni Sen yarattın. Ben Senin kulunum ve gücüm yettiğince Sana verdiğim sözü ve vaadimi yerine getirmeye çalışıyorum. İşlediklerimin şerrinden Sana sığınırım. Bana verdiğin nimetlerini itiraf ederim, günahlarımı da itiraf ederim. Beni bağışla çünkü günahları Sen'den başka bağışlayacak yoktur." Allah'ım! "Kulum, bu konular üzerine de tövbe et." dediğin, işlenmiş ya da işlenecek ne kadar günah varsa affet. Bizler eksiğiz, Sen dualarımızı kabul et ve bizleri tamamla ya Rabbi! İlk yaratıldığım andan bu ana kadar, işlediğim ve işlenmesine sebep olduğum tüm isyanlardan ve günahlardan bedenen, kalben ve nefsen pişmanım.
+
+Evvelinden ahirine, tüm zerrelerimle ilmin adedince tövbe ettim ya Rabbi! Estağfirullâh. Estağfirullâh. Estağfirullâhe'l-'azîm el-kerîm, ellezî lâ ilâhe illâ hû, el-Hayye'l-Kayyûm ve etûbu ileyh (Azamet sahibi, kendisinden başka ilah olmayan, diri ve her şeyin sahibi olan Allah'tan af diler ve ona tövbe ederim).
+
+Allah'ım! Yaptığım bu nasuh tövbesini ve duaları dergâh-ı izzetinde kabul eyle. Ümmet-i Muhammed'den (s.a.v.) hak alacağı olanlar adına da yaptım; hazinenden tamamlayarak günahlarımızı affet ve bizi tüm kullarınla helalleştir. Ya Rabbi! İzzet, Celal, Kibriya ve Azamet'in hürmetine, Sen'den Senin hürmetine istiyoruz. Bu duamı, bildiğim ve bilmediğim tüm esmâ ve ism-i âzamlar ile birleştir; en kıymetli kabul anlarında, zamanlarında ve mekânlarında dolaştır. Salih kullarının sâfiyane dualarına ilhak eyle. Efendimiz'in (s.a.v.) nurunun, zerrelerinin, kalbindeki ism-i âzamın ve yaptığı duaların hürmetine; Hz. Hatice, Hz. Aişe, Hz. Fatıma, Hz. Ali, Hz. Hasan, Hz. Hüseyin, Hz. Hamza ve ehlibeytin hürmetine; Kelime-i Tevhid, Besmele-i Şerif, Kelime-i Şehadet ve Salavat-ı Şerife hürmetine; Kur'ân-ı Azîmü'ş-Şân'ın, surelerin, ayetlerin, kelimelerin, hurûfu mukattaların ve harflerinin hürmetine; ya Rabbi, göklerin ve yerin orduları, mülkleri, hazineleri, nuru, mirası ve anahtarlarının hürmetine; "Kün fe yekûn.", "Gaybın anahtarları benim katımdadır, onu ancak ben bilirim.", "Rabb'inin ordularını ancak ben bilirim." ayetlerinin ve "İşleri yönetenlere" yemin ettiğin ayetlerin hürmetine; bedenen, kalben ve nefsen pişmanım, tövbe ediyorum. Bu zamana kadar yaptığım tüm dualarımı, taleplerimi, nasuh tövbelerimi en hayırlısının en kolayıyla kolaylaştırarak kabul eyle.
+
+Evvelinden ahirine, tüm zerrelerimle ilmin adedince tövbe ettim ya Rabbi! Estağfirullâh. Estağfirullâh. Estağfirullâhe'l-'azîm el-kerîm, ellezî lâ ilâhe illâ hû, el-Hayye'l-Kayyûm ve etûbu ileyh (Azamet sahibi, kendisinden başka ilah olmayan, diri ve her şeyin sahibi olan Allah'tan af diler ve ona tövbe ederim).
+
+Yevme lâ temliku nefsun linefsin şey'â, vel-emru yevme-izin lillâh. Ellezî yuvesvisu fî sudûri-nnâs. Min şerri'l-vesvâsi'l-hannâs. Fesebbih bi-hamdi rabbike vestağfirhu, innehû kâne tevvâbâ. Ve lem yekun lehû kufuven ehad. İnne şâni'eke huve'l-ebter.
+
+Allahümme âmin. Allah, Er-Rahmân, Er-Rahîm, El-Melik, El-Kuddûs, Es-Selâm, El-Mu'min, El-Muheymin, El-Azîz, El-Cebbâr, El-Mutekebbir, El-Hâlık, El-Bâri', El-Musavvir, El-Gaffâr, El-Kahhâr, El-Vehhab, Er-Rezzák, El-Fettâh, El-'Alîm, El-Kâbıd, El-Bâsıt, El-Hâfid, Er-Râfi', El-Mu'izz, El-Muzill, Es-Semî, El-Basîr, El-Hakem, El-'Adl, El-Latif, El-Habîr, El-Halim, El-'Azîm, El-Gafûr, Eş-Şekûr, El-'Aliyy, El-Kebîr, El-Hafiz, El-Mukît, El-Hasîb, El-Celîl, El-Kerîm, Er-Rakîb, El-Mucîb, El-Vâsi', El-Hakîm, El-Vedûd, El-Mecîd, El-Bâ'is, Eş-Şehîd, El-Hakk, El-Vekîl, El-Kavî, El-Metîn, El-Velî, El-Hamîd, El-Muhsî, El-Mubdi', El-Mu'îd, El-Muhyî, El-Mumît, El-Hayy, El-Kayyûm, El-Vâcid, El-Macîd, El-Vâhid, Es-Samed, El-Kadir, El-Muktedir, El-Mukaddim, El-Muahhir, El-Evvel, El-Ahir, Ez-Zahir, El-Bâtın, El-Vâlî, El-Mute'âlî, El-Berr, Et-Tevvâb, El-Muntakim, El-'Afuvv, Er-Raûf, Mâliku'l-Mulk, Zu'l-Celâli ve'l-İkrâm, El-Muksit, El-Câmi, El-Ganî, El-Muğnî, El-Mâni, Ed-Dârr, En-Nâfi', En-Nûr, El-Hadî, El-Bedî, El-Bâkî, El-Vâris, Er-Reşîd, Es-Sabûr.
+
+Allah'ım, bizlere merhamet et, Senin merhametine ve rızana muhtacız.
+
+Allahümme salli ve sellim ve bârik 'alâ seyyidinâ Muhammedin ve 'alâ âlihi 'adede in'âmillahi ve ifdâlih.
+
+Subhâne Rabbike Rabb'il-'izzeti 'ammâ yasifûn, ve selâmun 'alel murselîn, ve'l-hamdu li'llahi Rabb'il-'âlemîn.
+
+El-Fâtiha.`;
+
+/** O gün en az bir okuma yapılmış günlerin sayısı (hedef güne sayılır). */
+function tovbeGunSayisi(){
+  return Object.values(TOVBE.gunler).filter(g => g && g.some(Boolean)).length;
+}
+function tovbeTarihten(anahtar){
+  const [y,m,d] = anahtar.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+function tovbeTarihYaz(d){ return d.getDate() + ' ' + AYLAR[d.getMonth()]; }
+/** Başlangıçtan dünden geriye, o gün hiç okunmamışsa kaçırılan gün sayısı. */
+function tovbeKacirilanGun(){
+  if(!TOVBE.baslangic) return 0;
+  const dun = new Date(); dun.setHours(0,0,0,0); dun.setDate(dun.getDate()-1);
+  let kacirilan = 0;
+  for(let d = tovbeTarihten(TOVBE.baslangic); d <= dun; d.setDate(d.getDate()+1)){
+    const g = TOVBE.gunler[gunAnahtar(d)];
+    if(!g || !g.some(Boolean)) kacirilan++;
+  }
+  return kacirilan;
+}
+function tovbeAyarDegistir(alan, delta, min, max){
+  TOVBE[alan] = Math.max(min, Math.min(max, (TOVBE[alan]||0) + delta));
+  depoYaz('besvakit_tovbe', TOVBE);
+  tovbeCiz();
+}
+function tovbeCiz(){
+  const a = gunAnahtar(new Date());
+  const gunlukSayi = TOVBE.gunlukSayi || 1;
+  const hedefGun = TOVBE.hedefGun || 1;
+  const bugun = (TOVBE.gunler[a] || []).slice(0, gunlukSayi);
+  while(bugun.length < gunlukSayi) bugun.push(false);
+  const gun = tovbeGunSayisi();
+  const kalan = Math.max(0, hedefGun - gun);
+  const tamam = gun >= hedefGun;
+
+  let uyari = '';
+  if(TOVBE.baslangic && !tamam){
+    const kacirilan = tovbeKacirilanGun();
+    const bugunBos = bugun.filter(Boolean).length === 0;
+    if(kacirilan > 0) uyari = kacirilan + ' gün atlandı' + (bugunBos ? ' · bugün de henüz okumadınız' : '') + '.';
+    else if(bugunBos) uyari = 'Bugün henüz okumadınız.';
+  }
+
+  $('#tovbeKart').innerHTML = `
+    <div class="ozet" style="padding:16px 16px 0">
+      <div class="ozet-kutu"><b>${gun}</b><span>Gün</span></div>
+      <div class="ozet-kutu"><b>${kalan}</b><span>Kalan gün</span></div>
+      <div class="ozet-kutu"><b>${bugun.filter(Boolean).length}</b><span>Bugün</span></div>
+    </div>
+    <div class="cubuk" style="padding:12px 16px 4px">
+      <div class="cubuk-hat"><i style="width:${Math.min(100, gun/hedefGun*100)}%"></i></div>
+      <div class="cubuk-yuzde">${gun}/${hedefGun}</div>
+    </div>
+    ${TOVBE.baslangic ? (()=>{
+      const bas = tovbeTarihten(TOVBE.baslangic);
+      const bitis = tovbeTarihten(TOVBE.baslangic); bitis.setDate(bitis.getDate() + hedefGun - 1);
+      return `<p class="bilgi" style="padding:0 16px 4px">Başlangıç ${tovbeTarihYaz(bas)} · hedef bitiş ${tovbeTarihYaz(bitis)}</p>`;
+    })() : ''}
+    ${uyari ? `<div style="margin:0 16px 10px;padding:10px 14px;border-radius:10px;
+      background:rgba(216,169,60,.15);border:1px solid rgba(216,169,60,.35);color:var(--pirinc);font-size:12.5px">${uyari}</div>` : ''}
+    <p class="bilgi" style="padding:0 16px 6px">${
+      tamam
+        ? hedefGun + ' günlük tövbe programını tamamladın. İstersen sıfırlayıp yeniden başlayabilirsin.'
+        : 'Her gün en az bir kez okumak günü sayar.'
+    }</p>
+    <div class="alan"><label>Hedef gün</label>
+      <div class="duzeltme">
+        <button data-tovbe-ayar="hedefGun" data-y="-1">−</button>
+        <span>${hedefGun}</span>
+        <button data-tovbe-ayar="hedefGun" data-y="1">+</button>
+      </div></div>
+    <div class="alan"><label>Günlük okuma sayısı</label>
+      <div class="duzeltme">
+        <button data-tovbe-ayar="gunlukSayi" data-y="-1">−</button>
+        <span>${gunlukSayi}</span>
+        <button data-tovbe-ayar="gunlukSayi" data-y="1">+</button>
+      </div></div>
+    ${bugun.map((yapildi,i)=>`
+      <button class="takip-satir ${yapildi?'kilindi':''}" data-okuma="${i}">
+        <div class="kutucuk">✓</div>
+        <div class="takip-ad">${i+1}. okuma</div>
+      </button>`).join('')}
+    <div class="btn-satir" style="padding:12px 16px">
+      <button class="btn ikincil" id="tovbeSifirla">Programı sıfırla</button>
+    </div>
+    <div class="tovbe-metin">${TOVBE_METIN.split(/\n\n+/).map(p=>`<p>${p.trim()}</p>`).join('')}</div>`;
+
+  $$('[data-okuma]').forEach(b => b.onclick = ()=>{
+    const i = +b.dataset.okuma;
+    const g = (TOVBE.gunler[a] || []).slice(0, gunlukSayi);
+    while(g.length < gunlukSayi) g.push(false);
+    g[i] = !g[i];
+    TOVBE.gunler[a] = g;
+    if(!TOVBE.baslangic && g.some(Boolean)) TOVBE.baslangic = a;
+    depoYaz('besvakit_tovbe', TOVBE);
+    tovbeCiz();
+  });
+  $$('[data-tovbe-ayar]').forEach(b => b.onclick = ()=>
+    tovbeAyarDegistir(b.dataset.tovbeAyar, +b.dataset.y, 1, b.dataset.tovbeAyar === 'hedefGun' ? 365 : 20));
+  $('#tovbeSifirla').onclick = ()=>{
+    TOVBE.gunler = {};
+    TOVBE.baslangic = null;
+    depoYaz('besvakit_tovbe', TOVBE);
+    toast('Tövbe programı sıfırlandı');
+    tovbeCiz();
+  };
+}
+
 /* ---------- zikirmatik ---------- */
 function zikirKaydet(){ depoYaz('besvakit_zikir', ZIKIR); }
 /** Sabit zikirler + kullanıcının eklediği özel zikirler, tek liste olarak. */
@@ -2768,6 +2938,7 @@ function baslat(){
   katlamaKur('#diniBaslik', '#diniKart', 'diniAcik', diniGunleriCiz);
   katlamaKur('#istatistikBaslik', '#istatistikKart', 'istatistikAcik', istatistikCiz);
   katlamaKur('#kazaBaslik', '#kazaKart', 'kazaAcik', kazaCiz);
+  katlamaKur('#tovbeBaslik', '#tovbeKart', 'tovbeAcik', tovbeCiz);
   // Leaflet yalnızca bölüm açılınca indirilir — kapalıyken hiç ağ isteği yok.
   katlamaKur('#haritaBaslik', '#haritaKart', 'haritaAcik', haritaKur);
   katlamaKur('#camiBaslik', '#camiKart', 'camiAcik', ()=>{});
