@@ -1112,14 +1112,14 @@ function ayiKonumla(){
   const ay = ayDurumu(new Date());
   const svg = $('#yildizlar'), r = 15;
   // Konumu çizimden sonra ölç: yüzde/px karışımı ve safe-area burada çözülüyor.
-  const genislik = svg.clientWidth || 380;
-  const cx = genislik - (r + 10) - 20;   // sağ kenardan 20px iç boşluk
-  // Hicri tarihin hemen altına in; durum çubuğunun arkasına kaçmasın.
-  const svgUst = svg.getBoundingClientRect().top;
+  const svgKutu = svg.getBoundingClientRect();
   const tarih  = $('#tarih').getBoundingClientRect();
+  // Sağ kenarı hicri tarih yazısının sağ kenarıyla hizala (tarih zaten sağa yaslı).
+  const genislik = svg.clientWidth || 380;
+  const cx = tarih.width ? (tarih.right - svgKutu.left - r) : (genislik - r - 20);
   // Tarih henüz yazılmadıysa (ilk çizim) üst iç boşluk + iki satır tahmini
   const ustBosluk = parseFloat(getComputedStyle($('#gokyuzu')).paddingTop) || 18;
-  const cy = (tarih.height ? tarih.bottom - svgUst : ustBosluk + 30) + r + 12;
+  const cy = (tarih.height ? tarih.bottom - svgKutu.top : ustBosluk + 30) + r + 12;
   grup.innerHTML =
     `<circle cx="${cx}" cy="${cy}" r="${r + 7}" fill="#F2EEE2" opacity=".05"/>` +
     `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#F2EEE2" opacity=".10"/>` +
