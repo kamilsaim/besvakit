@@ -274,10 +274,20 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
 .tesbih-zikir{text-align:center;margin:14px 0 2px}
 .tesbih-zikir b{display:block;font-size:17px;font-weight:700;letter-spacing:.01em}
 .tesbih-zikir em{display:block;font-style:normal;font-size:12.5px;color:var(--hayalet);margin-top:3px}
-.zikir-sec{display:flex;gap:8px;overflow-x:auto;padding:2px 0 6px;-webkit-overflow-scrolling:touch}
+.zikir-sec-sar{display:flex;align-items:center;gap:8px}
+.zikir-sec{display:flex;gap:8px;overflow-x:auto;padding:2px 0 6px;-webkit-overflow-scrolling:touch;flex:1}
 .zikir-sec button{flex:none;padding:8px 14px;border-radius:20px;background:var(--kat);
   border:1px solid var(--cizgi);font-size:12.5px;font-weight:600;color:var(--sis);white-space:nowrap}
 .zikir-sec button.acik{background:var(--cini-koyu);border-color:transparent;color:var(--kagit)}
+.zikir-sec button.ozel{padding-right:10px}
+.zikir-sec button.ozel::after{content:'×';margin-left:6px;opacity:.6}
+#zikirEkleBtn{flex:none;width:34px;height:34px;border-radius:50%;background:var(--kat);
+  border:1px solid var(--cizgi);color:var(--sis);font-size:18px;line-height:1}
+.tesbih-set-btn{display:block;width:100%;text-align:left;padding:10px 14px;margin:2px 0 10px;
+  border-radius:12px;background:var(--kat);border:1px solid var(--cizgi);font-size:12.5px;
+  font-weight:600;color:var(--sis)}
+.tesbih-set-btn.acik{background:var(--cini-koyu);border-color:transparent;color:var(--kagit)}
+.tesbih-set-btn em{display:block;font-style:normal;font-weight:500;font-size:11px;opacity:.75;margin-top:2px}
 
 /* zikir istatistiği */
 .zikir-satir{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--cizgi)}
@@ -512,7 +522,20 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
     <div class="kart katlanir gizli" id="kazaKart"></div>
 
     <div class="baslik">Zikirmatik</div>
-    <div class="zikir-sec" id="zikirSec"></div>
+    <button class="tesbih-set-btn" id="setModuBtn">Namaz sonrası tesbih seti
+      <em>Sübhânallâh 33 · Elhamdülillâh 33 · Allâhüekber 34 — hedefe ulaşınca otomatik geçer</em></button>
+    <div class="zikir-sec-sar">
+      <div class="zikir-sec" id="zikirSec"></div>
+      <button id="zikirEkleBtn" aria-label="Yeni zikir ekle">+</button>
+    </div>
+    <div class="kart katlanir gizli" id="zikirEkleForm">
+      <div class="alan"><label>Zikir adı</label><input type="text" id="ozelZikirAd" maxlength="40" placeholder="ör. Yâ Latîf"></div>
+      <div class="alan"><label>Hedef <em>0 = serbest sayaç</em></label><input type="number" id="ozelZikirHedef" value="33" min="0" max="9999" style="width:80px;text-align:right"></div>
+      <div class="btn-satir" style="padding:0 16px 14px">
+        <button class="btn ikincil" id="ozelZikirVazgec">Vazgeç</button>
+        <button class="btn" id="ozelZikirKaydet">Ekle</button>
+      </div>
+    </div>
     <div class="tesbih-zikir" id="tesbihZikir"></div>
     <div class="tesbih-sar">
       <button id="tesbihBtn" aria-label="Zikir sayacı — dokunarak arttır">
@@ -532,6 +555,11 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
     </button>
     <div class="kart katlanir" id="zikirIstKart"></div>
     <p class="bilgi" id="zikirGunluk"></p>
+
+    <button class="baslik" id="esmaBaslik" aria-expanded="false" aria-controls="esmaKart">
+      Esmâ-ül Hüsnâ <span class="ok" aria-hidden="true">⌃</span>
+    </button>
+    <div class="kart katlanir gizli" id="esmaKart"></div>
   </section>
 
   <!-- AYARLAR -->
@@ -770,7 +798,7 @@ const VARSAYILAN = {
   resmi:true, ilce:'9620', resmiIl:'546',   // varsayılan şehir Kayseri ile tutarlı
   cuma:true, cumaSaat:'11:30',
   imsakiyeAcik:true, diniAcik:false, istatistikAcik:false, kazaAcik:false,
-  haritaAcik:false, camiAcik:false, zikirIstAcik:true,
+  haritaAcik:false, camiAcik:false, zikirIstAcik:true, esmaAcik:false,
   sapma:0
 };
 let A = yukle();
@@ -793,7 +821,7 @@ function depoYaz(anahtar, veri){ try{ localStorage.setItem(anahtar, JSON.stringi
 
 let TAKIP = depoOku('besvakit_takip', { gunler:{}, kaza:{}, oruc:{} });
 /* gecmis: { 'YYYY-MM-DD': { 'Sübhânallâh': 33, ... } } — zikir başına ayrı sayım */
-let ZIKIR = depoOku('besvakit_zikir', { sayac:0, secili:0, gunluk:{}, gecmis:{} });
+let ZIKIR = depoOku('besvakit_zikir', { sayac:0, secili:0, gunluk:{}, gecmis:{}, ozel:[], setModu:false });
 
 /* ---------- açı yardımcıları ---------- */
 const D = Math.PI/180;
@@ -1627,6 +1655,113 @@ const ZIKIRLER = [
   { ad:'Serbest',            anlam:'Hedefsiz sayaç',                      hedef:0 }
 ];
 
+/** Esmâ-ül Hüsnâ — Allah'ın 99 ismi ve kısa anlamları. Statik içerik, tek seferlik çizilir. */
+const ESMA = [
+  { ad:'Allah', anlam:'Eşi ve benzeri olmayan tek İlah' },
+  { ad:'Er-Rahmân', anlam:'Dünyada bütün mahlûkata merhamet eden' },
+  { ad:'Er-Rahîm', anlam:'Ahirette yalnız müminlere merhamet eden' },
+  { ad:'El-Melik', anlam:'Mülkün ve kâinatın gerçek sahibi' },
+  { ad:'El-Kuddûs', anlam:'Her türlü eksiklikten uzak, tertemiz' },
+  { ad:'Es-Selâm', anlam:'Kullarını her türlü tehlikeden esirgeyen' },
+  { ad:'El-Mü’min', anlam:'Güven veren, kalplere iman nuru koyan' },
+  { ad:'El-Müheymin', anlam:'Her şeyi görüp gözeten, koruyan' },
+  { ad:'El-Azîz', anlam:'İzzet sahibi, karşı gelinemeyen' },
+  { ad:'El-Cebbâr', anlam:'Dilediğini yaptırmaya gücü yeten' },
+  { ad:'El-Mütekebbir', anlam:'Büyüklükte eşi ve benzeri olmayan' },
+  { ad:'El-Hâlık', anlam:'Yoktan var eden' },
+  { ad:'El-Bâri’', anlam:'Her şeyi kusursuzca yaratan' },
+  { ad:'El-Musavvir', anlam:'Varlıklara şekil ve suret veren' },
+  { ad:'El-Gaffâr', anlam:'Günahları çokça bağışlayan' },
+  { ad:'El-Kahhâr', anlam:'Her şeye galip ve hâkim olan' },
+  { ad:'El-Vehhâb', anlam:'Karşılıksız çokça bağışta bulunan' },
+  { ad:'Er-Rezzâk', anlam:'Bütün canlıların rızkını veren' },
+  { ad:'El-Fettâh', anlam:'Her türlü güçlüğü çözüp kolaylaştıran' },
+  { ad:'El-Alîm', anlam:'Gizli açık her şeyi hakkıyla bilen' },
+  { ad:'El-Kâbıd', anlam:'Dilediğinde rızkı ve canı daraltan' },
+  { ad:'El-Bâsit', anlam:'Dilediğinde rızkı ve rahmeti genişleten' },
+  { ad:'El-Hâfıd', anlam:'Dilediğini alçaltan' },
+  { ad:'Er-Râfi’', anlam:'Dilediğini yücelten' },
+  { ad:'El-Mu’ız', anlam:'Dilediğine izzet ve şeref veren' },
+  { ad:'El-Müzil', anlam:'Dilediğini zillete düşüren' },
+  { ad:'Es-Semî’', anlam:'Her şeyi işiten' },
+  { ad:'El-Basîr', anlam:'Her şeyi gören' },
+  { ad:'El-Hakem', anlam:'Hükmeden, hakkı üstün kılan' },
+  { ad:'El-Adl', anlam:'Mutlak adalet sahibi' },
+  { ad:'El-Latîf', anlam:'Lütuf sahibi, en ince işlerin farkında olan' },
+  { ad:'El-Habîr', anlam:'Her şeyden haberdar olan' },
+  { ad:'El-Halîm', anlam:'Yumuşak davranan, cezada acele etmeyen' },
+  { ad:'El-Azîm', anlam:'Büyüklükte sınırı olmayan' },
+  { ad:'El-Gafûr', anlam:'Günahları örten, çok bağışlayan' },
+  { ad:'Eş-Şekûr', anlam:'Az amele çok karşılık veren' },
+  { ad:'El-Aliyy', anlam:'Yüceler yücesi' },
+  { ad:'El-Kebîr', anlam:'Büyüklükte benzeri olmayan' },
+  { ad:'El-Hafîz', anlam:'Koruyup gözeten' },
+  { ad:'El-Mukît', anlam:'Yaratılmışların rızkını ve gıdasını yaratan' },
+  { ad:'El-Hasîb', anlam:'Herkese yeten, hesaba çeken' },
+  { ad:'El-Celîl', anlam:'Celal ve azamet sahibi' },
+  { ad:'El-Kerîm', anlam:'Cömertliği sınırsız olan' },
+  { ad:'Er-Rakîb', anlam:'Her şeyi gözetleyip denetleyen' },
+  { ad:'El-Mucîb', anlam:'Duaları işitip kabul eden' },
+  { ad:'El-Vâsi’', anlam:'İlmi ve rahmeti her şeyi kuşatan' },
+  { ad:'El-Hakîm', anlam:'Her işi hikmetli, yerli yerinde olan' },
+  { ad:'El-Vedûd', anlam:'Kullarını çok seven, sevilen' },
+  { ad:'El-Mecîd', anlam:'Şanı ve şerefi yüce olan' },
+  { ad:'El-Bâis', anlam:'Ölüleri dirilten, peygamber gönderen' },
+  { ad:'Eş-Şehîd', anlam:'Her şeye şahit olan' },
+  { ad:'El-Hakk', anlam:'Varlığı gerçek ve değişmez olan' },
+  { ad:'El-Vekîl', anlam:'Kendisine güvenilip dayanılan' },
+  { ad:'El-Kaviyy', anlam:'Gücü sınırsız olan' },
+  { ad:'El-Metîn', anlam:'Kudreti sarsılmaz olan' },
+  { ad:'El-Veliyy', anlam:'Müminlerin dostu ve yardımcısı' },
+  { ad:'El-Hamîd', anlam:'Her türlü övgüye lâyık olan' },
+  { ad:'El-Muhsî', anlam:'Her şeyin sayısını bilen' },
+  { ad:'El-Mübdi’', anlam:'Örneksiz, ilk defa yaratan' },
+  { ad:'El-Muîd', anlam:'Yarattığını yok edip yeniden yaratan' },
+  { ad:'El-Muhyî', anlam:'Can veren, dirilten' },
+  { ad:'El-Mümît', anlam:'Ölümü yaratan' },
+  { ad:'El-Hayy', anlam:'Ezelî ve ebedî diri olan' },
+  { ad:'El-Kayyûm', anlam:'Her şeyi ayakta tutan' },
+  { ad:'El-Vâcid', anlam:'Hiçbir şeye muhtaç olmayan, dilediğini bulan' },
+  { ad:'El-Mâcid', anlam:'Şanı ve kadri yüce olan' },
+  { ad:'El-Vâhid', anlam:'Zâtında, sıfatlarında eşi ve ortağı olmayan tek' },
+  { ad:'Es-Samed', anlam:'Hiçbir şeye muhtaç olmayan, her şeyin muhtaç olduğu' },
+  { ad:'El-Kâdir', anlam:'Her şeye gücü yeten' },
+  { ad:'El-Muktedir', anlam:'Dilediği gibi tasarruf eden' },
+  { ad:'El-Mukaddim', anlam:'Dilediğini öne alan' },
+  { ad:'El-Muahhir', anlam:'Dilediğini geri bırakan' },
+  { ad:'El-Evvel', anlam:'Varlığının başlangıcı olmayan' },
+  { ad:'El-Âhir', anlam:'Varlığının sonu olmayan' },
+  { ad:'Ez-Zâhir', anlam:'Varlığı delilleriyle apaçık olan' },
+  { ad:'El-Bâtın', anlam:'Zâtı akılların idrak edemeyeceği kadar gizli olan' },
+  { ad:'El-Vâli', anlam:'Bütün kâinatı yöneten' },
+  { ad:'El-Müteâlî', anlam:'Aklın tasavvurundan çok yüce olan' },
+  { ad:'El-Berr', anlam:'İyiliği ve ihsanı bol olan' },
+  { ad:'Et-Tevvâb', anlam:'Tövbeleri çokça kabul eden' },
+  { ad:'El-Müntekim', anlam:'Suçluları adaletiyle cezalandıran' },
+  { ad:'El-Afüvv', anlam:'Affı bol olan' },
+  { ad:'Er-Raûf', anlam:'Çok şefkatli, esirgeyen' },
+  { ad:'Mâlikü’l-Mülk', anlam:'Mülkün ve her varlığın gerçek sahibi' },
+  { ad:'Zülcelâli ve’l-İkrâm', anlam:'Hem büyüklük hem ikram sahibi' },
+  { ad:'El-Muksit', anlam:'Adaletle hükmeden' },
+  { ad:'El-Câmi’', anlam:'Dilediğini dilediği yerde toplayan' },
+  { ad:'El-Ganî', anlam:'Hiçbir şeye muhtaç olmayan, sonsuz zengin' },
+  { ad:'El-Muğnî', anlam:'Dilediğini zengin kılan' },
+  { ad:'El-Mâni’', anlam:'Zararlı şeylerden koruyan' },
+  { ad:'Ed-Dârr', anlam:'Elem ve zarar veren şeyleri yaratan' },
+  { ad:'En-Nâfi’', anlam:'Fayda veren şeyleri yaratan' },
+  { ad:'En-Nûr', anlam:'Âlemleri nurlandıran, hidayet veren' },
+  { ad:'El-Hâdî', anlam:'Doğru yola ileten' },
+  { ad:'El-Bedî’', anlam:'Eşi ve örneği olmadan yaratan' },
+  { ad:'El-Bâkî', anlam:'Varlığının sonu olmayan, ebedî' },
+  { ad:'El-Vâris', anlam:'Her şeyin gerçek ve son sahibi' },
+  { ad:'Er-Reşîd', anlam:'Bütün işleri hikmetle sonuca ulaştıran' },
+  { ad:'Es-Sabûr', anlam:'Çok sabırlı olan' }
+];
+function esmaCiz(){
+  $('#esmaKart').innerHTML = ESMA.map(x=>
+    `<div class="zikir-satir"><div class="ad">${x.ad}<em>${x.anlam}</em></div></div>`).join('');
+}
+
 const gunAnahtar = d => d.getFullYear()+'-'+iki(d.getMonth()+1)+'-'+iki(d.getDate());
 
 /** Bugün hangi namazların vakti girdi? Yatsı gece yarısını aştığı için ayrı bakılır. */
@@ -1730,12 +1865,26 @@ function kazaCiz(){
 
 /* ---------- zikirmatik ---------- */
 function zikirKaydet(){ depoYaz('besvakit_zikir', ZIKIR); }
+/** Sabit zikirler + kullanıcının eklediği özel zikirler, tek liste olarak. */
+function zikirListesi(){ return ZIKIRLER.concat(ZIKIR.ozel || []); }
+/* Tesbih seti: listedeki ilk üç zikir (Sübhânallâh 33, Elhamdülillâh 33,
+   Allâhüekber 34) zaten bu sırada — namaz sonrası tesbihin ta kendisi. */
+const TESBIH_SETI_SON = 2;
 function tesbihCiz(){
-  const z = ZIKIRLER[ZIKIR.secili] || ZIKIRLER[0];
-  $('#zikirSec').innerHTML = ZIKIRLER.map((x,i)=>
-    `<button data-zikir="${i}" class="${i===ZIKIR.secili?'acik':''}">${x.ad}</button>`).join('');
+  const liste = zikirListesi();
+  const z = liste[ZIKIR.secili] || liste[0];
+  $('#zikirSec').innerHTML = liste.map((x,i)=>
+    `<button data-zikir="${i}" class="${i===ZIKIR.secili?'acik':''} ${i>=ZIKIRLER.length?'ozel':''}">${x.ad}</button>`).join('');
   $$('[data-zikir]').forEach(b => b.onclick = ()=>{
-    ZIKIR.secili = +b.dataset.zikir; ZIKIR.sayac = 0; zikirKaydet(); tesbihCiz();
+    const i = +b.dataset.zikir;
+    if(i >= ZIKIRLER.length && i === ZIKIR.secili){
+      ZIKIR.ozel.splice(i - ZIKIRLER.length, 1);
+      ZIKIR.secili = 0; ZIKIR.sayac = 0;
+      toast('Zikir silindi');
+    } else {
+      ZIKIR.secili = i; ZIKIR.sayac = 0;
+    }
+    zikirKaydet(); tesbihCiz();
   });
   $('#tesbihZikir').innerHTML = `<b>${z.ad}</b><em>${z.anlam}</em>`;
   $('#tesbihSayi').textContent = ZIKIR.sayac;
@@ -1743,18 +1892,30 @@ function tesbihCiz(){
   const bugunZikir = ZIKIR.gunluk[gunAnahtar(new Date())] || 0;
   $('#zikirGunluk').textContent = 'Bugün toplam ' + bugunZikir +
     ' zikir. Sayaç zikir değiştirince sıfırlanır, toplamlar korunur.';
+  const setBtn = $('#setModuBtn');
+  setBtn.classList.toggle('acik', !!ZIKIR.setModu);
   if(A.zikirIstAcik) zikirIstatistikCiz();
 }
 function tesbihArtir(){
-  const z = ZIKIRLER[ZIKIR.secili] || ZIKIRLER[0];
+  const liste = zikirListesi();
+  const z = liste[ZIKIR.secili] || liste[0];
   ZIKIR.sayac++;
   const a = gunAnahtar(new Date());
   ZIKIR.gunluk[a] = (ZIKIR.gunluk[a]||0) + 1;
   ZIKIR.gecmis = ZIKIR.gecmis || {};
   ZIKIR.gecmis[a] = ZIKIR.gecmis[a] || {};
   ZIKIR.gecmis[a][z.ad] = (ZIKIR.gecmis[a][z.ad]||0) + 1;
-  if(A.titresim && navigator.vibrate) navigator.vibrate(z.hedef && ZIKIR.sayac === z.hedef ? [60,60,60] : 12);
-  if(z.hedef && ZIKIR.sayac === z.hedef) toast(z.ad + ' · ' + z.hedef + ' tamamlandı');
+  const tamam = z.hedef && ZIKIR.sayac === z.hedef;
+  if(A.titresim && navigator.vibrate) navigator.vibrate(tamam ? [60,60,60] : 12);
+  if(tamam && ZIKIR.setModu && ZIKIR.secili < TESBIH_SETI_SON){
+    toast(z.ad + ' tamam · sırada ' + liste[ZIKIR.secili+1].ad);
+    ZIKIR.secili++; ZIKIR.sayac = 0;
+  } else if(tamam && ZIKIR.setModu && ZIKIR.secili === TESBIH_SETI_SON){
+    toast('Tesbih seti tamamlandı · 100');
+    ZIKIR.secili = 0; ZIKIR.sayac = 0;
+  } else if(tamam){
+    toast(z.ad + ' · ' + z.hedef + ' tamamlandı');
+  }
   zikirKaydet(); tesbihCiz();
 }
 function zikirEksilt(ad){
@@ -1780,8 +1941,9 @@ function zikirToplamlari(){
 }
 function zikirIstatistikCiz(){
   const { bugun, toplam } = zikirToplamlari();
-  const z = ZIKIRLER[ZIKIR.secili] || ZIKIRLER[0];
-  const satirlar = ZIKIRLER.filter(x => bugun[x.ad] || toplam[x.ad] || x.ad === z.ad);
+  const liste = zikirListesi();
+  const z = liste[ZIKIR.secili] || liste[0];
+  const satirlar = liste.filter(x => bugun[x.ad] || toplam[x.ad] || x.ad === z.ad);
   if(!satirlar.length){
     $('#zikirIstKart').innerHTML = kutu('Henüz zikir çekilmedi. Yukarıdaki daireye dokunarak başla.');
     return;
@@ -2614,12 +2776,36 @@ function baslat(){
       ZIKIR.sayac--;
       const a = gunAnahtar(new Date());
       ZIKIR.gunluk[a] = Math.max(0, (ZIKIR.gunluk[a]||0) - 1);
-      zikirEksilt((ZIKIRLER[ZIKIR.secili] || ZIKIRLER[0]).ad);
+      const liste = zikirListesi();
+      zikirEksilt((liste[ZIKIR.secili] || liste[0]).ad);
       zikirKaydet(); tesbihCiz();
     }
   };
   katlamaKur('#zikirIstBaslik', '#zikirIstKart', 'zikirIstAcik', zikirIstatistikCiz);
+  katlamaKur('#esmaBaslik', '#esmaKart', 'esmaAcik', esmaCiz);
   $('#tesbihSifirla').onclick = ()=>{ ZIKIR.sayac = 0; zikirKaydet(); tesbihCiz(); toast('Sayaç sıfırlandı'); };
+  $('#setModuBtn').onclick = ()=>{
+    ZIKIR.setModu = !ZIKIR.setModu;
+    if(ZIKIR.setModu){ ZIKIR.secili = 0; ZIKIR.sayac = 0; }
+    zikirKaydet(); tesbihCiz();
+  };
+  $('#zikirEkleBtn').onclick = ()=>{
+    $('#zikirEkleForm').classList.toggle('gizli');
+    if(!$('#zikirEkleForm').classList.contains('gizli')) $('#ozelZikirAd').focus();
+  };
+  $('#ozelZikirVazgec').onclick = ()=> $('#zikirEkleForm').classList.add('gizli');
+  $('#ozelZikirKaydet').onclick = ()=>{
+    const ad = $('#ozelZikirAd').value.trim();
+    if(!ad){ $('#ozelZikirAd').focus(); return; }
+    const hedef = Math.max(0, Math.min(9999, +$('#ozelZikirHedef').value || 0));
+    ZIKIR.ozel = ZIKIR.ozel || [];
+    ZIKIR.ozel.push({ ad, anlam:'Eklediğin zikir', hedef });
+    ZIKIR.secili = ZIKIRLER.length + ZIKIR.ozel.length - 1; ZIKIR.sayac = 0;
+    zikirKaydet();
+    $('#ozelZikirAd').value = ''; $('#ozelZikirHedef').value = 33;
+    $('#zikirEkleForm').classList.add('gizli');
+    tesbihCiz();
+  };
   gunuTazele();
   setInterval(tikTak, 1000);
 
