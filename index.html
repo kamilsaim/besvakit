@@ -945,6 +945,74 @@ function ayDurumu(tarih){
   };
 }
 
+/**
+ * Ayın ufuktan yüksekliği (derece), verilen UT Julian günü ve konumda.
+ * Boylam terimleri ayDurumu ile aynı; ayrıca ekvatoral çevrim için enlem
+ * (F terimi) ve yerel saat açısı (Greenwich yıldız zamanı üzerinden) eklendi.
+ */
+function ayKonumu(jdUT, lat, lng){
+  const T = jdUT - 2451545.0;
+  const gunesOrt = fixA(357.529 + 0.98560028*T);
+  const L  = fixA(218.316 + 13.176396*T);
+  const M  = fixA(134.963 + 13.064993*T);
+  const Dl = fixA(297.850 + 12.190749*T);
+  const F  = fixA(93.272 + 13.229350*T);
+  const boylam = L + 6.289*sin(M) - 1.274*sin(2*Dl - M) + 0.658*sin(2*Dl) - 0.186*sin(gunesOrt);
+  const enlem  = 5.128*sin(F) + 0.280*sin(M + F) + 0.277*sin(M - F);
+  const e = 23.439 - 0.0000004*T;
+  const ra   = fixS(atan2(sin(boylam)*cos(e) - tan(enlem)*sin(e), cos(boylam)) / 15);
+  const decl = asin(sin(enlem)*cos(e) + cos(enlem)*sin(e)*sin(boylam));
+  const gst  = fixA(280.46061837 + 360.98564736629*T);
+  const H    = fixA(gst + lng - ra*15);
+  return { yukseklik: asin(sin(lat)*sin(decl) + cos(lat)*cos(decl)*cos(H)) };
+}
+function ayYukseklikYerel(tarih, lat, lng){
+  const tz    = -tarih.getTimezoneOffset()/60;
+  const jd0   = julian(tarih.getFullYear(), tarih.getMonth()+1, tarih.getDate());
+  const yerel = tarih.getHours() + tarih.getMinutes()/60;
+  return ayKonumu(jd0 + (yerel - tz)/24, lat, lng).yukseklik;
+}
+/**
+ * Verilen günde ayın doğuş ve batış dakikalarını (yerel, 0-1440) bulur.
+ * İki saatlik aralıklarda üç noktadan geçen parabolle ufuk kesişimi aranıyor
+ * (dakika dakika taramaktan çok daha ucuz). Ay her gün ~50 dk geç doğduğu
+ * için bazı takvim günlerinde doğuş ya da batış hiç olmayabilir — bu normal,
+ * ilgili alan null döner.
+ */
+function ayDogusBatisi(tarih, lat, lng){
+  const gun = new Date(tarih); gun.setHours(0,0,0,0);
+  const anKonum = dk => { const t = new Date(gun); t.setMinutes(dk); return ayYukseklikYerel(t, lat, lng); };
+  const ufukDuzeltme = 0.133;      // ort. paralaks - kırılma - görünen yarıçap
+  let dogus = null, batis = null;
+  let h0 = anKonum(0) - ufukDuzeltme;
+  for(let s = 1; s <= 23 && (dogus === null || batis === null); s += 2){
+    const h1 = anKonum(s*60) - ufukDuzeltme;
+    const h2 = anKonum((s+1)*60) - ufukDuzeltme;
+    const a = (h0 + h2)/2 - h1, b = (h2 - h0)/2;
+    const xe = -b/(2*a), ye = (a*xe + b)*xe + h1;
+    const d = b*b - 4*a*h1;
+    let x1, x2, kok = 0;
+    if(d >= 0){
+      const dx = Math.sqrt(d)/(Math.abs(a)*2);
+      x1 = xe - dx; x2 = xe + dx;
+      if(Math.abs(x1) <= 1) kok++;
+      if(Math.abs(x2) <= 1) kok++;
+      if(x1 < -1) x1 = x2;
+    }
+    if(kok === 1){
+      if(h0 < 0){ if(dogus === null) dogus = s + x1; } else { if(batis === null) batis = s + x1; }
+    } else if(kok === 2){
+      if(dogus === null) dogus = s + (ye < 0 ? x2 : x1);
+      if(batis === null) batis = s + (ye < 0 ? x1 : x2);
+    }
+    h0 = h2;
+  }
+  return {
+    dogus: dogus === null ? null : Math.round(mod(dogus,24)*60),
+    batis: batis === null ? null : Math.round(mod(batis,24)*60)
+  };
+}
+
 function ayAdi(faz){
   if(faz < 12 || faz >= 348) return 'Yeni ay';
   if(faz < 78)  return 'Hilal';
@@ -1481,6 +1549,11 @@ function ayDurumSatiri(){
     'Cemaziyelahir','Recep','Şaban','Ramazan','Şevval','Zilkade','Zilhicce'];
   const adi = HICRI_AYLAR[(h.month-1) % 12] || '';
   const kalan = Math.round(ay.yeniAyaKalan);
+  const db = ayDogusBatisi(new Date(), A.lat, A.lng);
+  const dbYazi = [
+    db.dogus === null ? '' : `doğuş ${saatYaz(db.dogus)}`,
+    db.batis === null ? '' : `batış ${saatYaz(db.batis)}`
+  ].filter(Boolean).join(' · ');
 
   const sonGun = h.day >= 29;
   return `
@@ -1493,7 +1566,7 @@ function ayDurumSatiri(){
       </div>
       <div class="kerahat-ad">${adi} ${h.day} · ${ayAdi(ay.faz)}
         <em>Ay %${Math.round(ay.aydinlik*100)} aydınlık · ${ay.yas.toFixed(0)} günlük${
-          kalan > 0 ? ` · yeni ay ${kalan} gün sonra` : ''}</em></div>
+          kalan > 0 ? ` · yeni ay ${kalan} gün sonra` : ''}${dbYazi ? ` · ${dbYazi}` : ''}</em></div>
     </div>
     ${sonGun ? `<div class="kerahat-satir">
       <div class="kerahat-ikon">☾</div>
