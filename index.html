@@ -10,8 +10,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Beş Vakit">
 <meta name="description" content="Reklamsız, ücretsiz, internetsiz çalışan namaz vakti ve kıble uygulaması.">
-<link rel="icon" type="image/png" href="logos.png">
-<link rel="apple-touch-icon" href="logos.png">
+<link rel="icon" type="image/png" href="logo-beyaz.png">
+<link rel="apple-touch-icon" href="logo-beyaz.png">
 <link id="manifest" rel="manifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -217,7 +217,8 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
 .dini-satir.yakin .dini-kalan b{color:var(--cini)}
 
 /* marka / hakkında */
-.marka-logo{width:22px;height:22px;flex:none;display:block}
+.marka-logo{width:22px;height:22px;flex:none;display:block;border-radius:50%;
+  background:radial-gradient(circle,rgba(244,241,232,.30),rgba(244,241,232,.06) 65%,transparent 78%)}
 .hakkinda{display:flex;align-items:center;gap:14px;padding:16px}
 .hakkinda img{width:56px;height:56px;flex:none}
 .hakkinda-ad{font-family:'Antonio',sans-serif;font-size:26px;letter-spacing:.02em;line-height:1}
@@ -753,7 +754,7 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
    ========================================================== */
 const APP = 'Beş Vakit';
 const SURUM = '0.10.0';
-const LOGO = 'logos.png';
+const LOGO = 'logo-beyaz.png';
 const KABE = { lat: 21.4224779, lng: 39.8261722 };
 const VAKITLER = [
   { k:'imsak',   ad:'İmsak',  alt:'Sabah namazı başlangıcı', ikon:'☾' },
