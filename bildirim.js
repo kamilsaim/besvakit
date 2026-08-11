@@ -63,10 +63,39 @@ function bvSaatYaz(dk) {
   return (s < 10 ? '0' : '') + s + ':' + (m < 10 ? '0' : '') + m;
 }
 
+/* Android'de uygulama başına bekleyen alarm sayısı ~500 ile sınırlıdır.
+   Sınıra dayanmamak için hedefi 400'de tutup gün sayısını aktif tür sayısına
+   göre daraltıyoruz. Kullanıcı bu sayıyı görmez ve ayarlayamaz. */
+const BV_HEDEF_BILDIRIM = 400;
+const BV_TABAN_GUN = 7;
+const BV_TAVAN_GUN = 30;
+
+/** Ayarlara göre kaç gün ileriye kuyruk kurulacağını hesaplar. */
+function bvGunButcesi(ayar) {
+  if (!ayar) return 0;
+  let gunluk = 0;
+
+  BV_VAKIT_SIRA.forEach(k => {
+    const v = ayar.vakit && ayar.vakit[k];
+    if (!v || !v.bildir) return;
+    gunluk++;
+    if ((+v.once || 0) > 0 && k !== 'gunes') gunluk++;
+  });
+
+  if (ayar.kerahat) gunluk += (ayar.kerahatAraliklari || []).length;
+  if ((ayar.ramazanGunleri || []).length) gunluk += 2;
+
+  // Cuma haftada bir, bütçeyi kayda değer etkilemez — sayıma katılmaz.
+  if (gunluk <= 0) return ayar.cuma ? BV_TAVAN_GUN : 0;
+
+  return Math.max(BV_TABAN_GUN,
+         Math.min(BV_TAVAN_GUN, Math.floor(BV_HEDEF_BILDIRIM / gunluk)));
+}
+
 function bildirimListesiUret(ayar, gunler, simdi) {
   if (!ayar || !ayar.acik) return [];
 
-  const anahtarlar = Object.keys(gunler).sort();
+  const anahtarlar = Object.keys(gunler).sort().slice(0, bvGunButcesi(ayar));
   const liste = [];
 
   anahtarlar.forEach((gun, gunSira) => {
@@ -170,7 +199,7 @@ function bildirimListesiUret(ayar, gunler, simdi) {
 /* Hem tarayıcıda (script etiketiyle) hem Node'da (require ile) çalışsın. */
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    bildirimListesiUret, BV_TUR, BV_VAKIT_SIRA,
+    bildirimListesiUret, bvGunButcesi, BV_TUR, BV_VAKIT_SIRA,
     bvZaman, bvSaatDk, bvSaatYaz, bvSessizMi, bvKanal
   };
 }

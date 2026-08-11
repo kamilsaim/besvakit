@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const { bildirimListesiUret } = require('../bildirim.js');
+const { bildirimListesiUret, bvGunButcesi } = require('../bildirim.js');
 
 /** Testlerde kullanılan sabit gün tablosu: iki gün, altı vakit (dakika). */
 const GUNLER = {
@@ -299,4 +299,77 @@ test('sahurOnce 0 ise sahur bildirimi üretilmez ama iftar üretilir', () => {
 
   assert.strictEqual(oruc.length, 1);
   assert.ok(oruc[0].govde.startsWith('İftar'));
+});
+
+test('hiçbir şey açık değilse bütçe sıfırdır', () => {
+  assert.strictEqual(bvGunButcesi(ayarKur()), 0);
+});
+
+test('az tür açıkken tavan 30 gündür', () => {
+  const ayar = ayarKur();
+  ayar.vakit.ogle.bildir = true;            // günde 1 bildirim
+  assert.strictEqual(bvGunButcesi(ayar), 30);
+});
+
+test('çok tür açıkken gün sayısı daralır', () => {
+  const ayar = ayarKur({ kerahat: true, kerahatAraliklari: KERAHAT_TEST,
+                         ramazanGunleri: ['2026-08-12'] });
+  Object.keys(ayar.vakit).forEach(k => {
+    ayar.vakit[k].bildir = true;
+    ayar.vakit[k].once = 15;
+  });
+  // 6 vakit + 5 önceden (güneş hariç) + 3 kerahat + 2 oruç = 16 -> 400/16 = 25
+  assert.strictEqual(bvGunButcesi(ayar), 25);
+});
+
+test('bütçe hiçbir zaman 7 günün altına inmez', () => {
+  const ayar = ayarKur({ kerahat: true });
+  // yapay olarak çok fazla kerahat aralığı: 60 tür -> 400/60 = 6, taban 7'ye çıkar
+  ayar.kerahatAraliklari = Array.from({ length: 60 }, (_, i) => ({
+    ad: 'X' + i, bas: 'gunes', basEk: i, son: 'gunes', sonEk: i + 5
+  }));
+  assert.strictEqual(bvGunButcesi(ayar), 7);
+});
+
+test('bütçe üretilen gün sayısını sınırlar', () => {
+  // 40 günlük tablo ver, tek vakit açık -> 30 günle sınırlanmalı
+  const uzun = {};
+  for (let i = 0; i < 40; i++) {
+    const d = new Date(2026, 7, 11 + i);
+    const a = d.getFullYear() + '-' +
+              String(d.getMonth() + 1).padStart(2, '0') + '-' +
+              String(d.getDate()).padStart(2, '0');
+    uzun[a] = [236, 334, 769, 999, 1195, 1285];
+  }
+  const ayar = ayarKur();
+  ayar.vakit.ogle.bildir = true;
+  const simdi = new Date(2026, 7, 11, 0, 0, 0);
+
+  const liste = bildirimListesiUret(ayar, uzun, simdi);
+
+  assert.strictEqual(liste.length, 30);
+});
+
+test('toplam bildirim sayısı 400\'ü aşmaz', () => {
+  const uzun = {};
+  for (let i = 0; i < 40; i++) {
+    const d = new Date(2026, 7, 11 + i);
+    const a = d.getFullYear() + '-' +
+              String(d.getMonth() + 1).padStart(2, '0') + '-' +
+              String(d.getDate()).padStart(2, '0');
+    uzun[a] = [236, 334, 769, 999, 1195, 1285];
+  }
+  const ayar = ayarKur({ kerahat: true, kerahatAraliklari: KERAHAT_TEST,
+                         cuma: true, ramazanGunleri: Object.keys(uzun) });
+  Object.keys(ayar.vakit).forEach(k => {
+    ayar.vakit[k].bildir = true;
+    ayar.vakit[k].once = 15;
+  });
+  const simdi = new Date(2026, 7, 11, 0, 0, 0);
+
+  const liste = bildirimListesiUret(ayar, uzun, simdi);
+
+  // 16 günlük tür × 25 gün = 400, üstüne bütçeye katılmayan cuma bildirimleri.
+  // Asıl amaç Android'in ~500 sınırının altında kalmak.
+  assert.ok(liste.length <= 450, 'üretilen: ' + liste.length);
 });
