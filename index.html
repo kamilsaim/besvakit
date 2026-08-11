@@ -2370,37 +2370,83 @@ function bildirimGunTablosu(){
   return gunler;
 }
 
+/** Kuyruğu etkileyen her ayarı ve güncel günü kapsayan imza — widgetVeriYaz ile aynı fikir. */
+function bildirimImza(){
+  return gunAnahtar(new Date()) + '|' + (A.bildirimAcik?1:0) +
+    '|' + VAKITLER.map(v=>(A.bildirim[v.k].bildir?1:0) + ',' + (+A.bildirim[v.k].once||0)).join(';') +
+    '|' + (A.sessizBas||'00:00') + '-' + (A.sessizSon||'00:00') +
+    '|' + (+A.sahurOnce||0) +
+    '|' + (A.kerahat?1:0) + '|' + (A.cuma?1:0) + '|' + (A.cumaSaat||'11:30') +
+    '|' + (A.ramazanMod||'') +
+    '|' + A.sehir + '|' + A.lat.toFixed(4) + ',' + A.lng.toFixed(4) +
+    '|' + A.rakim + '|' + A.yontem + '|' + A.mezhep + '|' + (A.temkin?1:0) +
+    '|' + VAKITLER.map(v=>A.duzeltme[v.k]).join(',');
+}
+
+let _bildirimSonKurulum = '';
+let _bildirimCalisiyor = null;   // sürmekte olan kurulum promise'ı
+let _bildirimTekrarGerek = false; // kurulum sürerken yeni istek geldi mi
+
 /**
- * Kuyruğu baştan kurar: önce her şeyi iptal eder, sonra yeniden yazar.
+ * Kuyruğu baştan kurar: önce yeni listeyi üretir, sonra iptal eder, sonra yazar.
  * Artımlı güncelleme yapılmıyor — ayar değişince hangi bildirimin
  * geçersizleştiğini izlemek kırılgan olurdu.
+ * Eşzamanlı çağrılar birbirini geçmesin diye tek seferde bir kurulum çalışır;
+ * kurulum sürerken gelen istekler kaybolmaz, kurulum bitince tek bir yeniden
+ * çalıştırmayla (son isteği yansıtacak şekilde) telafi edilir.
  */
 async function bildirimKur(){
   const L = bildirimEklentisi();
   if(!L) return;                       // tarayıcı: eski setInterval yolu çalışır
 
-  try{
-    await bildirimKanallariKur();
+  if(_bildirimCalisiyor){
+    // bir kurulum zaten sürüyor — onun bitmesini bekle, sonra güncel ayarlarla bir kez daha çalış
+    _bildirimTekrarGerek = true;
+    return _bildirimCalisiyor;
+  }
 
-    const bekleyen = await L.getPending();
-    if(bekleyen && bekleyen.notifications && bekleyen.notifications.length){
-      await L.cancel({ notifications: bekleyen.notifications.map(n=>({ id:n.id })) });
+  _bildirimCalisiyor = (async()=>{
+    try{
+      const imza = bildirimImza();
+      if(imza === _bildirimSonKurulum) return;
+
+      await bildirimKanallariKur();
+
+      // önce üret: üretim patlarsa mevcut kuyruk dokunulmamış kalır
+      const liste = A.bildirimAcik ? bildirimListesiUret(bildirimAyari(), bildirimGunTablosu(), new Date()) : [];
+
+      const bekleyen = await L.getPending();
+      if(bekleyen && bekleyen.notifications && bekleyen.notifications.length){
+        await L.cancel({ notifications: bekleyen.notifications.map(n=>({ id:n.id })) });
+      }
+
+      if(!A.bildirimAcik || !liste.length){
+        _bildirimSonKurulum = imza;
+        return;
+      }
+
+      await L.schedule({ notifications: liste.map(b=>({
+        id: b.id,
+        title: b.baslik,
+        body: b.govde,
+        channelId: b.kanal,
+        schedule: { at: b.zaman, allowWhileIdle: true }
+      })) });
+      _bildirimSonKurulum = imza;
+    }catch(e){
+      toast('Bildirimler kurulamadı — sonraki açılışta yeniden denenecek');
+      // imza kaydedilmedi: bir sonraki çağrı yeniden dener
     }
+  })();
 
-    if(!A.bildirimAcik) return;
-
-    const liste = bildirimListesiUret(bildirimAyari(), bildirimGunTablosu(), new Date());
-    if(!liste.length) return;
-
-    await L.schedule({ notifications: liste.map(b=>({
-      id: b.id,
-      title: b.baslik,
-      body: b.govde,
-      channelId: b.kanal,
-      schedule: { at: b.zaman, allowWhileIdle: true }
-    })) });
-  }catch(e){
-    toast('Bildirimler kurulamadı — sonraki açılışta yeniden denenecek');
+  try{
+    await _bildirimCalisiyor;
+  }finally{
+    _bildirimCalisiyor = null;
+    if(_bildirimTekrarGerek){
+      _bildirimTekrarGerek = false;
+      await bildirimKur();
+    }
   }
 }
 
