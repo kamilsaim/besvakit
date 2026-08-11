@@ -136,6 +136,32 @@ function bildirimListesiUret(ayar, gunler, simdi) {
         });
       }
     }
+
+    // Ramazan — hangi günlerin ramazan olduğu dışarıdan gelir, hicri hesap
+    // index.html'de kalır.
+    if ((ayar.ramazanGunleri || []).indexOf(gun) >= 0) {
+      const imsakDk = vakitler[BV_VAKIT_SIRA.indexOf('imsak')];
+      const aksamDk = vakitler[BV_VAKIT_SIRA.indexOf('aksam')];
+      const sahurOnce = +ayar.sahurOnce || 0;
+
+      if (sahurOnce > 0) {
+        liste.push({
+          id: gunSira * 100 + BV_TUR.sahur,
+          kanal: bvKanal('oruc', imsakDk - sahurOnce, ayar.sessiz),
+          baslik: BV_BASLIK,
+          govde: 'Sahura ' + sahurOnce + ' dakika kaldı · imsak ' + bvSaatYaz(imsakDk),
+          zaman: bvZaman(gun, imsakDk - sahurOnce)
+        });
+      }
+
+      liste.push({
+        id: gunSira * 100 + BV_TUR.iftar,
+        kanal: bvKanal('oruc', aksamDk, ayar.sessiz),
+        baslik: BV_BASLIK,
+        govde: 'İftar vakti · akşam ' + bvSaatYaz(aksamDk),
+        zaman: bvZaman(gun, aksamDk)
+      });
+    }
   });
 
   return liste.filter(b => b.zaman.getTime() > simdi.getTime());

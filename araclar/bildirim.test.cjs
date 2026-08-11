@@ -257,3 +257,46 @@ test('cuma kapalıyken bildirim üretilmez', () => {
 
   assert.strictEqual(liste.length, 0);
 });
+
+test('ramazan günlerinde sahur ve iftar bildirimi üretir', () => {
+  const ayar = ayarKur({ ramazanGunleri: ['2026-08-12'], sahurOnce: 45 });
+  const simdi = new Date(2026, 7, 11, 0, 0, 0);
+
+  const liste = bildirimListesiUret(ayar, GUNLER, simdi);
+  const oruc = liste.filter(b => b.kanal === 'oruc');
+
+  assert.strictEqual(oruc.length, 2, 'yalnızca ramazan olan gün için');
+
+  // 12 Ağustos imsak 237 dk = 03:57; 45 dk öncesi 03:12
+  const sahur = oruc.find(b => b.govde.startsWith('Sahur'));
+  assert.strictEqual(sahur.zaman.getDate(), 12);
+  assert.strictEqual(sahur.zaman.getHours(), 3);
+  assert.strictEqual(sahur.zaman.getMinutes(), 12);
+  assert.strictEqual(sahur.govde, 'Sahura 45 dakika kaldı · imsak 03:57');
+
+  // 12 Ağustos akşam 1194 dk = 19:54
+  const iftar = oruc.find(b => b.govde.startsWith('İftar'));
+  assert.strictEqual(iftar.zaman.getHours(), 19);
+  assert.strictEqual(iftar.zaman.getMinutes(), 54);
+  assert.strictEqual(iftar.govde, 'İftar vakti · akşam 19:54');
+});
+
+test('ramazan dışındaki günlerde oruç bildirimi üretmez', () => {
+  const ayar = ayarKur({ ramazanGunleri: [] });
+  const simdi = new Date(2026, 7, 11, 0, 0, 0);
+
+  const liste = bildirimListesiUret(ayar, GUNLER, simdi);
+
+  assert.strictEqual(liste.filter(b => b.kanal === 'oruc').length, 0);
+});
+
+test('sahurOnce 0 ise sahur bildirimi üretilmez ama iftar üretilir', () => {
+  const ayar = ayarKur({ ramazanGunleri: ['2026-08-12'], sahurOnce: 0 });
+  const simdi = new Date(2026, 7, 11, 0, 0, 0);
+
+  const liste = bildirimListesiUret(ayar, GUNLER, simdi);
+  const oruc = liste.filter(b => b.kanal === 'oruc');
+
+  assert.strictEqual(oruc.length, 1);
+  assert.ok(oruc[0].govde.startsWith('İftar'));
+});
