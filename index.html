@@ -2489,6 +2489,7 @@ async function widgetVeriYaz(){
   // aynı gün ve aynı ayarlarla ikinci kez yazma
   const imza = gunAnahtar(bugun) + '|' + A.sehir + '|' + A.lat.toFixed(4) + ',' + A.lng.toFixed(4) +
                '|' + A.rakim + '|' + A.yontem + '|' + A.mezhep + '|' + (A.temkin?1:0) +
+               '|' + A.ramazanMod +
                '|' + VAKITLER.map(v=>A.duzeltme[v.k]).join(',');
   if(imza === _widgetSonYazim) return;
 
@@ -2500,7 +2501,8 @@ async function widgetVeriYaz(){
   }
   try{
     await P.set({ key:'bv_widget', value: JSON.stringify({
-      sehir: A.sehir, yazan: gunAnahtar(bugun), gunler
+      sehir: A.sehir, yazan: gunAnahtar(bugun), gunler,
+      ramazan: ramazanGunleri()
     })});
     _widgetSonYazim = imza;
   }catch(e){}
