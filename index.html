@@ -650,18 +650,25 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
     <div class="baslik">Bildirim ve görünüm</div>
     <div class="kart">
       <div class="alan">
-        <label>Vakit bildirimi<em>Uygulama açıkken çalışır</em></label>
+        <label>Bildirimler<em>Tümünü açar veya kapatır</em></label>
         <button class="svic" id="bildirimSvic" role="switch"></button>
       </div>
       <div class="alan">
-        <label>Vakit öncesi hatırlatma<em>Hazırlanmak için erken uyarı</em></label>
-        <select id="onceden">
+        <label>Sessiz saatler başlangıcı<em>Bu aralıkta sessiz bildirim gelir</em></label>
+        <input type="time" id="sessizBas">
+      </div>
+      <div class="alan">
+        <label>Sessiz saatler bitişi<em>Başlangıçla aynıysa kapalı</em></label>
+        <input type="time" id="sessizSon">
+      </div>
+      <div class="alan">
+        <label>Sahur uyarısı<em>İmsaktan kaç dakika önce</em></label>
+        <select id="sahurOnce">
           <option value="0">Kapalı</option>
-          <option value="5">5 dk önce</option>
-          <option value="10">10 dk önce</option>
-          <option value="15">15 dk önce</option>
           <option value="30">30 dk önce</option>
           <option value="45">45 dk önce</option>
+          <option value="60">1 saat önce</option>
+          <option value="90">1,5 saat önce</option>
         </select>
       </div>
       <div class="alan">
@@ -707,6 +714,21 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
       <div class="alan">
         <label>Ekranı açık tut<em>Kıble ve geri sayım için</em></label>
         <button class="svic" id="uyanikSvic" role="switch"></button>
+      </div>
+      <div class="alan" id="sesAyarAlani" style="display:none">
+        <label>Bildirim sesleri<em>Her tür için ayrı ses ve titreşim</em></label>
+        <select id="sesKanal">
+          <option value="">Seç…</option>
+          <option value="vakit">Namaz vakitleri</option>
+          <option value="once">Vakit öncesi uyarı</option>
+          <option value="oruc">Sahur ve iftar</option>
+          <option value="ozel">Cuma ve kerahat</option>
+          <option value="sessiz">Sessiz saatler</option>
+        </select>
+      </div>
+      <div class="alan" id="pilAlani" style="display:none">
+        <label>Bildirimler gecikiyor mu?<em>Pil ayarından uygulamayı serbest bırak</em></label>
+        <button class="svic" id="pilDugme" role="button">Aç</button>
       </div>
     </div>
 
@@ -2922,17 +2944,46 @@ function ayarlariKur(){
     }
     return true;
   });
-  $('#onceden').value = A.onceden;
-  $('#onceden').onchange = e => { A.onceden = +e.target.value; kaydet(); };
+  // Ana anahtar değişince kuyruk baştan kurulur (kapatılınca boşaltılır).
+  (function(){
+    const el = $('#bildirimSvic');
+    const eski = el.onclick;
+    el.onclick = async (e)=>{ await eski(e); bildirimKur(); };
+  })();
+  ['#kerahatSvic', '#cumaSvic'].forEach(sel=>{
+    const el = $(sel), eski = el.onclick;
+    el.onclick = async (e)=>{ await eski(e); bildirimKur(); };
+  });
+
+  $('#sessizBas').value = A.sessizBas || '00:00';
+  $('#sessizBas').onchange = e => { A.sessizBas = e.target.value; kaydet(); bildirimKur(); };
+  $('#sessizSon').value = A.sessizSon || '00:00';
+  $('#sessizSon').onchange = e => { A.sessizSon = e.target.value; kaydet(); bildirimKur(); };
+
+  $('#sahurOnce').value = A.sahurOnce;
+  $('#sahurOnce').onchange = e => { A.sahurOnce = +e.target.value; kaydet(); bildirimKur(); };
+
+  // Ses ve pil ayarları yalnızca APK içinde anlamlı
+  const C = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Cihaz;
+  if(C){
+    $('#sesAyarAlani').style.display = '';
+    $('#pilAlani').style.display = '';
+    $('#sesKanal').onchange = e => {
+      if(!e.target.value) return;
+      C.kanalAyariAc({ kanal: e.target.value }).catch(()=>{});
+      e.target.value = '';
+    };
+    $('#pilDugme').onclick = ()=> C.pilAyariAc().catch(()=>{});
+  }
   svicKur('#sesSvic','ses');
   svicKur('#titresimSvic','titresim');
   $('#tema').value = A.tema;
   $('#tema').onchange = e => { A.tema = e.target.value; kaydet(); temaUygula(); };
   svicKur('#cumaSvic','cuma', ()=>{ setTimeout(gunuTazele,0); return true; });
   $('#cumaSaat').value = A.cumaSaat || '11:30';
-  $('#cumaSaat').onchange = e => { A.cumaSaat = e.target.value || '11:30'; kaydet(); };
+  $('#cumaSaat').onchange = e => { A.cumaSaat = e.target.value || '11:30'; kaydet(); bildirimKur(); };
   $('#ramazanMod').value = A.ramazanMod;
-  $('#ramazanMod').onchange = e => { A.ramazanMod = e.target.value; kaydet(); gunuTazele(); };
+  $('#ramazanMod').onchange = e => { A.ramazanMod = e.target.value; kaydet(); gunuTazele(); bildirimKur(); };
   svicKur('#kerahatSvic','kerahat', ()=>{ setTimeout(gunuTazele,0); return true; });
   svicKur('#gokSvic','gokyuzu', ()=>{ setTimeout(()=>gokyuzuCiz(simdiDk()),0); return true; });
   svicKur('#uyanikSvic','uyanik', v=>{ uyanikAyarla(v); return true; });
