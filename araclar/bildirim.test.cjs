@@ -94,3 +94,54 @@ test('kimlikler benzersizdir', () => {
 
   assert.strictEqual(new Set(kimlikler).size, kimlikler.length);
 });
+
+test('vakit öncesi uyarı üretir', () => {
+  const ayar = ayarKur();
+  ayar.vakit.ikindi.bildir = true;
+  ayar.vakit.ikindi.once = 15;
+  const simdi = new Date(2026, 7, 11, 0, 0, 0);
+
+  const liste = bildirimListesiUret(ayar, GUNLER, simdi);
+  const once = liste.filter(b => b.kanal === 'once');
+
+  assert.strictEqual(once.length, 2);
+  // ikindi 999 dk = 16:39; 15 dk öncesi 16:24
+  assert.strictEqual(once[0].zaman.getHours(), 16);
+  assert.strictEqual(once[0].zaman.getMinutes(), 24);
+  assert.strictEqual(once[0].govde, 'İkindi vaktine 15 dakika kaldı');
+});
+
+test('her vaktin kendi önceden süresi olur', () => {
+  const ayar = ayarKur();
+  ayar.vakit.ogle.bildir = true;   ayar.vakit.ogle.once = 10;
+  ayar.vakit.ikindi.bildir = true; ayar.vakit.ikindi.once = 30;
+  const simdi = new Date(2026, 7, 11, 0, 0, 0);
+
+  const liste = bildirimListesiUret(ayar, GUNLER, simdi);
+  const metinler = liste.filter(b => b.kanal === 'once').map(b => b.govde);
+
+  assert.ok(metinler.includes('Öğle vaktine 10 dakika kaldı'));
+  assert.ok(metinler.includes('İkindi vaktine 30 dakika kaldı'));
+});
+
+test('güneş için önceden uyarı üretilmez', () => {
+  const ayar = ayarKur();
+  ayar.vakit.gunes.bildir = true;
+  ayar.vakit.gunes.once = 15;
+  const simdi = new Date(2026, 7, 11, 0, 0, 0);
+
+  const liste = bildirimListesiUret(ayar, GUNLER, simdi);
+
+  assert.strictEqual(liste.filter(b => b.kanal === 'once').length, 0);
+});
+
+test('önceden 0 ise uyarı üretilmez', () => {
+  const ayar = ayarKur();
+  ayar.vakit.ogle.bildir = true;
+  ayar.vakit.ogle.once = 0;
+  const simdi = new Date(2026, 7, 11, 0, 0, 0);
+
+  const liste = bildirimListesiUret(ayar, GUNLER, simdi);
+
+  assert.strictEqual(liste.filter(b => b.kanal === 'once').length, 0);
+});

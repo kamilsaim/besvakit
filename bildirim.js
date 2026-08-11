@@ -64,6 +64,18 @@ function bildirimListesiUret(ayar, gunler, simdi) {
           : BV_VAKIT_AD[k] + ' vakti girdi',
         zaman: bvZaman(gun, dk)
       });
+
+      // Vakit öncesi hatırlatma — güneş doğuşu için anlamsız, atlanır.
+      const once = +v.once || 0;
+      if (once > 0 && k !== 'gunes') {
+        liste.push({
+          id: gunSira * 100 + BV_TUR.once + i,
+          kanal: 'once',
+          baslik: BV_BASLIK,
+          govde: BV_VAKIT_AD[k] + ' vaktine ' + once + ' dakika kaldı',
+          zaman: bvZaman(gun, dk - once)
+        });
+      }
     });
   });
 
