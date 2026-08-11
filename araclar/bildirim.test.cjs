@@ -145,3 +145,39 @@ test('önceden 0 ise uyarı üretilmez', () => {
 
   assert.strictEqual(liste.filter(b => b.kanal === 'once').length, 0);
 });
+
+test('sessiz aralığa düşen bildirimin kanalı sessiz olur', () => {
+  const ayar = ayarKur({ sessiz: { bas: '22:00', son: '06:00' } });
+  ayar.vakit.imsak.bildir = true;   // 236 dk = 03:56, aralığın içinde
+  ayar.vakit.ogle.bildir = true;    // 769 dk = 12:49, aralığın dışında
+  const simdi = new Date(2026, 7, 11, 0, 0, 0);
+
+  const liste = bildirimListesiUret(ayar, GUNLER, simdi);
+  const imsak = liste.find(b => b.govde === 'İmsak vakti girdi');
+  const ogle  = liste.find(b => b.govde === 'Öğle vakti girdi');
+
+  assert.strictEqual(imsak.kanal, 'sessiz');
+  assert.strictEqual(ogle.kanal, 'vakit');
+});
+
+test('gece yarısını aşmayan sessiz aralık da çalışır', () => {
+  const ayar = ayarKur({ sessiz: { bas: '12:00', son: '14:00' } });
+  ayar.vakit.ogle.bildir = true;    // 12:49, aralığın içinde
+  ayar.vakit.ikindi.bildir = true;  // 16:39, aralığın dışında
+  const simdi = new Date(2026, 7, 11, 0, 0, 0);
+
+  const liste = bildirimListesiUret(ayar, GUNLER, simdi);
+
+  assert.strictEqual(liste.find(b => b.govde === 'Öğle vakti girdi').kanal, 'sessiz');
+  assert.strictEqual(liste.find(b => b.govde === 'İkindi vakti girdi').kanal, 'vakit');
+});
+
+test('başlangıç ve bitiş aynıysa sessiz saatler kapalıdır', () => {
+  const ayar = ayarKur({ sessiz: { bas: '00:00', son: '00:00' } });
+  ayar.vakit.imsak.bildir = true;
+  const simdi = new Date(2026, 7, 11, 0, 0, 0);
+
+  const liste = bildirimListesiUret(ayar, GUNLER, simdi);
+
+  assert.strictEqual(liste[0].kanal, 'vakit');
+});

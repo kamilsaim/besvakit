@@ -39,6 +39,23 @@ function bvSaatDk(metin) {
   return isNaN(dk) ? null : dk;
 }
 
+/**
+ * Verilen dakika sessiz aralığa düşüyor mu?
+ * Aralık gece yarısını aşabilir (22:00–06:00). bas === son ise kapalı sayılır.
+ */
+function bvSessizMi(dk, sessiz) {
+  if (!sessiz) return false;
+  const bas = bvSaatDk(sessiz.bas), son = bvSaatDk(sessiz.son);
+  if (bas === null || son === null || bas === son) return false;
+  const d = ((Math.round(dk) % 1440) + 1440) % 1440;
+  return bas < son ? (d >= bas && d < son) : (d >= bas || d < son);
+}
+
+/** Bildirim sessiz aralığa düşüyorsa kanalı 'sessiz' ile değiştirir. */
+function bvKanal(kanal, dk, sessiz) {
+  return bvSessizMi(dk, sessiz) ? 'sessiz' : kanal;
+}
+
 function bildirimListesiUret(ayar, gunler, simdi) {
   if (!ayar || !ayar.acik) return [];
 
@@ -57,7 +74,7 @@ function bildirimListesiUret(ayar, gunler, simdi) {
 
       liste.push({
         id: gunSira * 100 + BV_TUR.vakit + i,
-        kanal: 'vakit',
+        kanal: bvKanal('vakit', dk, ayar.sessiz),
         baslik: BV_BASLIK,
         govde: k === 'gunes'
           ? 'Güneş doğdu — sabah namazı vakti çıktı'
@@ -70,7 +87,7 @@ function bildirimListesiUret(ayar, gunler, simdi) {
       if (once > 0 && k !== 'gunes') {
         liste.push({
           id: gunSira * 100 + BV_TUR.once + i,
-          kanal: 'once',
+          kanal: bvKanal('once', dk - once, ayar.sessiz),
           baslik: BV_BASLIK,
           govde: BV_VAKIT_AD[k] + ' vaktine ' + once + ' dakika kaldı',
           zaman: bvZaman(gun, dk - once)
@@ -84,5 +101,8 @@ function bildirimListesiUret(ayar, gunler, simdi) {
 
 /* Hem tarayıcıda (script etiketiyle) hem Node'da (require ile) çalışsın. */
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { bildirimListesiUret, BV_TUR, BV_VAKIT_SIRA, bvZaman, bvSaatDk };
+  module.exports = {
+    bildirimListesiUret, BV_TUR, BV_VAKIT_SIRA,
+    bvZaman, bvSaatDk, bvSessizMi, bvKanal
+  };
 }
