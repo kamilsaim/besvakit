@@ -225,3 +225,35 @@ test('İstiva kerahatı öğleden 10 dk önce başlar', () => {
   assert.strictEqual(istiva.zaman.getMinutes(), 39);
   assert.strictEqual(istiva.govde, 'İstiva kerahat vakti başladı · 10 dk sürer');
 });
+
+/** 14 Ağustos 2026 cuma gününü de içeren daha uzun bir tablo. */
+const HAFTA = {
+  '2026-08-11': [236, 334, 769, 999, 1195, 1285],  // salı
+  '2026-08-12': [237, 335, 769, 999, 1194, 1284],  // çarşamba
+  '2026-08-13': [238, 336, 769, 998, 1193, 1283],  // perşembe
+  '2026-08-14': [239, 337, 769, 998, 1192, 1282]   // cuma
+};
+
+test('cuma bildirimi yalnızca cuma gününe düşer', () => {
+  const ayar = ayarKur({ cuma: true, cumaSaat: '11:30' });
+  const simdi = new Date(2026, 7, 11, 0, 0, 0);
+
+  const liste = bildirimListesiUret(ayar, HAFTA, simdi);
+  const cumalar = liste.filter(b => b.govde.startsWith('Cuma namazı'));
+
+  assert.strictEqual(cumalar.length, 1);
+  assert.strictEqual(cumalar[0].zaman.getDate(), 14);
+  assert.strictEqual(cumalar[0].zaman.getHours(), 11);
+  assert.strictEqual(cumalar[0].zaman.getMinutes(), 30);
+  assert.strictEqual(cumalar[0].kanal, 'ozel');
+  assert.strictEqual(cumalar[0].govde, 'Cuma namazı vakti yaklaşıyor · öğle 12:49');
+});
+
+test('cuma kapalıyken bildirim üretilmez', () => {
+  const ayar = ayarKur({ cuma: false });
+  const simdi = new Date(2026, 7, 11, 0, 0, 0);
+
+  const liste = bildirimListesiUret(ayar, HAFTA, simdi);
+
+  assert.strictEqual(liste.length, 0);
+});

@@ -56,6 +56,13 @@ function bvKanal(kanal, dk, sessiz) {
   return bvSessizMi(dk, sessiz) ? 'sessiz' : kanal;
 }
 
+/** Dakika -> 'HH:MM'. index.html'deki saatYaz ile aynı biçim. */
+function bvSaatYaz(dk) {
+  const d = ((Math.round(dk) % 1440) + 1440) % 1440;
+  const s = Math.floor(d / 60), m = d % 60;
+  return (s < 10 ? '0' : '') + s + ':' + (m < 10 ? '0' : '') + m;
+}
+
 function bildirimListesiUret(ayar, gunler, simdi) {
   if (!ayar || !ayar.acik) return [];
 
@@ -113,6 +120,22 @@ function bildirimListesiUret(ayar, gunler, simdi) {
         });
       });
     }
+
+    // Cuma hatırlatması — haftada bir, kullanıcının belirlediği saatte.
+    if (ayar.cuma) {
+      const cumaDk = bvSaatDk(ayar.cumaSaat);
+      const gunAdi = bvZaman(gun, 0).getDay();
+      if (cumaDk !== null && gunAdi === 5) {
+        liste.push({
+          id: gunSira * 100 + BV_TUR.cuma,
+          kanal: bvKanal('ozel', cumaDk, ayar.sessiz),
+          baslik: BV_BASLIK,
+          govde: 'Cuma namazı vakti yaklaşıyor · öğle ' +
+                 bvSaatYaz(vakitler[BV_VAKIT_SIRA.indexOf('ogle')]),
+          zaman: bvZaman(gun, cumaDk)
+        });
+      }
+    }
   });
 
   return liste.filter(b => b.zaman.getTime() > simdi.getTime());
@@ -122,6 +145,6 @@ function bildirimListesiUret(ayar, gunler, simdi) {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     bildirimListesiUret, BV_TUR, BV_VAKIT_SIRA,
-    bvZaman, bvSaatDk, bvSessizMi, bvKanal
+    bvZaman, bvSaatDk, bvSaatYaz, bvSessizMi, bvKanal
   };
 }
