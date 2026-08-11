@@ -805,9 +805,12 @@ const VARSAYILAN = {
   sehir:'Kayseri', lat:38.7312, lng:35.4787, rakim:1050, otoKonum:true,
   yontem:'diyanet', mezhep:1,
   duzeltme:{ imsak:0, gunes:0, ogle:0, ikindi:0, aksam:0, yatsi:0 },
-  bildirim:{ imsak:true, gunes:false, ogle:true, ikindi:true, aksam:true, yatsi:true },
+  bildirim:{ imsak:{bildir:true,  once:0}, gunes:{bildir:false, once:0},
+             ogle: {bildir:true,  once:0}, ikindi:{bildir:true, once:0},
+             aksam:{bildir:true,  once:0}, yatsi:{bildir:true,  once:0} },
   bildirimAcik:false, ses:true, titresim:true, gokyuzu:true, uyanik:false,
-  onceden:0, tema:'koyu', kerahat:true, ramazanMod:'oto',
+  sessizBas:'00:00', sessizSon:'00:00', sahurOnce:45,
+  tema:'koyu', kerahat:true, ramazanMod:'oto',
   resmi:true, ilce:'9620', resmiIl:'546',   // varsayılan şehir Kayseri ile tutarlı
   cuma:true, cumaSaat:'11:30',
   imsakiyeAcik:true, diniAcik:false, istatistikAcik:false, kazaAcik:false,
@@ -818,10 +821,35 @@ let A = yukle();
 function yukle(){
   try{
     const h = JSON.parse(localStorage.getItem('besvakit') || '{}');
-    return Object.assign({}, VARSAYILAN, h,
-      { duzeltme:Object.assign({}, VARSAYILAN.duzeltme, h.duzeltme||{}),
-        bildirim:Object.assign({}, VARSAYILAN.bildirim, h.bildirim||{}) });
+    const a = Object.assign({}, VARSAYILAN, h,
+      { duzeltme:Object.assign({}, VARSAYILAN.duzeltme, h.duzeltme||{}) });
+    a.bildirim = bildirimSemasiniTasi(h.bildirim, h.onceden);
+    delete a.onceden;
+    return a;
   }catch(e){ return JSON.parse(JSON.stringify(VARSAYILAN)); }
+}
+
+/**
+ * Eski şema vakit başına yalnızca aç/kapa (boolean) tutuyordu ve önceden uyarı
+ * tek bir global değerdi. Yeni şemada her vaktin kendi {bildir, once} nesnesi var.
+ * Eski global 'onceden' değeri tüm vakitlere kopyalanır — kullanıcı ayarını
+ * kaybetmesin.
+ */
+function bildirimSemasiniTasi(eski, eskiOnceden){
+  const yeni = {};
+  VAKITLER.forEach(v=>{
+    const d = VARSAYILAN.bildirim[v.k];
+    const e = eski && eski[v.k];
+    if(e && typeof e === 'object'){
+      yeni[v.k] = { bildir: !!e.bildir, once: +e.once || 0 };
+    }else if(typeof e === 'boolean'){
+      // eski şema: güneş için önceden uyarı anlamsız, sıfır bırakılır
+      yeni[v.k] = { bildir: e, once: v.k === 'gunes' ? 0 : (+eskiOnceden || 0) };
+    }else{
+      yeni[v.k] = { bildir: d.bildir, once: d.once };
+    }
+  });
+  return yeni;
 }
 function kaydet(){ try{ localStorage.setItem('besvakit', JSON.stringify(A)); }catch(e){} }
 
@@ -1363,12 +1391,14 @@ function vakitListesiCiz(){
       <div class="vakit-ikon">${v.ikon}</div>
       <div class="vakit-ad">${v.ad}<em>${v.alt}</em></div>
       <div class="vakit-saat">${saatYaz(bugunVakit[v.k])}</div>
-      <button class="zil ${A.bildirim[v.k]?'acik':''}" data-zil="${v.k}"
-        aria-label="${v.ad} bildirimi">${A.bildirim[v.k]?'🔔':'🔕'}</button>
+      <button class="zil ${A.bildirim[v.k].bildir?'acik':''}" data-zil="${v.k}"
+        aria-label="${v.ad} bildirimi">${A.bildirim[v.k].bildir?'🔔':'🔕'}</button>
     </div>`).join('');
   $$('[data-zil]').forEach(b=> b.onclick = ()=>{
-    const k=b.dataset.zil; A.bildirim[k] = !A.bildirim[k]; kaydet(); vakitListesiCiz();
-    toast(VAKITLER.find(v=>v.k===k).ad + (A.bildirim[k]?' bildirimi açık':' bildirimi kapalı'));
+    const k=b.dataset.zil; A.bildirim[k].bildir = !A.bildirim[k].bildir;
+    kaydet(); vakitListesiCiz();
+    toast(VAKITLER.find(v=>v.k===k).ad +
+          (A.bildirim[k].bildir?' bildirimi açık':' bildirimi kapalı'));
   });
 }
 /** Hangi kaynağın kullanıldığını görünür kılar — yanlış vakit izlenimi oluşmasın. */
@@ -1465,11 +1495,11 @@ const saatDamgasi = ()=>{ const d = new Date(); return d.toDateString() + '#' + 
 function bildirimKontrol(dk){
   if(!A.bildirimAcik) return;
   VAKITLER.forEach(v=>{
-    if(!A.bildirim[v.k]) return;
+    if(!A.bildirim[v.k].bildir) return;
     const t = bugunVakit[v.k];
 
     // vakit öncesi hatırlatma — güneş için anlamsız, atlanır
-    const onceden = +A.onceden || 0;
+    const onceden = +A.bildirim[v.k].once || 0;
     if(onceden && v.k !== 'gunes'){
       const o = t - onceden, oAnahtar = new Date().toDateString()+v.k+'-once';
       if(!isNaN(o) && dk >= o && dk < o + 1 && !uyariVerildi[oAnahtar]){
