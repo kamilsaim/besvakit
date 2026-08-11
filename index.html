@@ -677,7 +677,7 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
         </select>
       </div>
       <div class="alan">
-        <label>Sesli uyarı</label>
+        <label>Sesli uyarı<em>Tarayıcıda çalışır. APK'da bildirim sesi Android ayarından.</em></label>
         <button class="svic" id="sesSvic" role="switch"></button>
       </div>
       <div class="alan">
@@ -3022,7 +3022,21 @@ function ayarlariKur(){
   });
 
   svicKur('#bildirimSvic', 'bildirimAcik', async v=>{
-    if(v && 'Notification' in window && Notification.permission !== 'granted'){
+    if(!v) return true;
+    const L = bildirimEklentisi();
+    if(L){
+      // APK: Android 13+ POST_NOTIFICATIONS'ı çalışma anında ister. Manifest'te
+      // tanımlı olması yetmez — istenmezse bildirimler sessizce düşer.
+      // WebView'da web Notification API'si yok, o yüzden aşağıdaki dal buraya
+      // hiç uğramaz; izni eklentiden istemek zorundayız.
+      try{
+        let d = await L.checkPermissions();
+        if(d.display !== 'granted') d = await L.requestPermissions();
+        if(d.display !== 'granted'){ toast('Bildirim izni verilmedi'); return false; }
+      }catch(e){ toast('Bildirim izni alınamadı'); return false; }
+      return true;
+    }
+    if('Notification' in window && Notification.permission !== 'granted'){
       const izin = await Notification.requestPermission();
       if(izin !== 'granted'){ toast('Bildirim izni verilmedi'); return false; }
     }
@@ -3034,10 +3048,6 @@ function ayarlariKur(){
     const eski = el.onclick;
     el.onclick = async (e)=>{ await eski(e); bildirimKur(); };
   })();
-  ['#kerahatSvic', '#cumaSvic'].forEach(sel=>{
-    const el = $(sel), eski = el.onclick;
-    el.onclick = async (e)=>{ await eski(e); bildirimKur(); };
-  });
 
   $('#sessizBas').value = A.sessizBas || '00:00';
   $('#sessizBas').onchange = e => { A.sessizBas = e.target.value; kaydet(); bildirimKur(); };
