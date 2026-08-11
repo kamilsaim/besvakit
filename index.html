@@ -184,6 +184,10 @@ main{padding:4px 16px 24px;max-width:640px;margin:0 auto}
 .zil{width:34px;height:34px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:14px;
   opacity:.28;transition:opacity .2s,background .2s}
 .zil.acik{opacity:1;background:rgba(34,178,174,.16);color:var(--cini)}
+.once{background:none;border:0;color:var(--hayalet);font-size:11px;
+  font-variant-numeric:tabular-nums;padding:4px 6px;border-radius:8px;cursor:pointer;
+  letter-spacing:.02em}
+.once.acik{color:var(--pirinc)}
 
 /* imsakiye */
 table.imsakiye{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
@@ -362,6 +366,11 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
   background:var(--kat2);border:1px solid var(--cizgi);border-radius:10px;padding:9px 11px;
   min-width:96px;text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
 .alan input[type=number]{width:82px;min-width:0}
+/* Satır içi eylem düğmesi — anahtar değil, dokununca bir ekran açar.
+   Görsel olarak satırdaki açılır menülerle aynı dilde olsun diye onlarla eş biçimli. */
+.alan-dugme{background:var(--kat2);border:1px solid var(--cizgi);border-radius:10px;
+  padding:9px 14px;font-weight:600;font-size:13px;color:var(--kagit);cursor:pointer;flex:none}
+.alan-dugme:active{filter:brightness(1.25)}
 .svic{width:48px;height:28px;border-radius:16px;background:var(--kat2);position:relative;flex:none;
   border:1px solid var(--cizgi);transition:background .2s}
 .svic::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;
@@ -646,26 +655,33 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
     <div class="baslik">Bildirim ve görünüm</div>
     <div class="kart">
       <div class="alan">
-        <label>Vakit bildirimi<em>Uygulama açıkken çalışır</em></label>
+        <label>Bildirimler<em>Tümünü açar veya kapatır</em></label>
         <button class="svic" id="bildirimSvic" role="switch"></button>
       </div>
       <div class="alan">
-        <label>Vakit öncesi hatırlatma<em>Hazırlanmak için erken uyarı</em></label>
-        <select id="onceden">
+        <label>Sessiz saatler başlangıcı<em>Bu aralıkta sessiz bildirim gelir</em></label>
+        <input type="time" id="sessizBas">
+      </div>
+      <div class="alan">
+        <label>Sessiz saatler bitişi<em>Başlangıçla aynıysa kapalı</em></label>
+        <input type="time" id="sessizSon">
+      </div>
+      <div class="alan">
+        <label>Sahur uyarısı<em>İmsaktan kaç dakika önce</em></label>
+        <select id="sahurOnce">
           <option value="0">Kapalı</option>
-          <option value="5">5 dk önce</option>
-          <option value="10">10 dk önce</option>
-          <option value="15">15 dk önce</option>
           <option value="30">30 dk önce</option>
           <option value="45">45 dk önce</option>
+          <option value="60">1 saat önce</option>
+          <option value="90">1,5 saat önce</option>
         </select>
       </div>
       <div class="alan">
-        <label>Sesli uyarı</label>
+        <label>Sesli uyarı<em>Tarayıcıda çalışır. APK'da bildirim sesi Android ayarından.</em></label>
         <button class="svic" id="sesSvic" role="switch"></button>
       </div>
       <div class="alan">
-        <label>Titreşim<em>Kıble hizalanınca da titrer</em></label>
+        <label>Titreşim<em>Tesbih ve kıble için. Bildirim titreşimi Android ayarından.</em></label>
         <button class="svic" id="titresimSvic" role="switch"></button>
       </div>
       <div class="alan">
@@ -703,6 +719,21 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
       <div class="alan">
         <label>Ekranı açık tut<em>Kıble ve geri sayım için</em></label>
         <button class="svic" id="uyanikSvic" role="switch"></button>
+      </div>
+      <div class="alan" id="sesAyarAlani" style="display:none">
+        <label>Bildirim sesleri<em>Her tür için ayrı ses ve titreşim</em></label>
+        <select id="sesKanal">
+          <option value="">Seç…</option>
+          <option value="vakit">Namaz vakitleri</option>
+          <option value="once">Vakit öncesi uyarı</option>
+          <option value="oruc">Sahur ve iftar</option>
+          <option value="ozel">Cuma ve kerahat</option>
+          <option value="sessiz">Sessiz saatler</option>
+        </select>
+      </div>
+      <div class="alan" id="pilAlani" style="display:none">
+        <label>Bildirimler gecikiyor mu?<em>Pil ayarından uygulamayı serbest bırak</em></label>
+        <button class="alan-dugme" id="pilDugme">Aç</button>
       </div>
     </div>
 
@@ -747,13 +778,14 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
 
 <div class="toast" id="toast"></div>
 
+<script src="bildirim.js"></script>
 <script>
 /* ==========================================================
    BEŞ VAKİT — tek dosya, bağımsız namaz vakti uygulaması
    Vakitler cihazda hesaplanır; hiçbir sunucuya vakit sorulmaz.
    ========================================================== */
 const APP = 'Beş Vakit';
-const SURUM = '0.10.0';
+const SURUM = '0.11.0';
 const LOGO = 'logo-beyaz.png';
 const KABE = { lat: 21.4224779, lng: 39.8261722 };
 const VAKITLER = [
@@ -805,9 +837,12 @@ const VARSAYILAN = {
   sehir:'Kayseri', lat:38.7312, lng:35.4787, rakim:1050, otoKonum:true,
   yontem:'diyanet', mezhep:1,
   duzeltme:{ imsak:0, gunes:0, ogle:0, ikindi:0, aksam:0, yatsi:0 },
-  bildirim:{ imsak:true, gunes:false, ogle:true, ikindi:true, aksam:true, yatsi:true },
+  bildirim:{ imsak:{bildir:true,  once:0}, gunes:{bildir:false, once:0},
+             ogle: {bildir:true,  once:0}, ikindi:{bildir:true, once:0},
+             aksam:{bildir:true,  once:0}, yatsi:{bildir:true,  once:0} },
   bildirimAcik:false, ses:true, titresim:true, gokyuzu:true, uyanik:false,
-  onceden:0, tema:'koyu', kerahat:true, ramazanMod:'oto',
+  sessizBas:'00:00', sessizSon:'00:00', sahurOnce:45,
+  tema:'koyu', kerahat:true, ramazanMod:'oto',
   resmi:true, ilce:'9620', resmiIl:'546',   // varsayılan şehir Kayseri ile tutarlı
   cuma:true, cumaSaat:'11:30',
   imsakiyeAcik:true, diniAcik:false, istatistikAcik:false, kazaAcik:false,
@@ -818,10 +853,35 @@ let A = yukle();
 function yukle(){
   try{
     const h = JSON.parse(localStorage.getItem('besvakit') || '{}');
-    return Object.assign({}, VARSAYILAN, h,
-      { duzeltme:Object.assign({}, VARSAYILAN.duzeltme, h.duzeltme||{}),
-        bildirim:Object.assign({}, VARSAYILAN.bildirim, h.bildirim||{}) });
+    const a = Object.assign({}, VARSAYILAN, h,
+      { duzeltme:Object.assign({}, VARSAYILAN.duzeltme, h.duzeltme||{}) });
+    a.bildirim = bildirimSemasiniTasi(h.bildirim, h.onceden);
+    delete a.onceden;
+    return a;
   }catch(e){ return JSON.parse(JSON.stringify(VARSAYILAN)); }
+}
+
+/**
+ * Eski şema vakit başına yalnızca aç/kapa (boolean) tutuyordu ve önceden uyarı
+ * tek bir global değerdi. Yeni şemada her vaktin kendi {bildir, once} nesnesi var.
+ * Eski global 'onceden' değeri tüm vakitlere kopyalanır — kullanıcı ayarını
+ * kaybetmesin.
+ */
+function bildirimSemasiniTasi(eski, eskiOnceden){
+  const yeni = {};
+  VAKITLER.forEach(v=>{
+    const d = VARSAYILAN.bildirim[v.k];
+    const e = eski && eski[v.k];
+    if(e && typeof e === 'object'){
+      yeni[v.k] = { bildir: !!e.bildir, once: +e.once || 0 };
+    }else if(typeof e === 'boolean'){
+      // eski şema: güneş için önceden uyarı anlamsız, sıfır bırakılır
+      yeni[v.k] = { bildir: e, once: v.k === 'gunes' ? 0 : (+eskiOnceden || 0) };
+    }else{
+      yeni[v.k] = { bildir: d.bildir, once: d.once };
+    }
+  });
+  return yeni;
 }
 function kaydet(){ try{ localStorage.setItem('besvakit', JSON.stringify(A)); }catch(e){} }
 
@@ -1163,6 +1223,30 @@ const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 let bugunVakit = {}, siradaki = null, uyariVerildi = {}, uyanikKilit = null, sonTazeleme = null;
 
+/**
+ * Dokunsal geri bildirim. APK içinde @capacitor/haptics kullanılır —
+ * navigator.vibrate WebView'da bazı cihazlarda çalışmıyor. Eklenti yoksa
+ * tarayıcı API'sine düşer.
+ *
+ * Not: bu yalnızca UYGULAMA İÇİ titreşimdir. Bildirim titreşimi Android'in
+ * kanal ayarından yönetilir, buradan değil.
+ */
+function titret(sure){
+  if(!A.titresim) return;
+  const H = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Haptics;
+  if(H){
+    const s = Array.isArray(sure) ? sure.reduce((t,x)=>t+x, 0) : sure;
+    const stil = s >= 300 ? 'HEAVY' : (s >= 60 ? 'MEDIUM' : 'LIGHT');
+    try{
+      // impact() promise döndürür; titreşim motoru olmayan cihazda reddedebilir.
+      // Yutulmazsa yakalanmamış promise reddi olarak konsola düşer.
+      H.impact({ style:stil }).catch(()=>{});
+      return;
+    }catch(e){}
+  }
+  if(navigator.vibrate) navigator.vibrate(sure);
+}
+
 function toast(msg){
   const t = $('#toast'); t.textContent = msg; t.classList.add('gor');
   clearTimeout(t._z); t._z = setTimeout(()=>t.classList.remove('gor'), 2600);
@@ -1263,6 +1347,7 @@ function kerahatSimdi(dk){
 }
 /** Kerahat aralığına girildiği dakikada bir kez uyarır. */
 function kerahatUyari(dk){
+  if(kuyrukVar()) return;          // APK: bildirimler kuyruktan gelir
   if(!A.kerahat || !A.bildirimAcik) return;
   const k = kerahatSimdi(dk);
   if(!k) return;
@@ -1271,7 +1356,7 @@ function kerahatUyari(dk){
     uyariVerildi[anahtar] = true;
     const metin = k.ad + ' kerahat vakti başladı · ' + Math.round(k.son - k.bas) + ' dk sürer';
     try{ if(Notification.permission==='granted') new Notification(APP,{ body:metin, tag:'kerahat' }); }catch(e){}
-    if(A.titresim && navigator.vibrate) navigator.vibrate([120,80,120]);
+    titret([120,80,120]);
     toast(metin);
   }
 }
@@ -1319,7 +1404,7 @@ function ramazanCiz(){
     TAKIP.oruc = TAKIP.oruc || {};
     if(TAKIP.oruc[a]) delete TAKIP.oruc[a]; else TAKIP.oruc[a] = 1;
     depoYaz('besvakit_takip', TAKIP);
-    if(A.titresim && navigator.vibrate) navigator.vibrate(25);
+    titret(25);
     ramazanCiz();
   };
 }
@@ -1355,20 +1440,45 @@ function temaUygula(){
 }
 
 /* ---------- vakit listesi ---------- */
+/* Önceden uyarı seçenekleri — düğmeye her dokunuşta sıradakine geçer. */
+const ONCE_SECENEK = [0, 5, 10, 15, 20, 30, 45];
+
 function vakitListesiCiz(){
   const simdi = simdiDk();
   const aktif = aktifVakit(simdi);
-  $('#vakitListe').innerHTML = VAKITLER.map(v=>`
+  $('#vakitListe').innerHTML = VAKITLER.map(v=>{
+    const b = A.bildirim[v.k];
+    // Güneş doğuşu için "önceden uyarı" anlamsız — düğme gösterilmez.
+    const onceDugme = v.k === 'gunes' ? '' :
+      `<button class="once ${b.once?'acik':''}" data-once="${v.k}"
+        aria-label="${v.ad} öncesi uyarı">${b.once ? '⏱ '+b.once+' dk' : '⏱ —'}</button>`;
+    return `
     <div class="vakit-satir ${aktif===v.k?'simdi':''}">
       <div class="vakit-ikon">${v.ikon}</div>
       <div class="vakit-ad">${v.ad}<em>${v.alt}</em></div>
       <div class="vakit-saat">${saatYaz(bugunVakit[v.k])}</div>
-      <button class="zil ${A.bildirim[v.k]?'acik':''}" data-zil="${v.k}"
-        aria-label="${v.ad} bildirimi">${A.bildirim[v.k]?'🔔':'🔕'}</button>
-    </div>`).join('');
+      ${onceDugme}
+      <button class="zil ${b.bildir?'acik':''}" data-zil="${v.k}"
+        aria-label="${v.ad} bildirimi">${b.bildir?'🔔':'🔕'}</button>
+    </div>`;
+  }).join('');
+
   $$('[data-zil]').forEach(b=> b.onclick = ()=>{
-    const k=b.dataset.zil; A.bildirim[k] = !A.bildirim[k]; kaydet(); vakitListesiCiz();
-    toast(VAKITLER.find(v=>v.k===k).ad + (A.bildirim[k]?' bildirimi açık':' bildirimi kapalı'));
+    const k=b.dataset.zil; A.bildirim[k].bildir = !A.bildirim[k].bildir;
+    kaydet(); vakitListesiCiz(); bildirimKur();
+    toast(VAKITLER.find(v=>v.k===k).ad +
+          (A.bildirim[k].bildir?' bildirimi açık':' bildirimi kapalı'));
+  });
+
+  $$('[data-once]').forEach(b=> b.onclick = ()=>{
+    const k = b.dataset.once;
+    const i = ONCE_SECENEK.indexOf(+A.bildirim[k].once || 0);
+    A.bildirim[k].once = ONCE_SECENEK[(i + 1) % ONCE_SECENEK.length];
+    kaydet(); vakitListesiCiz(); bildirimKur();
+    const ad = VAKITLER.find(v=>v.k===k).ad;
+    toast(A.bildirim[k].once
+      ? ad + ' vaktinden ' + A.bildirim[k].once + ' dk önce uyarır'
+      : ad + ' için önceden uyarı kapalı');
   });
 }
 /** Hangi kaynağın kullanıldığını görünür kılar — yanlış vakit izlenimi oluşmasın. */
@@ -1463,20 +1573,21 @@ const saatDamgasi = ()=>{ const d = new Date(); return d.toDateString() + '#' + 
 
 /* ---------- bildirim ---------- */
 function bildirimKontrol(dk){
+  if(kuyrukVar()) return;          // APK: bildirimler kuyruktan gelir
   if(!A.bildirimAcik) return;
   VAKITLER.forEach(v=>{
-    if(!A.bildirim[v.k]) return;
+    if(!A.bildirim[v.k].bildir) return;
     const t = bugunVakit[v.k];
 
     // vakit öncesi hatırlatma — güneş için anlamsız, atlanır
-    const onceden = +A.onceden || 0;
+    const onceden = +A.bildirim[v.k].once || 0;
     if(onceden && v.k !== 'gunes'){
       const o = t - onceden, oAnahtar = new Date().toDateString()+v.k+'-once';
       if(!isNaN(o) && dk >= o && dk < o + 1 && !uyariVerildi[oAnahtar]){
         uyariVerildi[oAnahtar] = true;
         const metin = v.ad + ' vaktine ' + onceden + ' dakika kaldı';
         try{ if(Notification.permission==='granted') new Notification(APP,{ body:metin, tag:v.k+'-once' }); }catch(e){}
-        if(A.titresim && navigator.vibrate) navigator.vibrate(180);
+        titret(180);
         toast(metin);
       }
     }
@@ -1486,7 +1597,7 @@ function bildirimKontrol(dk){
       uyariVerildi[anahtar] = true;
       const metin = v.k==='gunes' ? 'Güneş doğdu — sabah namazı vakti çıktı' : v.ad + ' vakti girdi';
       try{ if(Notification.permission==='granted') new Notification(APP,{ body:metin, tag:v.k }); }catch(e){}
-      if(A.titresim && navigator.vibrate) navigator.vibrate([400,150,400]);
+      titret([400,150,400]);
       if(A.ses) ezanSesi();
       toast(metin);
     }
@@ -1825,7 +1936,7 @@ function takipCiz(){
   }).join('');
   $$('[data-namaz]').forEach(b => b.onclick = ()=>{
     takipDegistir(anahtar, b.dataset.namaz);
-    if(A.titresim && navigator.vibrate) navigator.vibrate(25);
+    titret(25);
     takipCiz();
     if(gunSayisi(anahtar) === 5) toast('Bugünün beş vakti tamam · seri ' + seriHesapla() + ' gün');
   });
@@ -2079,7 +2190,7 @@ function tesbihArtir(){
   ZIKIR.gecmis[a] = ZIKIR.gecmis[a] || {};
   ZIKIR.gecmis[a][z.ad] = (ZIKIR.gecmis[a][z.ad]||0) + 1;
   const tamam = z.hedef && ZIKIR.sayac === z.hedef;
-  if(A.titresim && navigator.vibrate) navigator.vibrate(tamam ? [60,60,60] : 12);
+  titret(tamam ? [60,60,60] : 12);
   if(tamam && ZIKIR.setModu && ZIKIR.secili < TESBIH_SETI_SON){
     toast(z.ad + ' tamam · sırada ' + liste[ZIKIR.secili+1].ad);
     ZIKIR.secili++; ZIKIR.sayac = 0;
@@ -2178,6 +2289,7 @@ function cumaCiz(){
 }
 /** Cuma günü belirlenen saatte bir kez hatırlatır. */
 function cumaUyari(dk){
+  if(kuyrukVar()) return;          // APK: bildirimler kuyruktan gelir
   if(!A.cuma || !A.bildirimAcik) return;
   const g = new Date().getDay();
   const hedef = cumaSaatDk();
@@ -2187,7 +2299,7 @@ function cumaUyari(dk){
       uyariVerildi[anahtar] = true;
       const metin = 'Cuma namazı vakti yaklaşıyor · öğle ' + saatYaz(bugunVakit.ogle);
       try{ if(Notification.permission==='granted') new Notification(APP,{ body:metin, tag:'cuma' }); }catch(e){}
-      if(A.titresim && navigator.vibrate) navigator.vibrate([200,100,200]);
+      titret([200,100,200]);
       toast(metin);
     }
   }
@@ -2205,6 +2317,170 @@ function cumaSaatDk(){
    açılmasa da ana ekrandaki widget doğru çalışmaya devam eder.
    Tarayıcıda hiçbir şey yapmaz — yalnızca APK içinde çalışır.
    ========================================================== */
+/* ==========================================================
+   ARKA PLAN BİLDİRİMLERİ
+   Web'deki setInterval yalnızca uygulama açıkken çalışır. APK içinde
+   @capacitor/local-notifications ile 30 güne kadar bildirimi önceden kuyruğa
+   alıyoruz; böylece uygulama kapalıyken de bildirim gelir.
+   Ses ve titreşim seçimi Android'in kanal ayarına bırakıldı — kanal bir kez
+   oluşturulduktan sonra kod ile değiştirilemez, yalnızca kullanıcı değiştirir.
+   ========================================================== */
+const BV_KANALLAR = [
+  { id:'vakit',  name:'Namaz vakitleri', description:'Vakit girdiğinde',
+    importance:5, vibration:true },
+  { id:'once',   name:'Vakit öncesi uyarı', description:'Vakte az kala',
+    importance:4, vibration:true },
+  { id:'oruc',   name:'Sahur ve iftar', description:'Ramazan bildirimleri',
+    importance:5, vibration:true },
+  { id:'ozel',   name:'Cuma ve kerahat', description:'Diğer hatırlatmalar',
+    importance:3, vibration:true },
+  { id:'sessiz', name:'Sessiz saatler', description:'Sessiz aralığa düşen bildirimler',
+    importance:2, vibration:false }
+];
+
+const bildirimEklentisi = ()=>
+  (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.LocalNotifications) || null;
+
+/** Kuyruk kullanılabiliyorsa uygulama açıkken çalışan eski yol susar —
+    yoksa aynı bildirim iki kez gelir. */
+const kuyrukVar = ()=> !!bildirimEklentisi();
+
+let _kanallarKuruldu = false;
+async function bildirimKanallariKur(){
+  const L = bildirimEklentisi();
+  if(!L || _kanallarKuruldu) return;
+  for(const k of BV_KANALLAR){
+    try{ await L.createChannel(k); }catch(e){}
+  }
+  _kanallarKuruldu = true;
+}
+
+/** Önümüzdeki 30 günün hangileri ramazan — hicri hesap burada kalır. */
+function ramazanGunleri(){
+  if(A.ramazanMod === 'kapali') return [];
+  const liste = [], bugun = new Date();
+  for(let i=0; i<30; i++){
+    const d = new Date(bugun); d.setDate(d.getDate() + i);
+    try{
+      const h = hicriParcala(d);
+      if(h.month === 9) liste.push(gunAnahtar(d));
+    }catch(e){}
+  }
+  // 'Her zaman açık' denemesinde bugünü ramazan say
+  if(A.ramazanMod === 'acik' && !liste.length) liste.push(gunAnahtar(bugun));
+  return liste;
+}
+
+/** bildirim.js'in beklediği saf ayar nesnesini üretir. */
+function bildirimAyari(){
+  const vakit = {};
+  VAKITLER.forEach(v=>{
+    vakit[v.k] = { bildir: !!A.bildirim[v.k].bildir, once: +A.bildirim[v.k].once || 0 };
+  });
+  return {
+    acik: !!A.bildirimAcik,
+    vakit,
+    sessiz: { bas: A.sessizBas || '00:00', son: A.sessizSon || '00:00' },
+    kerahat: !!A.kerahat,
+    kerahatAraliklari: KERAHAT,
+    cuma: !!A.cuma,
+    cumaSaat: A.cumaSaat || '11:30',
+    ramazanGunleri: ramazanGunleri(),
+    sahurOnce: +A.sahurOnce || 0
+  };
+}
+
+/** Önümüzdeki 30 günün vakit tablosu — widgetVeriYaz ile aynı biçim. */
+function bildirimGunTablosu(){
+  const gunler = {}, bugun = new Date();
+  for(let i=0; i<30; i++){
+    const d = new Date(bugun); d.setDate(d.getDate() + i);
+    const v = vakitAl(d);
+    gunler[gunAnahtar(d)] = VAKITLER.map(x => isNaN(v[x.k]) ? 0 : Math.round(v[x.k]));
+  }
+  return gunler;
+}
+
+/** Kuyruğu etkileyen her ayarı ve güncel günü kapsayan imza — widgetVeriYaz ile aynı fikir. */
+function bildirimImza(){
+  return gunAnahtar(new Date()) + '|' + (A.bildirimAcik?1:0) +
+    '|' + VAKITLER.map(v=>(A.bildirim[v.k].bildir?1:0) + ',' + (+A.bildirim[v.k].once||0)).join(';') +
+    '|' + (A.sessizBas||'00:00') + '-' + (A.sessizSon||'00:00') +
+    '|' + (+A.sahurOnce||0) +
+    '|' + (A.kerahat?1:0) + '|' + (A.cuma?1:0) + '|' + (A.cumaSaat||'11:30') +
+    '|' + (A.ramazanMod||'') +
+    '|' + A.sehir + '|' + A.lat.toFixed(4) + ',' + A.lng.toFixed(4) +
+    '|' + A.rakim + '|' + A.yontem + '|' + A.mezhep + '|' + (A.temkin?1:0) +
+    '|' + VAKITLER.map(v=>A.duzeltme[v.k]).join(',');
+}
+
+let _bildirimSonKurulum = '';
+let _bildirimCalisiyor = null;   // sürmekte olan kurulum promise'ı
+let _bildirimTekrarGerek = false; // kurulum sürerken yeni istek geldi mi
+
+/**
+ * Kuyruğu baştan kurar: önce yeni listeyi üretir, sonra iptal eder, sonra yazar.
+ * Artımlı güncelleme yapılmıyor — ayar değişince hangi bildirimin
+ * geçersizleştiğini izlemek kırılgan olurdu.
+ * Eşzamanlı çağrılar birbirini geçmesin diye tek seferde bir kurulum çalışır;
+ * kurulum sürerken gelen istekler kaybolmaz, kurulum bitince tek bir yeniden
+ * çalıştırmayla (son isteği yansıtacak şekilde) telafi edilir.
+ */
+async function bildirimKur(){
+  const L = bildirimEklentisi();
+  if(!L) return;                       // tarayıcı: eski setInterval yolu çalışır
+
+  if(_bildirimCalisiyor){
+    // bir kurulum zaten sürüyor — onun bitmesini bekle, sonra güncel ayarlarla bir kez daha çalış
+    _bildirimTekrarGerek = true;
+    return _bildirimCalisiyor;
+  }
+
+  _bildirimCalisiyor = (async()=>{
+    try{
+      const imza = bildirimImza();
+      if(imza === _bildirimSonKurulum) return;
+
+      await bildirimKanallariKur();
+
+      // önce üret: üretim patlarsa mevcut kuyruk dokunulmamış kalır
+      const liste = A.bildirimAcik ? bildirimListesiUret(bildirimAyari(), bildirimGunTablosu(), new Date()) : [];
+
+      const bekleyen = await L.getPending();
+      if(bekleyen && bekleyen.notifications && bekleyen.notifications.length){
+        await L.cancel({ notifications: bekleyen.notifications.map(n=>({ id:n.id })) });
+      }
+
+      if(!A.bildirimAcik || !liste.length){
+        _bildirimSonKurulum = imza;
+        return;
+      }
+
+      await L.schedule({ notifications: liste.map(b=>({
+        id: b.id,
+        title: b.baslik,
+        body: b.govde,
+        channelId: b.kanal,
+        schedule: { at: b.zaman, allowWhileIdle: true }
+      })) });
+      _bildirimSonKurulum = imza;
+    }catch(e){
+      toast('Bildirimler kurulamadı — sonraki açılışta yeniden denenecek');
+      // imza kaydedilmedi: bir sonraki çağrı yeniden dener
+    }
+  })();
+
+  try{
+    await _bildirimCalisiyor;
+  }finally{
+    _bildirimCalisiyor = null;
+    if(_bildirimTekrarGerek){
+      _bildirimTekrarGerek = false;
+      await bildirimKur();
+    }
+  }
+}
+
 let _widgetSonYazim = '';
 async function widgetVeriYaz(){
   const P = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Preferences;
@@ -2213,6 +2489,7 @@ async function widgetVeriYaz(){
   // aynı gün ve aynı ayarlarla ikinci kez yazma
   const imza = gunAnahtar(bugun) + '|' + A.sehir + '|' + A.lat.toFixed(4) + ',' + A.lng.toFixed(4) +
                '|' + A.rakim + '|' + A.yontem + '|' + A.mezhep + '|' + (A.temkin?1:0) +
+               '|' + A.ramazanMod +
                '|' + VAKITLER.map(v=>A.duzeltme[v.k]).join(',');
   if(imza === _widgetSonYazim) return;
 
@@ -2224,7 +2501,8 @@ async function widgetVeriYaz(){
   }
   try{
     await P.set({ key:'bv_widget', value: JSON.stringify({
-      sehir: A.sehir, yazan: gunAnahtar(bugun), gunler
+      sehir: A.sehir, yazan: gunAnahtar(bugun), gunler,
+      ramazan: ramazanGunleri()
     })});
     _widgetSonYazim = imza;
   }catch(e){}
@@ -2249,6 +2527,7 @@ function gunuTazele(){
   tikTak();
   kibleBilgiTazele();
   widgetVeriYaz();
+  bildirimKur();
 }
 
 /* ==========================================================
@@ -2318,8 +2597,8 @@ function pusulaCiz(){
   $('#sapmaYazi').textContent = (sapma===null) ? kible.toFixed(0)+'°' :
       (hizali ? 'Kıble' : (sapma>180 ? '◀ '+Math.round(360-sapma)+'°' : Math.round(sapma)+'° ▶'));
   $('.pusula-durum').classList.toggle('hizali', hizali);
-  if(hizali && pusulaAcik && A.titresim && navigator.vibrate && Date.now()-sonTitresim > 4000){
-    sonTitresim = Date.now(); navigator.vibrate(60);
+  if(hizali && pusulaAcik && A.titresim && Date.now()-sonTitresim > 4000){
+    sonTitresim = Date.now(); titret(60);
   }
 }
 /* ---------- güneşe göre kıble ---------- */
@@ -2743,23 +3022,62 @@ function ayarlariKur(){
   });
 
   svicKur('#bildirimSvic', 'bildirimAcik', async v=>{
-    if(v && 'Notification' in window && Notification.permission !== 'granted'){
+    if(!v) return true;
+    const L = bildirimEklentisi();
+    if(L){
+      // APK: Android 13+ POST_NOTIFICATIONS'ı çalışma anında ister. Manifest'te
+      // tanımlı olması yetmez — istenmezse bildirimler sessizce düşer.
+      // WebView'da web Notification API'si yok, o yüzden aşağıdaki dal buraya
+      // hiç uğramaz; izni eklentiden istemek zorundayız.
+      try{
+        let d = await L.checkPermissions();
+        if(d.display !== 'granted') d = await L.requestPermissions();
+        if(d.display !== 'granted'){ toast('Bildirim izni verilmedi'); return false; }
+      }catch(e){ toast('Bildirim izni alınamadı'); return false; }
+      return true;
+    }
+    if('Notification' in window && Notification.permission !== 'granted'){
       const izin = await Notification.requestPermission();
       if(izin !== 'granted'){ toast('Bildirim izni verilmedi'); return false; }
     }
     return true;
   });
-  $('#onceden').value = A.onceden;
-  $('#onceden').onchange = e => { A.onceden = +e.target.value; kaydet(); };
+  // Ana anahtar değişince kuyruk baştan kurulur (kapatılınca boşaltılır).
+  (function(){
+    const el = $('#bildirimSvic');
+    const eski = el.onclick;
+    el.onclick = async (e)=>{ await eski(e); bildirimKur(); };
+  })();
+
+  $('#sessizBas').value = A.sessizBas || '00:00';
+  $('#sessizBas').onchange = e => { A.sessizBas = e.target.value; kaydet(); bildirimKur(); };
+  $('#sessizSon').value = A.sessizSon || '00:00';
+  $('#sessizSon').onchange = e => { A.sessizSon = e.target.value; kaydet(); bildirimKur(); };
+
+  $('#sahurOnce').value = A.sahurOnce;
+  $('#sahurOnce').onchange = e => { A.sahurOnce = +e.target.value; kaydet(); bildirimKur(); };
+
+  // Ses ve pil ayarları yalnızca APK içinde anlamlı
+  const C = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Cihaz;
+  if(C){
+    $('#sesAyarAlani').style.display = '';
+    $('#pilAlani').style.display = '';
+    $('#sesKanal').onchange = e => {
+      if(!e.target.value) return;
+      C.kanalAyariAc({ kanal: e.target.value }).catch(()=>{});
+      e.target.value = '';
+    };
+    $('#pilDugme').onclick = ()=> C.pilAyariAc().catch(()=>{});
+  }
   svicKur('#sesSvic','ses');
   svicKur('#titresimSvic','titresim');
   $('#tema').value = A.tema;
   $('#tema').onchange = e => { A.tema = e.target.value; kaydet(); temaUygula(); };
   svicKur('#cumaSvic','cuma', ()=>{ setTimeout(gunuTazele,0); return true; });
   $('#cumaSaat').value = A.cumaSaat || '11:30';
-  $('#cumaSaat').onchange = e => { A.cumaSaat = e.target.value || '11:30'; kaydet(); };
+  $('#cumaSaat').onchange = e => { A.cumaSaat = e.target.value || '11:30'; kaydet(); bildirimKur(); };
   $('#ramazanMod').value = A.ramazanMod;
-  $('#ramazanMod').onchange = e => { A.ramazanMod = e.target.value; kaydet(); gunuTazele(); };
+  $('#ramazanMod').onchange = e => { A.ramazanMod = e.target.value; kaydet(); gunuTazele(); bildirimKur(); };
   svicKur('#kerahatSvic','kerahat', ()=>{ setTimeout(gunuTazele,0); return true; });
   svicKur('#gokSvic','gokyuzu', ()=>{ setTimeout(()=>gokyuzuCiz(simdiDk()),0); return true; });
   svicKur('#uyanikSvic','uyanik', v=>{ uyanikAyarla(v); return true; });
