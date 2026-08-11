@@ -184,6 +184,10 @@ main{padding:4px 16px 24px;max-width:640px;margin:0 auto}
 .zil{width:34px;height:34px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:14px;
   opacity:.28;transition:opacity .2s,background .2s}
 .zil.acik{opacity:1;background:rgba(34,178,174,.16);color:var(--cini)}
+.once{background:none;border:0;color:var(--hayalet);font-size:11px;
+  font-variant-numeric:tabular-nums;padding:4px 6px;border-radius:8px;cursor:pointer;
+  letter-spacing:.02em}
+.once.acik{color:var(--pirinc)}
 
 /* imsakiye */
 table.imsakiye{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
@@ -1384,22 +1388,45 @@ function temaUygula(){
 }
 
 /* ---------- vakit listesi ---------- */
+/* Önceden uyarı seçenekleri — düğmeye her dokunuşta sıradakine geçer. */
+const ONCE_SECENEK = [0, 5, 10, 15, 20, 30, 45];
+
 function vakitListesiCiz(){
   const simdi = simdiDk();
   const aktif = aktifVakit(simdi);
-  $('#vakitListe').innerHTML = VAKITLER.map(v=>`
+  $('#vakitListe').innerHTML = VAKITLER.map(v=>{
+    const b = A.bildirim[v.k];
+    // Güneş doğuşu için "önceden uyarı" anlamsız — düğme gösterilmez.
+    const onceDugme = v.k === 'gunes' ? '' :
+      `<button class="once ${b.once?'acik':''}" data-once="${v.k}"
+        aria-label="${v.ad} öncesi uyarı">${b.once ? '⏱ '+b.once+' dk' : '⏱ —'}</button>`;
+    return `
     <div class="vakit-satir ${aktif===v.k?'simdi':''}">
       <div class="vakit-ikon">${v.ikon}</div>
       <div class="vakit-ad">${v.ad}<em>${v.alt}</em></div>
       <div class="vakit-saat">${saatYaz(bugunVakit[v.k])}</div>
-      <button class="zil ${A.bildirim[v.k].bildir?'acik':''}" data-zil="${v.k}"
-        aria-label="${v.ad} bildirimi">${A.bildirim[v.k].bildir?'🔔':'🔕'}</button>
-    </div>`).join('');
+      ${onceDugme}
+      <button class="zil ${b.bildir?'acik':''}" data-zil="${v.k}"
+        aria-label="${v.ad} bildirimi">${b.bildir?'🔔':'🔕'}</button>
+    </div>`;
+  }).join('');
+
   $$('[data-zil]').forEach(b=> b.onclick = ()=>{
     const k=b.dataset.zil; A.bildirim[k].bildir = !A.bildirim[k].bildir;
-    kaydet(); vakitListesiCiz();
+    kaydet(); vakitListesiCiz(); bildirimKur();
     toast(VAKITLER.find(v=>v.k===k).ad +
           (A.bildirim[k].bildir?' bildirimi açık':' bildirimi kapalı'));
+  });
+
+  $$('[data-once]').forEach(b=> b.onclick = ()=>{
+    const k = b.dataset.once;
+    const i = ONCE_SECENEK.indexOf(+A.bildirim[k].once || 0);
+    A.bildirim[k].once = ONCE_SECENEK[(i + 1) % ONCE_SECENEK.length];
+    kaydet(); vakitListesiCiz(); bildirimKur();
+    const ad = VAKITLER.find(v=>v.k===k).ad;
+    toast(A.bildirim[k].once
+      ? ad + ' vaktinden ' + A.bildirim[k].once + ' dk önce uyarır'
+      : ad + ' için önceden uyarı kapalı');
   });
 }
 /** Hangi kaynağın kullanıldığını görünür kılar — yanlış vakit izlenimi oluşmasın. */
