@@ -94,6 +94,25 @@ function bildirimListesiUret(ayar, gunler, simdi) {
         });
       }
     });
+
+    // Kerahat aralıkları — tanım index.html'deki KERAHAT sabitinden gelir,
+    // burada çoğaltılmaz.
+    if (ayar.kerahat) {
+      (ayar.kerahatAraliklari || []).forEach((ker, ki) => {
+        const basDk = vakitler[BV_VAKIT_SIRA.indexOf(ker.bas)] + ker.basEk;
+        const sonDk = vakitler[BV_VAKIT_SIRA.indexOf(ker.son)] + ker.sonEk;
+        if (isNaN(basDk) || isNaN(sonDk)) return;
+
+        liste.push({
+          id: gunSira * 100 + BV_TUR.kerahat + ki,
+          kanal: bvKanal('ozel', basDk, ayar.sessiz),
+          baslik: BV_BASLIK,
+          govde: ker.ad + ' kerahat vakti başladı · ' +
+                 Math.round(sonDk - basDk) + ' dk sürer',
+          zaman: bvZaman(gun, basDk)
+        });
+      });
+    }
   });
 
   return liste.filter(b => b.zaman.getTime() > simdi.getTime());

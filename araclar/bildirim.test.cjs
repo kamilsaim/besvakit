@@ -181,3 +181,47 @@ test('başlangıç ve bitiş aynıysa sessiz saatler kapalıdır', () => {
 
   assert.strictEqual(liste[0].kanal, 'vakit');
 });
+
+/** index.html'deki KERAHAT sabitiyle aynı yapı. */
+const KERAHAT_TEST = [
+  { ad: 'İşrak',  bas: 'gunes', basEk: 0,   son: 'gunes', sonEk: 45 },
+  { ad: 'İstiva', bas: 'ogle',  basEk: -10, son: 'ogle',  sonEk: 0 },
+  { ad: 'Gurub',  bas: 'aksam', basEk: -45, son: 'aksam', sonEk: 0 }
+];
+
+test('kerahat açıkken üç uyarı üretir', () => {
+  const ayar = ayarKur({ kerahat: true, kerahatAraliklari: KERAHAT_TEST });
+  const simdi = new Date(2026, 7, 11, 0, 0, 0);
+
+  const liste = bildirimListesiUret(ayar, GUNLER, simdi);
+  const ker = liste.filter(b => b.kanal === 'ozel');
+
+  assert.strictEqual(ker.length, 6, 'iki gün × üç aralık');
+  // İşrak: gunes 334 dk = 05:34, süre 45 dk
+  const israk = ker.find(b => b.govde.startsWith('İşrak'));
+  assert.strictEqual(israk.zaman.getHours(), 5);
+  assert.strictEqual(israk.zaman.getMinutes(), 34);
+  assert.strictEqual(israk.govde, 'İşrak kerahat vakti başladı · 45 dk sürer');
+});
+
+test('kerahat kapalıyken uyarı üretmez', () => {
+  const ayar = ayarKur({ kerahat: false, kerahatAraliklari: KERAHAT_TEST });
+  const simdi = new Date(2026, 7, 11, 0, 0, 0);
+
+  const liste = bildirimListesiUret(ayar, GUNLER, simdi);
+
+  assert.strictEqual(liste.length, 0);
+});
+
+test('İstiva kerahatı öğleden 10 dk önce başlar', () => {
+  const ayar = ayarKur({ kerahat: true, kerahatAraliklari: KERAHAT_TEST });
+  const simdi = new Date(2026, 7, 11, 0, 0, 0);
+
+  const liste = bildirimListesiUret(ayar, GUNLER, simdi);
+  const istiva = liste.find(b => b.govde.startsWith('İstiva'));
+
+  // ogle 769 dk = 12:49; 10 dk öncesi 12:39
+  assert.strictEqual(istiva.zaman.getHours(), 12);
+  assert.strictEqual(istiva.zaman.getMinutes(), 39);
+  assert.strictEqual(istiva.govde, 'İstiva kerahat vakti başladı · 10 dk sürer');
+});
