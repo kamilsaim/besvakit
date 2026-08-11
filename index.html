@@ -747,6 +747,7 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
 
 <div class="toast" id="toast"></div>
 
+<script src="bildirim.js"></script>
 <script>
 /* ==========================================================
    BEŞ VAKİT — tek dosya, bağımsız namaz vakti uygulaması
@@ -2235,6 +2236,120 @@ function cumaSaatDk(){
    açılmasa da ana ekrandaki widget doğru çalışmaya devam eder.
    Tarayıcıda hiçbir şey yapmaz — yalnızca APK içinde çalışır.
    ========================================================== */
+/* ==========================================================
+   ARKA PLAN BİLDİRİMLERİ
+   Web'deki setInterval yalnızca uygulama açıkken çalışır. APK içinde
+   @capacitor/local-notifications ile 30 güne kadar bildirimi önceden kuyruğa
+   alıyoruz; böylece uygulama kapalıyken de bildirim gelir.
+   Ses ve titreşim seçimi Android'in kanal ayarına bırakıldı — kanal bir kez
+   oluşturulduktan sonra kod ile değiştirilemez, yalnızca kullanıcı değiştirir.
+   ========================================================== */
+const BV_KANALLAR = [
+  { id:'vakit',  name:'Namaz vakitleri', description:'Vakit girdiğinde',
+    importance:5, vibration:true },
+  { id:'once',   name:'Vakit öncesi uyarı', description:'Vakte az kala',
+    importance:4, vibration:true },
+  { id:'oruc',   name:'Sahur ve iftar', description:'Ramazan bildirimleri',
+    importance:5, vibration:true },
+  { id:'ozel',   name:'Cuma ve kerahat', description:'Diğer hatırlatmalar',
+    importance:3, vibration:true },
+  { id:'sessiz', name:'Sessiz saatler', description:'Sessiz aralığa düşen bildirimler',
+    importance:2, vibration:false }
+];
+
+const bildirimEklentisi = ()=>
+  (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.LocalNotifications) || null;
+
+let _kanallarKuruldu = false;
+async function bildirimKanallariKur(){
+  const L = bildirimEklentisi();
+  if(!L || _kanallarKuruldu) return;
+  for(const k of BV_KANALLAR){
+    try{ await L.createChannel(k); }catch(e){}
+  }
+  _kanallarKuruldu = true;
+}
+
+/** Önümüzdeki 30 günün hangileri ramazan — hicri hesap burada kalır. */
+function ramazanGunleri(){
+  if(A.ramazanMod === 'kapali') return [];
+  const liste = [], bugun = new Date();
+  for(let i=0; i<30; i++){
+    const d = new Date(bugun); d.setDate(d.getDate() + i);
+    try{
+      const h = hicriParcala(d);
+      if(h.month === 9) liste.push(gunAnahtar(d));
+    }catch(e){}
+  }
+  // 'Her zaman açık' denemesinde bugünü ramazan say
+  if(A.ramazanMod === 'acik' && !liste.length) liste.push(gunAnahtar(bugun));
+  return liste;
+}
+
+/** bildirim.js'in beklediği saf ayar nesnesini üretir. */
+function bildirimAyari(){
+  const vakit = {};
+  VAKITLER.forEach(v=>{
+    vakit[v.k] = { bildir: !!A.bildirim[v.k].bildir, once: +A.bildirim[v.k].once || 0 };
+  });
+  return {
+    acik: !!A.bildirimAcik,
+    vakit,
+    sessiz: { bas: A.sessizBas || '00:00', son: A.sessizSon || '00:00' },
+    kerahat: !!A.kerahat,
+    kerahatAraliklari: KERAHAT,
+    cuma: !!A.cuma,
+    cumaSaat: A.cumaSaat || '11:30',
+    ramazanGunleri: ramazanGunleri(),
+    sahurOnce: +A.sahurOnce || 0
+  };
+}
+
+/** Önümüzdeki 30 günün vakit tablosu — widgetVeriYaz ile aynı biçim. */
+function bildirimGunTablosu(){
+  const gunler = {}, bugun = new Date();
+  for(let i=0; i<30; i++){
+    const d = new Date(bugun); d.setDate(d.getDate() + i);
+    const v = vakitAl(d);
+    gunler[gunAnahtar(d)] = VAKITLER.map(x => isNaN(v[x.k]) ? 0 : Math.round(v[x.k]));
+  }
+  return gunler;
+}
+
+/**
+ * Kuyruğu baştan kurar: önce her şeyi iptal eder, sonra yeniden yazar.
+ * Artımlı güncelleme yapılmıyor — ayar değişince hangi bildirimin
+ * geçersizleştiğini izlemek kırılgan olurdu.
+ */
+async function bildirimKur(){
+  const L = bildirimEklentisi();
+  if(!L) return;                       // tarayıcı: eski setInterval yolu çalışır
+
+  try{
+    await bildirimKanallariKur();
+
+    const bekleyen = await L.getPending();
+    if(bekleyen && bekleyen.notifications && bekleyen.notifications.length){
+      await L.cancel({ notifications: bekleyen.notifications.map(n=>({ id:n.id })) });
+    }
+
+    if(!A.bildirimAcik) return;
+
+    const liste = bildirimListesiUret(bildirimAyari(), bildirimGunTablosu(), new Date());
+    if(!liste.length) return;
+
+    await L.schedule({ notifications: liste.map(b=>({
+      id: b.id,
+      title: b.baslik,
+      body: b.govde,
+      channelId: b.kanal,
+      schedule: { at: b.zaman, allowWhileIdle: true }
+    })) });
+  }catch(e){
+    toast('Bildirimler kurulamadı — sonraki açılışta yeniden denenecek');
+  }
+}
+
 let _widgetSonYazim = '';
 async function widgetVeriYaz(){
   const P = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Preferences;
@@ -2279,6 +2394,7 @@ function gunuTazele(){
   tikTak();
   kibleBilgiTazele();
   widgetVeriYaz();
+  bildirimKur();
 }
 
 /* ==========================================================
