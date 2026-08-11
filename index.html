@@ -1236,10 +1236,11 @@ function titret(sure){
   const H = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Haptics;
   if(H){
     const s = Array.isArray(sure) ? sure.reduce((t,x)=>t+x, 0) : sure;
+    const stil = s >= 300 ? 'HEAVY' : (s >= 60 ? 'MEDIUM' : 'LIGHT');
     try{
-      if(s >= 300) H.impact({ style:'HEAVY' });
-      else if(s >= 60) H.impact({ style:'MEDIUM' });
-      else H.impact({ style:'LIGHT' });
+      // impact() promise döndürür; titreşim motoru olmayan cihazda reddedebilir.
+      // Yutulmazsa yakalanmamış promise reddi olarak konsola düşer.
+      H.impact({ style:stil }).catch(()=>{});
       return;
     }catch(e){}
   }
