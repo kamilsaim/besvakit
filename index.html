@@ -681,7 +681,7 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
         <button class="svic" id="sesSvic" role="switch"></button>
       </div>
       <div class="alan">
-        <label>Titreşim<em>Kıble hizalanınca da titrer</em></label>
+        <label>Titreşim<em>Tesbih ve kıble için. Bildirim titreşimi Android ayarından.</em></label>
         <button class="svic" id="titresimSvic" role="switch"></button>
       </div>
       <div class="alan">
@@ -1223,6 +1223,29 @@ const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 let bugunVakit = {}, siradaki = null, uyariVerildi = {}, uyanikKilit = null, sonTazeleme = null;
 
+/**
+ * Dokunsal geri bildirim. APK içinde @capacitor/haptics kullanılır —
+ * navigator.vibrate WebView'da bazı cihazlarda çalışmıyor. Eklenti yoksa
+ * tarayıcı API'sine düşer.
+ *
+ * Not: bu yalnızca UYGULAMA İÇİ titreşimdir. Bildirim titreşimi Android'in
+ * kanal ayarından yönetilir, buradan değil.
+ */
+function titret(sure){
+  if(!A.titresim) return;
+  const H = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Haptics;
+  if(H){
+    const s = Array.isArray(sure) ? sure.reduce((t,x)=>t+x, 0) : sure;
+    try{
+      if(s >= 300) H.impact({ style:'HEAVY' });
+      else if(s >= 60) H.impact({ style:'MEDIUM' });
+      else H.impact({ style:'LIGHT' });
+      return;
+    }catch(e){}
+  }
+  if(navigator.vibrate) navigator.vibrate(sure);
+}
+
 function toast(msg){
   const t = $('#toast'); t.textContent = msg; t.classList.add('gor');
   clearTimeout(t._z); t._z = setTimeout(()=>t.classList.remove('gor'), 2600);
@@ -1331,7 +1354,7 @@ function kerahatUyari(dk){
     uyariVerildi[anahtar] = true;
     const metin = k.ad + ' kerahat vakti başladı · ' + Math.round(k.son - k.bas) + ' dk sürer';
     try{ if(Notification.permission==='granted') new Notification(APP,{ body:metin, tag:'kerahat' }); }catch(e){}
-    if(A.titresim && navigator.vibrate) navigator.vibrate([120,80,120]);
+    titret([120,80,120]);
     toast(metin);
   }
 }
@@ -1379,7 +1402,7 @@ function ramazanCiz(){
     TAKIP.oruc = TAKIP.oruc || {};
     if(TAKIP.oruc[a]) delete TAKIP.oruc[a]; else TAKIP.oruc[a] = 1;
     depoYaz('besvakit_takip', TAKIP);
-    if(A.titresim && navigator.vibrate) navigator.vibrate(25);
+    titret(25);
     ramazanCiz();
   };
 }
@@ -1561,7 +1584,7 @@ function bildirimKontrol(dk){
         uyariVerildi[oAnahtar] = true;
         const metin = v.ad + ' vaktine ' + onceden + ' dakika kaldı';
         try{ if(Notification.permission==='granted') new Notification(APP,{ body:metin, tag:v.k+'-once' }); }catch(e){}
-        if(A.titresim && navigator.vibrate) navigator.vibrate(180);
+        titret(180);
         toast(metin);
       }
     }
@@ -1571,7 +1594,7 @@ function bildirimKontrol(dk){
       uyariVerildi[anahtar] = true;
       const metin = v.k==='gunes' ? 'Güneş doğdu — sabah namazı vakti çıktı' : v.ad + ' vakti girdi';
       try{ if(Notification.permission==='granted') new Notification(APP,{ body:metin, tag:v.k }); }catch(e){}
-      if(A.titresim && navigator.vibrate) navigator.vibrate([400,150,400]);
+      titret([400,150,400]);
       if(A.ses) ezanSesi();
       toast(metin);
     }
@@ -1910,7 +1933,7 @@ function takipCiz(){
   }).join('');
   $$('[data-namaz]').forEach(b => b.onclick = ()=>{
     takipDegistir(anahtar, b.dataset.namaz);
-    if(A.titresim && navigator.vibrate) navigator.vibrate(25);
+    titret(25);
     takipCiz();
     if(gunSayisi(anahtar) === 5) toast('Bugünün beş vakti tamam · seri ' + seriHesapla() + ' gün');
   });
@@ -2164,7 +2187,7 @@ function tesbihArtir(){
   ZIKIR.gecmis[a] = ZIKIR.gecmis[a] || {};
   ZIKIR.gecmis[a][z.ad] = (ZIKIR.gecmis[a][z.ad]||0) + 1;
   const tamam = z.hedef && ZIKIR.sayac === z.hedef;
-  if(A.titresim && navigator.vibrate) navigator.vibrate(tamam ? [60,60,60] : 12);
+  titret(tamam ? [60,60,60] : 12);
   if(tamam && ZIKIR.setModu && ZIKIR.secili < TESBIH_SETI_SON){
     toast(z.ad + ' tamam · sırada ' + liste[ZIKIR.secili+1].ad);
     ZIKIR.secili++; ZIKIR.sayac = 0;
@@ -2272,7 +2295,7 @@ function cumaUyari(dk){
       uyariVerildi[anahtar] = true;
       const metin = 'Cuma namazı vakti yaklaşıyor · öğle ' + saatYaz(bugunVakit.ogle);
       try{ if(Notification.permission==='granted') new Notification(APP,{ body:metin, tag:'cuma' }); }catch(e){}
-      if(A.titresim && navigator.vibrate) navigator.vibrate([200,100,200]);
+      titret([200,100,200]);
       toast(metin);
     }
   }
@@ -2564,8 +2587,8 @@ function pusulaCiz(){
   $('#sapmaYazi').textContent = (sapma===null) ? kible.toFixed(0)+'°' :
       (hizali ? 'Kıble' : (sapma>180 ? '◀ '+Math.round(360-sapma)+'°' : Math.round(sapma)+'° ▶'));
   $('.pusula-durum').classList.toggle('hizali', hizali);
-  if(hizali && pusulaAcik && A.titresim && navigator.vibrate && Date.now()-sonTitresim > 4000){
-    sonTitresim = Date.now(); navigator.vibrate(60);
+  if(hizali && pusulaAcik && A.titresim && Date.now()-sonTitresim > 4000){
+    sonTitresim = Date.now(); titret(60);
   }
 }
 /* ---------- güneşe göre kıble ---------- */
