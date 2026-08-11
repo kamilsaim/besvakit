@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const { bildirimListesiUret, bvGunButcesi } = require('../bildirim.js');
+const { bildirimListesiUret, bvGunButcesi, bvZaman, bvSaatDk, bvSaatYaz } = require('../bildirim.js');
 
 /** Testlerde kullanılan sabit gün tablosu: iki gün, altı vakit (dakika). */
 const GUNLER = {
@@ -372,4 +372,152 @@ test('toplam bildirim sayısı 400\'ü aşmaz', () => {
   // 16 günlük tür × 25 gün = 400, üstüne bütçeye katılmayan cuma bildirimleri.
   // Asıl amaç Android'in ~500 sınırının altında kalmak.
   assert.ok(liste.length <= 450, 'üretilen: ' + liste.length);
+});
+
+// --- Fix 1: 0 dakika eksik vakit sayılmalı, bildirim üretmemeli ---
+
+test('vakit 0 ise eksik sayılır, bildirim üretilmez', () => {
+  const ayar = ayarKur();
+  ayar.vakit.ikindi.bildir = true;
+  ayar.vakit.ikindi.once = 15;
+  const gunler = { '2026-08-12': [236, 334, 769, 0, 1195, 1285] };
+  const simdi = new Date(2026, 7, 11, 0, 0, 0);
+
+  const liste = bildirimListesiUret(ayar, gunler, simdi);
+
+  assert.strictEqual(liste.filter(b => b.govde.startsWith('İkindi')).length, 0);
+});
+
+test('vakit 0 iken aynı gündeki diğer vakitler çalışmaya devam eder', () => {
+  const ayar = ayarKur();
+  ayar.vakit.ikindi.bildir = true;
+  ayar.vakit.ogle.bildir = true;
+  const gunler = { '2026-08-12': [236, 334, 769, 0, 1195, 1285] };
+  const simdi = new Date(2026, 7, 11, 0, 0, 0);
+
+  const liste = bildirimListesiUret(ayar, gunler, simdi);
+
+  assert.strictEqual(liste.filter(b => b.govde === 'Öğle vakti girdi').length, 1);
+});
+
+// --- Fix 2: Cuma bloğu öğle değeri eksikse ek metni atlamalı ---
+
+test('cuma metninde öğle değeri geçerliyken eskisi gibi kalır', () => {
+  const ayar = ayarKur({ cuma: true, cumaSaat: '11:30' });
+  const simdi = new Date(2026, 7, 11, 0, 0, 0);
+
+  const liste = bildirimListesiUret(ayar, HAFTA, simdi);
+  const cuma = liste.find(b => b.govde.startsWith('Cuma namazı'));
+
+  assert.strictEqual(cuma.govde, 'Cuma namazı vakti yaklaşıyor · öğle 12:49');
+});
+
+test('cuma günü öğle eksikse (boş dizi) ek metin atlanır', () => {
+  const ayar = ayarKur({ cuma: true, cumaSaat: '11:30' });
+  const gunler = { '2026-08-14': [] };
+  const simdi = new Date(2026, 7, 11, 0, 0, 0);
+
+  const liste = bildirimListesiUret(ayar, gunler, simdi);
+  const cuma = liste.find(b => b.govde.startsWith('Cuma namazı'));
+
+  assert.strictEqual(cuma.govde, 'Cuma namazı vakti yaklaşıyor');
+  assert.ok(!cuma.govde.includes('NaN'));
+});
+
+test('cuma günü öğle 0 ise ek metin atlanır', () => {
+  const ayar = ayarKur({ cuma: true, cumaSaat: '11:30' });
+  const gunler = { '2026-08-14': [239, 337, 0, 998, 1192, 1282] };
+  const simdi = new Date(2026, 7, 11, 0, 0, 0);
+
+  const liste = bildirimListesiUret(ayar, gunler, simdi);
+  const cuma = liste.find(b => b.govde.startsWith('Cuma namazı'));
+
+  assert.strictEqual(cuma.govde, 'Cuma namazı vakti yaklaşıyor');
+});
+
+// --- Fix 3: geçmiş günler bütçeyi tüketmemeli ---
+
+test('geçmiş günler bütçe dilimine girmez', () => {
+  // Bütçe (tek vakit açıkken) 30 gün. 35 geçmiş + 5 gelecek gün veriyoruz;
+  // geçmiş günler dilimi tüketirse gelecekten hiç bildirim çıkmaz.
+  const uzun = {};
+  for (let i = -35; i < 5; i++) {
+    const d = new Date(2026, 7, 11 + i);
+    const a = d.getFullYear() + '-' +
+              String(d.getMonth() + 1).padStart(2, '0') + '-' +
+              String(d.getDate()).padStart(2, '0');
+    uzun[a] = [236, 334, 769, 999, 1195, 1285];
+  }
+  const ayar = ayarKur();
+  ayar.vakit.ogle.bildir = true;
+  const simdi = new Date(2026, 7, 11, 0, 0, 0);
+
+  const liste = bildirimListesiUret(ayar, uzun, simdi);
+
+  assert.ok(liste.length > 0, 'geçmiş günler bütçeyi tüketmemeli, gelecekten bildirim üretilmeli');
+});
+
+// --- Hardening 5: null/undefined gunler ---
+
+test('gunler null ise boş liste döner, hata fırlatmaz', () => {
+  const ayar = ayarKur();
+  ayar.vakit.ogle.bildir = true;
+  const simdi = new Date(2026, 7, 11, 0, 0, 0);
+
+  assert.deepStrictEqual(bildirimListesiUret(ayar, null, simdi), []);
+  assert.deepStrictEqual(bildirimListesiUret(ayar, undefined, simdi), []);
+});
+
+// --- Hardening 8: doğrudan yardımcı fonksiyon testleri ---
+
+test('bvSaatDk boş metinde null döner', () => {
+  assert.strictEqual(bvSaatDk(''), null);
+});
+
+test('bvSaatDk tek haneli değerleri de ayrıştırır', () => {
+  assert.strictEqual(bvSaatDk('9:5'), 545);
+});
+
+test('bvSaatYaz negatif ve taşan dakikaları sarar', () => {
+  assert.strictEqual(bvSaatYaz(-30), '23:30');
+  assert.strictEqual(bvSaatYaz(1440 + 90), '01:30');
+});
+
+test('bvZaman negatif dakikayı bir önceki güne yuvarlar', () => {
+  const d = bvZaman('2026-08-12', -70);
+  assert.strictEqual(d.getDate(), 11);
+  assert.strictEqual(d.getHours(), 22);
+  assert.strictEqual(d.getMinutes(), 50);
+});
+
+// --- Reviewer ek test 9: türetilmiş dakikayla sessiz kanal kontrolü ---
+
+test('önceden uyarı sessiz aralığa düşerse kanalı sessiz olur', () => {
+  const ayar = ayarKur({ sessiz: { bas: '22:00', son: '06:00' } });
+  ayar.vakit.imsak.bildir = true;
+  ayar.vakit.imsak.once = 50;   // imsak 236 dk = 03:56, -50 = 03:06, hâlâ sessiz aralıkta
+  const simdi = new Date(2026, 7, 11, 0, 0, 0);
+
+  const liste = bildirimListesiUret(ayar, GUNLER, simdi);
+  const once = liste.find(b => b.kanal === 'once' || (b.govde.includes('kaldı') && b.govde.startsWith('İmsak')));
+
+  assert.strictEqual(once.kanal, 'sessiz');
+});
+
+// --- Reviewer ek test 10: gece yarısını aşan sahur ---
+
+test('gece yarısını aşan sahur önceki güne doğru saatte planlanır', () => {
+  const ayar = ayarKur({ ramazanGunleri: ['2026-08-12'], sahurOnce: 90,
+                          sessiz: { bas: '22:00', son: '06:00' } });
+  const gunler = { '2026-08-12': [20, 334, 769, 999, 1195, 1285] };
+  const simdi = new Date(2026, 7, 11, 0, 0, 0);
+
+  const liste = bildirimListesiUret(ayar, gunler, simdi);
+  const sahur = liste.find(b => b.govde.startsWith('Sahur'));
+
+  // imsak 20 dk = 00:20; 90 dk öncesi = -70 dk -> önceki gün 22:50
+  assert.strictEqual(sahur.zaman.getDate(), 11);
+  assert.strictEqual(sahur.zaman.getHours(), 22);
+  assert.strictEqual(sahur.zaman.getMinutes(), 50);
+  assert.strictEqual(sahur.kanal, 'sessiz');
 });

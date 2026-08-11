@@ -22,10 +22,19 @@ const BV_TUR = {
   sahur: 20,
   iftar: 21,
   cuma: 30,
-  kerahat: 40      // 40-49 : kerahat aralıkları
+  // kerahat + ki: ki 0'dan başlar ve üst sınır index.html'deki KERAHAT
+  // sabitinin uzunluğu kadardır (bugün 3). Kod bunu sınırlamaz — ki'nin
+  // 60'ın altında kalması çağıranın sorumluluğudur, aksi halde kimlikler
+  // bir sonraki günün 0-99 bloğuna taşıp çakışır.
+  kerahat: 40
 };
 
-/** 'YYYY-MM-DD' + gece yarısından itibaren dakika -> yerel saatli Date. */
+/** 'YYYY-MM-DD' + gece yarısından itibaren dakika -> yerel saatli Date.
+ *  Kasıtlı olarak mutlak epoch aritmetiği kullanır: negatif dk değeri
+ *  Date.getTime() üzerinden doğru şekilde bir önceki güne taşar (sahur gibi
+ *  gece yarısını aşan durumlar için gerekli). Türkiye'de 2016'dan beri yaz
+ *  saati uygulaması olmadığından DST sınırında saat kayması burada bir
+ *  sorun teşkil etmez; bu davranış kasıtlıdır, değiştirilmemelidir. */
 function bvZaman(gunAnahtari, dk) {
   const p = gunAnahtari.split('-');
   const d = new Date(+p[0], +p[1] - 1, +p[2], 0, 0, 0, 0);
@@ -93,9 +102,16 @@ function bvGunButcesi(ayar) {
 }
 
 function bildirimListesiUret(ayar, gunler, simdi) {
-  if (!ayar || !ayar.acik) return [];
+  if (!ayar || !ayar.acik || !gunler) return [];
 
-  const anahtarlar = Object.keys(gunler).sort().slice(0, bvGunButcesi(ayar));
+  // Sözlük sıralaması yalnızca anahtarlar sıfır dolgulu 'YYYY-MM-DD' biçiminde
+  // olduğu için tarih sırasıyla örtüşür.
+  // Bugünün takvim gününden önceki günleri dilime girmeden eleriz, yoksa
+  // geçmiş günler bütçeyi tüketip gelecekteki günlerden yer çalar.
+  const bugun = new Date(simdi.getFullYear(), simdi.getMonth(), simdi.getDate());
+  const anahtarlar = Object.keys(gunler).sort()
+    .filter(gun => bvZaman(gun, 0).getTime() >= bugun.getTime())
+    .slice(0, bvGunButcesi(ayar));
   const liste = [];
 
   anahtarlar.forEach((gun, gunSira) => {
@@ -105,8 +121,12 @@ function bildirimListesiUret(ayar, gunler, simdi) {
     BV_VAKIT_SIRA.forEach((k, i) => {
       const v = ayar.vakit && ayar.vakit[k];
       if (!v || !v.bildir) return;
+      // 0, hesaplanamayan vakitler için widgetVeriYaz/bildirimGunTablosu'nun
+      // yazdığı "eksik" işaretidir (bkz. index.html), gerçek gece yarısı değil.
+      // Bu yüzden 0 da eksik sayılıp atlanmalı, aksi halde gece yarısı için
+      // sahte bir bildirim planlanır.
       const dk = vakitler[i];
-      if (!dk && dk !== 0) return;
+      if (!dk) return;
 
       liste.push({
         id: gunSira * 100 + BV_TUR.vakit + i,
@@ -155,12 +175,15 @@ function bildirimListesiUret(ayar, gunler, simdi) {
       const cumaDk = bvSaatDk(ayar.cumaSaat);
       const gunAdi = bvZaman(gun, 0).getDay();
       if (cumaDk !== null && gunAdi === 5) {
+        // Öğle değeri eksikse (0/NaN/tanımsız) saat ekini metne katma —
+        // hatırlatma yine de faydalı, ama uydurma bir saat göstermeyelim.
+        const ogleDk = vakitler[BV_VAKIT_SIRA.indexOf('ogle')];
         liste.push({
           id: gunSira * 100 + BV_TUR.cuma,
           kanal: bvKanal('ozel', cumaDk, ayar.sessiz),
           baslik: BV_BASLIK,
-          govde: 'Cuma namazı vakti yaklaşıyor · öğle ' +
-                 bvSaatYaz(vakitler[BV_VAKIT_SIRA.indexOf('ogle')]),
+          govde: 'Cuma namazı vakti yaklaşıyor' +
+                 (ogleDk ? ' · öğle ' + bvSaatYaz(ogleDk) : ''),
           zaman: bvZaman(gun, cumaDk)
         });
       }
