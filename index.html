@@ -371,6 +371,11 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
 .alan-dugme{background:var(--kat2);border:1px solid var(--cizgi);border-radius:10px;
   padding:9px 14px;font-weight:600;font-size:13px;color:var(--kagit);cursor:pointer;flex:none}
 .alan-dugme:active{filter:brightness(1.25)}
+/* İzin uyarısı — kullanıcının haberi olmadan bildirimlerin düştüğü tek durum
+   budur, bu yüzden satır normal ayarlardan görsel olarak ayrışır. */
+.alan.uyari{background:color-mix(in srgb, var(--pirinc) 12%, transparent)}
+.alan.uyari label{color:var(--pirinc)}
+.alan.uyari .alan-dugme{border-color:var(--pirinc);color:var(--pirinc)}
 .svic{width:48px;height:28px;border-radius:16px;background:var(--kat2);position:relative;flex:none;
   border:1px solid var(--cizgi);transition:background .2s}
 .svic::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;
@@ -731,6 +736,10 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
           <option value="sessiz">Sessiz saatler</option>
         </select>
       </div>
+      <div class="alan uyari" id="izinAlani" style="display:none">
+        <label>Bildirim izni kapalı<em>Bu haliyle hiçbir vakit bildirimi gelmez</em></label>
+        <button class="alan-dugme" id="izinDugme">Düzelt</button>
+      </div>
       <div class="alan" id="pilAlani" style="display:none">
         <label>Bildirimler gecikiyor mu?<em>Pil ayarından uygulamayı serbest bırak</em></label>
         <button class="alan-dugme" id="pilDugme">Aç</button>
@@ -785,7 +794,7 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
    Vakitler cihazda hesaplanır; hiçbir sunucuya vakit sorulmaz.
    ========================================================== */
 const APP = 'Beş Vakit';
-const SURUM = '0.12.0';
+const SURUM = '0.13.0';
 const LOGO = 'logo-beyaz.png';
 const KABE = { lat: 21.4224779, lng: 39.8261722 };
 const VAKITLER = [
@@ -1458,8 +1467,10 @@ function vakitListesiCiz(){
   const aktif = aktifVakit(simdi);
   $('#vakitListe').innerHTML = VAKITLER.map(v=>{
     const b = A.bildirim[v.k];
-    // Güneş doğuşu için "önceden uyarı" anlamsız — düğme gösterilmez.
-    const onceDugme = v.k === 'gunes' ? '' :
+    // Güneş dahil her vakit için önceden uyarı kurulabilir: doğuşa kaç dakika
+    // kaldığı, sabah namazını kaçırmamak için doğuş anındaki bildirimden daha
+    // işe yarar.
+    const onceDugme =
       `<button class="once ${b.once?'acik':''}" data-once="${v.k}"
         aria-label="${v.ad} öncesi uyarı">${b.once ? '⏱ '+b.once+' dk' : '⏱ —'}</button>`;
     return `
@@ -1484,11 +1495,18 @@ function vakitListesiCiz(){
     const k = b.dataset.once;
     const i = ONCE_SECENEK.indexOf(+A.bildirim[k].once || 0);
     A.bildirim[k].once = ONCE_SECENEK[(i + 1) % ONCE_SECENEK.length];
+    // Önceden uyarı o vaktin bildirimi kapalıyken üretilmiyor (bkz. bildirim.js).
+    // Kullanıcı süre seçtiği halde hiçbir şey gelmemesi sessiz bir tuzak olurdu:
+    // zili birlikte açıyor ve bunu toast'ta söylüyoruz.
+    const zilAcildi = A.bildirim[k].once && !A.bildirim[k].bildir;
+    if(zilAcildi) A.bildirim[k].bildir = true;
     kaydet(); vakitListesiCiz(); bildirimKur();
-    const ad = VAKITLER.find(v=>v.k===k).ad;
+    const v = VAKITLER.find(v=>v.k===k);
+    const ne = k === 'gunes' ? 'Güneş doğuşundan' : v.ad + ' vaktinden';
     toast(A.bildirim[k].once
-      ? ad + ' vaktinden ' + A.bildirim[k].once + ' dk önce uyarır'
-      : ad + ' için önceden uyarı kapalı');
+      ? ne + ' ' + A.bildirim[k].once + ' dk önce uyarır' +
+        (zilAcildi ? ' · ' + v.ad + ' bildirimi de açıldı' : '')
+      : v.ad + ' için önceden uyarı kapalı');
   });
 }
 /** Hangi kaynağın kullanıldığını görünür kılar — yanlış vakit izlenimi oluşmasın. */
@@ -2365,6 +2383,74 @@ async function bildirimKanallariKur(){
   _kanallarKuruldu = true;
 }
 
+/* Bildirim izni ana anahtar açılırken bir kez isteniyor. Ama izin sonradan
+   kaybolabilir: kullanıcı sistem ayarından kapatır, ya da Android "uzun süredir
+   kullanılmayan uygulama" iznini kendiliğinden geri alır. O durumda anahtar
+   açık görünmeye devam eder, schedule() sessizce hiçbir şey yapmaz ve kullanıcı
+   bildirimlerin gelmediğini ancak vakti kaçırınca fark eder. Bu yüzden her
+   kuyruk kurulumunda izni yeniden doğrulayıp durumu ayarlarda görünür kılıyoruz. */
+let _izinUyarisiGosterildi = false;
+
+/**
+ * İzni denetler, ayarlardaki uyarı satırını açar/kapatır.
+ * Kendiliğinden izin İSTEMEZ — istem yalnızca kullanıcı bir düğmeye
+ * dokunduğunda yapılmalı, yoksa Android istemi "kullanıcı reddetti" sayıp
+ * bir daha hiç göstermez. Dönüş: izin var mı.
+ */
+async function bildirimIzniTazele(){
+  const L = bildirimEklentisi();
+  const satir = $('#izinAlani');
+  if(!L){ if(satir) satir.style.display = 'none'; return true; }
+
+  let izinli = true;
+  try{
+    const d = await L.checkPermissions();
+    izinli = d.display === 'granted';
+  }catch(e){ return true; }   // sorulamıyorsa yanlış alarm verme
+
+  // Anahtar kapalıyken izin zaten gereksiz — uyarı gösterme.
+  const goster = A.bildirimAcik && !izinli;
+  if(satir) satir.style.display = goster ? '' : 'none';
+
+  if(goster && !_izinUyarisiGosterildi){
+    _izinUyarisiGosterildi = true;
+    toast('Bildirim izni kapalı — vakit bildirimleri gelmiyor');
+  }
+  if(!goster) _izinUyarisiGosterildi = false;
+
+  return izinli;
+}
+
+/** Uyarı satırındaki düğme: önce izni iste, sistem istemi çıkmıyorsa
+ *  kullanıcıyı doğrudan ayar ekranına götür. */
+async function bildirimIzniDuzelt(){
+  const L = bildirimEklentisi();
+  if(!L) return;
+  try{
+    const d = await L.requestPermissions();
+    if(d.display === 'granted'){
+      await bildirimIzniTazele();
+      bildirimKur();
+      toast('Bildirim izni verildi');
+      return;
+    }
+  }catch(e){}
+
+  // Kalıcı reddedilmiş: istem bir daha çıkmaz, tek yol sistem ayarı.
+  const C = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Cihaz;
+  if(C){
+    // Eski APK'larda bildirimAyariAc yok — kanal ayarına, o da yoksa
+    // uygulama ayrıntılarına düşeriz.
+    const ac = typeof C.bildirimAyariAc === 'function'
+      ? C.bildirimAyariAc()
+      : (typeof C.kanalAyariAc === 'function'
+          ? C.kanalAyariAc({ kanal:'vakit' })
+          : C.pilAyariAc());
+    ac.catch(()=> toast('Ayar ekranı açılamadı'));
+  }
+  toast('Ayarlar › Bildirimler bölümünden izni aç');
+}
+
 /** Önümüzdeki 30 günün hangileri ramazan — hicri hesap burada kalır. */
 function ramazanGunleri(){
   if(A.ramazanMod === 'kapali') return [];
@@ -2439,6 +2525,10 @@ let _bildirimTekrarGerek = false; // kurulum sürerken yeni istek geldi mi
 async function bildirimKur(){
   const L = bildirimEklentisi();
   if(!L) return;                       // tarayıcı: eski setInterval yolu çalışır
+
+  // İmza kontrolünden önce, her çağrıda: izin arada kaybolmuş olabilir ve
+  // ayarlar değişmediği için imza aynı kalır — uyarı yine de güncellenmeli.
+  bildirimIzniTazele();
 
   if(_bildirimCalisiyor){
     // bir kurulum zaten sürüyor — onun bitmesini bekle, sonra güncel ayarlarla bir kez daha çalış
@@ -3060,8 +3150,10 @@ function ayarlariKur(){
   (function(){
     const el = $('#bildirimSvic');
     const eski = el.onclick;
-    el.onclick = async (e)=>{ await eski(e); bildirimKur(); };
+    el.onclick = async (e)=>{ await eski(e); bildirimIzniTazele(); bildirimKur(); };
   })();
+
+  $('#izinDugme').onclick = bildirimIzniDuzelt;
 
   $('#sessizBas').value = A.sessizBas || '00:00';
   $('#sessizBas').onchange = e => { A.sessizBas = e.target.value; kaydet(); bildirimKur(); };

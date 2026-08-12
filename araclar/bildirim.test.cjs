@@ -124,15 +124,34 @@ test('her vaktin kendi önceden süresi olur', () => {
   assert.ok(metinler.includes('İkindi vaktine 30 dakika kaldı'));
 });
 
-test('güneş için önceden uyarı üretilmez', () => {
+test('güneş için önceden uyarı üretilir ve metni farklıdır', () => {
   const ayar = ayarKur();
   ayar.vakit.gunes.bildir = true;
   ayar.vakit.gunes.once = 15;
   const simdi = new Date(2026, 7, 11, 0, 0, 0);
 
   const liste = bildirimListesiUret(ayar, GUNLER, simdi);
+  const once = liste.filter(b => b.kanal === 'once');
 
-  assert.strictEqual(liste.filter(b => b.kanal === 'once').length, 0);
+  assert.strictEqual(once.length, 2);   // tablodaki iki gün için birer tane
+  // "Güneş vaktine kaldı" yanıltıcı olurdu: uyarılan şey vaktin başlaması
+  // değil, sabah namazı vaktinin kapanması.
+  assert.strictEqual(once[0].govde,
+    'Güneş doğuşuna 15 dakika kaldı — sabah namazı vakti çıkıyor');
+});
+
+test('güneş öncesi uyarı doğuştan tam o kadar dakika önceye kurulur', () => {
+  const ayar = ayarKur();
+  ayar.vakit.gunes.bildir = true;
+  ayar.vakit.gunes.once = 15;
+  const simdi = new Date(2026, 7, 11, 0, 0, 0);
+
+  const b = bildirimListesiUret(ayar, GUNLER, simdi)
+    .find(x => x.kanal === 'once');
+
+  // GUNLER'de 2026-08-11 güneş = 334 dk (05:34) -> 15 dk öncesi 05:19
+  assert.strictEqual(b.zaman.getTime(),
+    new Date(2026, 7, 11, 5, 19, 0).getTime());
 });
 
 test('önceden 0 ise uyarı üretilmez', () => {
@@ -318,8 +337,8 @@ test('çok tür açıkken gün sayısı daralır', () => {
     ayar.vakit[k].bildir = true;
     ayar.vakit[k].once = 15;
   });
-  // 6 vakit + 5 önceden (güneş hariç) + 3 kerahat + 2 oruç = 16 -> 400/16 = 25
-  assert.strictEqual(bvGunButcesi(ayar), 25);
+  // 6 vakit + 6 önceden + 3 kerahat + 2 oruç = 17 -> 400/17 = 23
+  assert.strictEqual(bvGunButcesi(ayar), 23);
 });
 
 test('bütçe hiçbir zaman 7 günün altına inmez', () => {

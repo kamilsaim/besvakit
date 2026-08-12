@@ -88,7 +88,7 @@ function bvGunButcesi(ayar) {
     const v = ayar.vakit && ayar.vakit[k];
     if (!v || !v.bildir) return;
     gunluk++;
-    if ((+v.once || 0) > 0 && k !== 'gunes') gunluk++;
+    if ((+v.once || 0) > 0) gunluk++;
   });
 
   if (ayar.kerahat) gunluk += (ayar.kerahatAraliklari || []).length;
@@ -138,14 +138,18 @@ function bildirimListesiUret(ayar, gunler, simdi) {
         zaman: bvZaman(gun, dk)
       });
 
-      // Vakit öncesi hatırlatma — güneş doğuşu için anlamsız, atlanır.
+      // Vakit öncesi hatırlatma. Güneş için metin farklıdır: doğuş bir vaktin
+      // başlangıcı değil, sabah namazı vaktinin son bulmasıdır — "güneş
+      // vaktine kaldı" demek yanıltıcı olurdu.
       const once = +v.once || 0;
-      if (once > 0 && k !== 'gunes') {
+      if (once > 0) {
         liste.push({
           id: gunSira * 100 + BV_TUR.once + i,
           kanal: bvKanal('once', dk - once, ayar.sessiz),
           baslik: BV_BASLIK,
-          govde: BV_VAKIT_AD[k] + ' vaktine ' + once + ' dakika kaldı',
+          govde: k === 'gunes'
+            ? 'Güneş doğuşuna ' + once + ' dakika kaldı — sabah namazı vakti çıkıyor'
+            : BV_VAKIT_AD[k] + ' vaktine ' + once + ' dakika kaldı',
           zaman: bvZaman(gun, dk - once)
         });
       }

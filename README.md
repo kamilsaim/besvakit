@@ -8,7 +8,7 @@
 
 [**→ Uygulamayı aç**](https://kamilsaim.github.io/besvakit/)
 
-![sürüm](https://img.shields.io/badge/sürüm-0.12.0-22B2AE?style=flat-square)
+![sürüm](https://img.shields.io/badge/sürüm-0.13.0-22B2AE?style=flat-square)
 ![bağımlılık](https://img.shields.io/badge/bağımlılık-yok-D8A93C?style=flat-square)
 ![tek dosya](https://img.shields.io/badge/tek%20dosya-HTML-080C18?style=flat-square)
 
@@ -96,6 +96,22 @@ kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasın�
   cami araması (Overpass API), yazı tipleri (Google Fonts). Üçü de kapalıyken uygulama çalışmaya devam eder.
 
 ## Sürüm geçmişi
+
+### 0.13.0
+- **Güneş doğuşu için önceden uyarı.** Sabah namazını kaçırmamak için asıl gereken
+  uyarı buydu: "Güneş doğuşuna 15 dakika kaldı — sabah namazı vakti çıkıyor".
+  Önceden güneş satırında ⏱ düğmesi hiç gösterilmiyordu, çünkü "vakit öncesi
+  hatırlatma" güneş için anlamsız sayılmıştı. Oysa güneş bir vaktin başlangıcı
+  değil, sabah namazının **bitişi** — uyarılması en kritik an.
+- **Bildirim izni kaybolursa artık görünür.** İzin yalnızca ana anahtar açılırken
+  bir kez isteniyordu. Kullanıcı izni sistem ayarından kapatırsa ya da Android
+  "uzun süredir kullanılmayan uygulama" iznini kendiliğinden geri alırsa, anahtar
+  açık görünmeye devam ediyor ve bildirimler sessizce düşüyordu. Artık her kuyruk
+  kurulumunda izin denetleniyor; yoksa Ayarlar'da uyarı satırı ve tek dokunuşla
+  düzelten bir düğme çıkıyor.
+- **Sessiz tuzak kapatıldı.** Vakit bildirimi kapalıyken "önceden uyarı" süresi
+  seçmek hiçbir şey üretmiyordu. Artık süre seçilince o vaktin zili birlikte
+  açılıyor ve bu kullanıcıya söyleniyor.
 
 ### 0.12.0
 - **Titreşim gerçekten hissediliyor.** `@capacitor/haptics`'in `impact()` çağrısı
