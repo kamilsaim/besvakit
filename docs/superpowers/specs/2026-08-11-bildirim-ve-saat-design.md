@@ -163,6 +163,22 @@ konsolunda test edilir:
 
 ## Aşama 2 — Wear OS
 
+> **Uygulamaya geçerken kapsam daraldı (2026-08-11).** Compose for Wear OS
+> Kotlin zorunlu kılıyor; proje tamamen Java ve Gradle 9.6.1 + AGP 9.3.1 +
+> Java 25 kombinasyonu çok yeni (Aşama 1'de bunun Capacitor'ın varsayılan
+> Gradle'ını kırdığını gördük). Kotlin araç zincirini eklemek ayrı bir sürüm
+> riski. Complication ve tile ise saf Java ile yazılabiliyor ve en çok bakılan
+> iki yüzey bunlar.
+>
+> Bu yüzden **tam saat uygulaması (vakitler, kıble, tesbih) ertelendi.**
+> Uygulanacak kapsam: Data Layer senkronu + complication + tile, hepsi Java.
+> Planı: `docs/superpowers/plans/2026-08-11-wear-os-complication-tile.md`
+>
+> Plan ayrıca "sıradaki vakit hangisi" mantığını `:ortak` adlı paylaşılan bir
+> Java modülüne çıkarıyor — bugün `VakitWidget.java` içinde gömülü ve saat de
+> aynı hesaba ihtiyaç duyuyor. İki kopya zamanla ayrışırdı; ayrıca ortak modül
+> JUnit ile test edilebiliyor.
+
 ### Bilinen risk
 
 Test cihazı henüz yok. Emülatör arayüzü, tile'ı ve complication'ı doğrular;
