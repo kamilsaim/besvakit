@@ -8,7 +8,7 @@
 
 [**→ Uygulamayı aç**](https://kamilsaim.github.io/besvakit/)
 
-![sürüm](https://img.shields.io/badge/sürüm-0.11.0-22B2AE?style=flat-square)
+![sürüm](https://img.shields.io/badge/sürüm-0.12.0-22B2AE?style=flat-square)
 ![bağımlılık](https://img.shields.io/badge/bağımlılık-yok-D8A93C?style=flat-square)
 ![tek dosya](https://img.shields.io/badge/tek%20dosya-HTML-080C18?style=flat-square)
 
@@ -96,6 +96,23 @@ kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasın�
   cami araması (Overpass API), yazı tipleri (Google Fonts). Üçü de kapalıyken uygulama çalışmaya devam eder.
 
 ## Sürüm geçmişi
+
+### 0.12.0
+- **Titreşim gerçekten hissediliyor.** `@capacitor/haptics`'in `impact()` çağrısı
+  Android'de süreye bakmıyor: LIGHT de HEAVY de 43–60 ms'lik tek bir blip üretiyor.
+  Uygulamadaki her titreşim — tesbihin kısa dokunuşu da, kıble hizalandığındaki
+  uzun deseni de — aynı, çoğu telefonda fark edilmeyen tıkırtıya dönüşüyordu.
+  Artık `vibrate()` ile istenen süre boyunca titriyor, desenler de parça parça
+  çalınıyor.
+- **Büyük widget yeniden tasarlandı.** Konum satırı, miladi ve hicri tarih,
+  sağ üstte sıradaki vaktin geri sayım rozeti; altı vakit ayrı kutucuklarda ve
+  sıradaki vakit dolu altın zeminle vurgulu (renk farkı küçük ekranda seçilmiyordu).
+- **Yeni geri sayım widget'ı.** Zemini yok — duvar kâğıdının üstünde tek satır
+  konum + vakit adı, altında büyük punto kalan süre. Punto widget'ın genişliğine
+  göre ayarlanıyor.
+- **Widget'ın kalan süresi bayatlamıyor.** Tazeleme 30 dakikada bir yerine vakte
+  yaklaştıkça sıklaşıyor (1 saatten uzaksa 10 dk, 10–60 dk arası 5 dk, son 10
+  dakikada dakika başı).
 
 ### 0.11.0
 - **Bildirimler uygulama kapalıyken de çalışıyor** (APK). Eskiden bildirimler
@@ -248,7 +265,7 @@ kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasın�
 - [x] Namaz takibi, kaza sayacı, zikirmatik
 - [x] Dini günler takvimi
 - [x] Çevrimdışı kabuk, vakit öncesi hatırlatma
-- [x] Android ana ekran widget'ı — sıradaki vakit, kalan süre, günün altı vakti
+- [x] Android ana ekran widget'ları — büyük (vakitler + hicri tarih) ve yalnızca geri sayım
 - [x] Capacitor kabuk (APK) — uygulama kapalıyken de bildirim
 - [ ] Gerçek ezan sesi — kanal sistem sesiyle kuruldu; ezan dosyası eklenecek
 - [ ] Wear OS — kadran üzeri complication ve kaydır-eriş kartı (planı hazır)

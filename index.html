@@ -785,7 +785,7 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
    Vakitler cihazda hesaplanır; hiçbir sunucuya vakit sorulmaz.
    ========================================================== */
 const APP = 'Beş Vakit';
-const SURUM = '0.11.0';
+const SURUM = '0.12.0';
 const LOGO = 'logo-beyaz.png';
 const KABE = { lat: 21.4224779, lng: 39.8261722 };
 const VAKITLER = [
@@ -1234,15 +1234,25 @@ let bugunVakit = {}, siradaki = null, uyariVerildi = {}, uyanikKilit = null, son
 function titret(sure){
   if(!A.titresim) return;
   const H = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Haptics;
-  if(H){
-    const s = Array.isArray(sure) ? sure.reduce((t,x)=>t+x, 0) : sure;
-    const stil = s >= 300 ? 'HEAVY' : (s >= 60 ? 'MEDIUM' : 'LIGHT');
-    try{
-      // impact() promise döndürür; titreşim motoru olmayan cihazda reddedebilir.
-      // Yutulmazsa yakalanmamış promise reddi olarak konsola düşer.
-      H.impact({ style:stil }).catch(()=>{});
-      return;
-    }catch(e){}
+  if(H && typeof H.vibrate === 'function'){
+    // impact() Android'de süreye bakmaz: LIGHT/MEDIUM/HEAVY hepsi 43-60 ms'lik
+    // tek bir blip. Zayıf motorlu telefonda bu hiç hissedilmiyordu ve
+    // titret([400,150,400]) ile titret(25) aynı şeye dönüşüyordu.
+    // vibrate() istenen süre boyunca titretir; deseni de parça parça çalıyoruz.
+    const parcalar = Array.isArray(sure) ? sure : [sure];
+    let gecikme = 0;
+    for(let i = 0; i < parcalar.length; i++){
+      const ms = parcalar[i];
+      // çift indeks = titreşim, tek indeks = duraklama (navigator.vibrate deseni)
+      if(i % 2 === 0 && ms > 0){
+        // 35 ms altı çoğu motorda hiç hissedilmiyor — tabanı oraya çekiyoruz
+        const t = Math.max(35, Math.round(ms));
+        if(gecikme === 0) H.vibrate({ duration:t }).catch(()=>{});
+        else setTimeout(()=>{ H.vibrate({ duration:t }).catch(()=>{}); }, gecikme);
+      }
+      gecikme += ms;
+    }
+    return;
   }
   if(navigator.vibrate) navigator.vibrate(sure);
 }
@@ -2493,15 +2503,19 @@ async function widgetVeriYaz(){
                '|' + VAKITLER.map(v=>A.duzeltme[v.k]).join(',');
   if(imza === _widgetSonYazim) return;
 
-  const gunler = {};
+  const gunler = {}, hicri = {};
   for(let i=0; i<30; i++){
     const d = new Date(bugun); d.setDate(d.getDate() + i);
     const v = vakitAl(d);
-    gunler[gunAnahtar(d)] = VAKITLER.map(x => isNaN(v[x.k]) ? 0 : Math.round(v[x.k]));
+    const k = gunAnahtar(d);
+    gunler[k] = VAKITLER.map(x => isNaN(v[x.k]) ? 0 : Math.round(v[x.k]));
+    // Hicri tarihi widget hesaplamaz: Intl'in ummülkura takvimi yalnızca web
+    // tarafında var, Java'daki karşılığı başka bir gün verebilirdi.
+    hicri[k] = hicriYaz(d);
   }
   try{
     await P.set({ key:'bv_widget', value: JSON.stringify({
-      sehir: A.sehir, yazan: gunAnahtar(bugun), gunler,
+      sehir: A.sehir, yazan: gunAnahtar(bugun), gunler, hicri,
       ramazan: ramazanGunleri()
     })});
     _widgetSonYazim = imza;
