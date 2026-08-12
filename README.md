@@ -8,7 +8,7 @@
 
 [**→ Uygulamayı aç**](https://kamilsaim.github.io/besvakit/)
 
-![sürüm](https://img.shields.io/badge/sürüm-0.10.0-22B2AE?style=flat-square)
+![sürüm](https://img.shields.io/badge/sürüm-0.11.0-22B2AE?style=flat-square)
 ![bağımlılık](https://img.shields.io/badge/bağımlılık-yok-D8A93C?style=flat-square)
 ![tek dosya](https://img.shields.io/badge/tek%20dosya-HTML-080C18?style=flat-square)
 
@@ -32,7 +32,7 @@ olmadan da, kaynak kapansa da çalışır. Anahtar yok, hesap yok, veri dışar�
 | **İbadet** | Namaz takibi, seri gün, aylık istatistik, kaza sayacı, zikirmatik (tesbih seti, özel zikir), Esmâ-ül Hüsnâ, Nasûh Tövbesi takibi |
 | **Cuma** | Cuma hatırlatması, Kehf Suresi uyarısı, salâvat sayacı |
 | **Camiler** | 3 km çevrendeki camiler, yön ve yürüme mesafesiyle |
-| **Bildirim** | Vakit girince ve istersen X dakika öncesinde uyarı, ses, titreşim |
+| **Bildirim** | APK'da uygulama kapalıyken de çalışır: her vakit, her vaktin kendi önceden uyarısı, kerahat, cuma, sahur/iftar, sessiz saatler |
 | **Çevrimdışı** | Servis işçisiyle uygulama kabuğu; vakitler önbellekte, hesap yedekte |
 
 ## Nasıl hesaplıyor
@@ -96,6 +96,35 @@ kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasın�
   cami araması (Overpass API), yazı tipleri (Google Fonts). Üçü de kapalıyken uygulama çalışmaya devam eder.
 
 ## Sürüm geçmişi
+
+### 0.11.0
+- **Bildirimler uygulama kapalıyken de çalışıyor** (APK). Eskiden bildirimler
+  `setInterval` ile üretiliyordu, yani yalnızca uygulama açıkken geliyordu — bir
+  namaz vakti uygulamasının en temel işlevi eksikti. Artık 30 güne kadar bildirim
+  `@capacitor/local-notifications` ile önceden kuyruğa alınıyor.
+- **Her vaktin kendi önceden uyarısı.** Tek global "X dakika önce" ayarı kalktı;
+  ana ekranda her vakit satırında kendi ⏱ düğmesi var (kapalı/5/10/15/20/30/45).
+  Eski ayar korunuyor, tüm vakitlere kopyalanıyor.
+- **Kerahat, cuma, sahur ve iftar bildirimleri** de kuyruğa alınıyor — hepsi
+  uygulama kapalıyken çalışır.
+- **Sessiz saatler.** Belirlediğin aralığa düşen bildirimler sessiz gelir.
+  Android'de kanal sesi sonradan kod ile değiştirilemediği için bu, ayrı bir
+  "sessiz" bildirim kanalına yönlendirme olarak yapıldı.
+- **Ses ve titreşim Android'in kanal ayarından seçiliyor.** Uygulama içinde ses
+  seçici yok: beş kanal var (vakit, önceden, oruç, cuma/kerahat, sessiz) ve
+  Ayarlar'daki kısayol doğrudan o kanalın sistem ekranını açıyor. Böylece
+  istediğin zil sesini seçebiliyorsun, APK da şişmiyor.
+- **"Bildirimler gecikiyor mu?" kartı.** Bazı markalar kuyruktaki alarmları pil
+  tasarrufu diye öldürüyor; düğme doğrudan pil optimizasyonu ayarına götürüyor.
+- **Uygulama içi titreşim native oldu** (`@capacitor/haptics`) — `navigator.vibrate`
+  WebView'da bazı cihazlarda çalışmıyordu. Ayarlardaki "Titreşim" anahtarı artık
+  yalnızca tesbih ve kıble için; bildirim titreşimi kanal ayarından geliyor.
+- **Widget'ta iftar geri sayımı.** Ramazanda akşam vakti "İftar" olarak öne çıkıyor.
+- Bildirim üretimi ayrı bir dosyaya (`bildirim.js`) çıkarıldı ve 40 testle
+  kaplandı — `index.html` tek parça olduğu için bu mantık daha önce hiç test
+  edilemiyordu.
+- Widget'ın saat dilimi/tarih değişimlerini dinleyen alıcısı `exported="false"`
+  olduğu için o sistem yayınlarını hiç almıyordu; düzeltildi.
 
 ### 0.10.0
 - **Ay doğuş/batış saatleri.** Dini günler kartındaki ay durumu satırına eklendi;
@@ -220,8 +249,9 @@ kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasın�
 - [x] Dini günler takvimi
 - [x] Çevrimdışı kabuk, vakit öncesi hatırlatma
 - [x] Android ana ekran widget'ı — sıradaki vakit, kalan süre, günün altı vakti
-- [ ] Capacitor kabuk (APK) — uygulama kapalıyken de bildirim
-- [ ] Gerçek ezan sesi
+- [x] Capacitor kabuk (APK) — uygulama kapalıyken de bildirim
+- [ ] Gerçek ezan sesi — kanal sistem sesiyle kuruldu; ezan dosyası eklenecek
+- [ ] Wear OS — kadran üzeri complication ve kaydır-eriş kartı (planı hazır)
 - [x] Açık tema ve AMOLED tema
 - [x] Ramazan modu — iftar/sahur geri sayımı
 - [x] Kerahat vakitleri uyarısı
