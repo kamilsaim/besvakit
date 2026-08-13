@@ -25,6 +25,9 @@ function ayarKur(fark) {
     kerahatAraliklari: [],
     cuma: false,
     cumaSaat: '11:30',
+    dua: false,
+    duaSaat: '09:00',
+    duaGunleri: {},
     ramazanGunleri: [],
     sahurOnce: 45
   };
@@ -539,4 +542,46 @@ test('gece yarısını aşan sahur önceki güne doğru saatte planlanır', () =
   assert.strictEqual(sahur.zaman.getHours(), 22);
   assert.strictEqual(sahur.zaman.getMinutes(), 50);
   assert.strictEqual(sahur.kanal, 'sessiz');
+});
+
+/* ---------- mübarek gün duaları ---------- */
+
+test('dua günü için belirlenen saatte tek bildirim üretir', () => {
+  const ayar = ayarKur({
+    dua: true, duaSaat: '09:00',
+    duaGunleri: { '2026-08-12': 'Receb ayı girdi — Receb duası okunur' }
+  });
+  const simdi = new Date(2026, 7, 11, 0, 0, 0);
+
+  const liste = bildirimListesiUret(ayar, GUNLER, simdi);
+  const dualar = liste.filter(b => b.govde.indexOf('Receb') >= 0);
+
+  assert.strictEqual(dualar.length, 1);
+  assert.strictEqual(dualar[0].zaman.getDate(), 12);
+  assert.strictEqual(dualar[0].zaman.getHours(), 9);
+  assert.strictEqual(dualar[0].kanal, 'ozel');
+});
+
+test('dua anahtarı kapalıyken dua bildirimi üretilmez', () => {
+  const ayar = ayarKur({
+    dua: false, duaGunleri: { '2026-08-12': 'Receb ayı girdi' }
+  });
+  const liste = bildirimListesiUret(ayar, GUNLER, new Date(2026, 7, 11, 0, 0, 0));
+  assert.strictEqual(liste.length, 0);
+});
+
+test('dua bildirimi sessiz aralığa düşerse kanal sessiz olur', () => {
+  const ayar = ayarKur({
+    dua: true, duaSaat: '03:00',
+    sessiz: { bas: '22:00', son: '06:00' },
+    duaGunleri: { '2026-08-12': 'Kadir Gecesi' }
+  });
+  const liste = bildirimListesiUret(ayar, GUNLER, new Date(2026, 7, 11, 0, 0, 0));
+  assert.strictEqual(liste.length, 1);
+  assert.strictEqual(liste[0].kanal, 'sessiz');
+});
+
+test('yalnızca dua açıkken bütçe tavan gün olur', () => {
+  assert.strictEqual(bvGunButcesi(ayarKur({ dua: true })), 30);
+  assert.strictEqual(bvGunButcesi(ayarKur()), 0);
 });

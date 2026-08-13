@@ -15,7 +15,7 @@
 <link id="manifest" rel="manifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Antonio:wght@300;400;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Antonio:wght@300;400;600;700&family=Manrope:wght@400;500;600;700&family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --gece:#080C18;
@@ -219,6 +219,32 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
 .dini-kalan span{display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;
   color:var(--hayalet);margin-top:3px}
 .dini-satir.yakin .dini-kalan b{color:var(--cini)}
+
+/* mübarek gün duaları */
+.dua-satir{display:flex;align-items:center;gap:12px;padding:12px 16px;width:100%;
+  background:none;border:0;border-bottom:1px solid var(--cizgi);color:inherit;
+  font-family:inherit;text-align:left;cursor:pointer}
+.dua-satir:last-child{border-bottom:0}
+.dua-satir.bugun{background:linear-gradient(90deg,rgba(198,166,100,.14),transparent)}
+.dua-ikon{width:26px;text-align:center;font-size:15px;opacity:.85;flex:none;color:var(--pirinc)}
+.dua-ad{flex:1;font-weight:600;font-size:14px;letter-spacing:.01em}
+.dua-ad em{display:block;font-style:normal;font-size:11.5px;color:var(--hayalet);font-weight:500;margin-top:1px}
+.dua-ok{flex:none;color:var(--hayalet);font-size:12px;transition:transform .2s}
+.dua-satir[aria-expanded=true] .dua-ok{transform:rotate(180deg)}
+.dua-govde{padding:2px 16px 16px;border-bottom:1px solid var(--cizgi)}
+.dua-blok{margin-top:14px}
+.dua-blok:first-child{margin-top:4px}
+.dua-adet{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--pirinc);
+  margin-bottom:6px}
+.dua-ar{font-family:'Scheherazade New','Amiri','Traditional Arabic',serif;
+  direction:rtl;text-align:right;font-size:23px;line-height:2.05;color:var(--kagit);
+  padding:10px 12px;background:var(--kat2);border:1px solid var(--cizgi);border-radius:12px}
+.dua-meal{font-size:13px;line-height:1.65;color:var(--sis);margin-top:8px}
+.dua-not{font-size:11px;color:var(--hayalet);margin-top:4px}
+.dua-tarif{margin:14px 0 0;padding-left:18px;font-size:12.5px;line-height:1.7;color:var(--sis)}
+.dua-tarif li{margin-bottom:5px}
+.dua-kaynak{font-size:11px;color:var(--hayalet);margin-top:14px;padding-top:10px;
+  border-top:1px solid var(--cizgi);line-height:1.55}
 
 /* marka / hakkında */
 .marka-logo{width:22px;height:22px;flex:none;display:block;border-radius:50%;
@@ -445,6 +471,11 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
       <div class="kart"><div class="cuma" id="cumaKart"></div></div>
     </div>
 
+    <div id="duaKutu" style="display:none">
+      <div class="baslik">Bugünün duaları</div>
+      <div class="kart" id="duaKart"></div>
+    </div>
+
     <div id="kerahatKutu">
       <div class="baslik">Kerahat vakitleri</div>
       <div class="kart" id="kerahatListe"></div>
@@ -587,6 +618,13 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
       Esmâ-ül Hüsnâ <span class="ok" aria-hidden="true">⌃</span>
     </button>
     <div class="kart katlanir gizli" id="esmaKart"></div>
+
+    <button class="baslik" id="duaArsivBaslik" aria-expanded="false" aria-controls="duaArsivKart">
+      Mübarek gün duaları <span class="ok" aria-hidden="true">⌃</span>
+    </button>
+    <div class="kart katlanir gizli" id="duaArsivKart"></div>
+    <p class="bilgi" id="duaKaynakNotu">Kaynak: Ramazanoğlu Mahmud Sâmi,
+      <b>Dualar ve Zikirler</b>, Erkam Yayınları. Her duanın altında kitaptaki sayfası yazılıdır.</p>
   </section>
 
   <!-- AYARLAR -->
@@ -714,6 +752,14 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
         <input type="time" id="cumaSaat">
       </div>
       <div class="alan">
+        <label>Mübarek gün duaları<em>O ay veya gece girince gösterir ve hatırlatır</em></label>
+        <button class="svic" id="duaSvic" role="switch"></button>
+      </div>
+      <div class="alan">
+        <label>Dua hatırlatma saati<em>Mübarek gün girdiğinde bu saatte uyarır</em></label>
+        <input type="time" id="duaSaat">
+      </div>
+      <div class="alan">
         <label>Ramazan modu<em>İftar ve sahur geri sayımı</em></label>
         <select id="ramazanMod">
           <option value="oto">Otomatik</option>
@@ -788,13 +834,14 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
 <div class="toast" id="toast"></div>
 
 <script src="bildirim.js"></script>
+<script src="dualar.js"></script>
 <script>
 /* ==========================================================
    BEŞ VAKİT — tek dosya, bağımsız namaz vakti uygulaması
    Vakitler cihazda hesaplanır; hiçbir sunucuya vakit sorulmaz.
    ========================================================== */
 const APP = 'Beş Vakit';
-const SURUM = '0.13.0';
+const SURUM = '0.14.0';
 const LOGO = 'logo-beyaz.png';
 const KABE = { lat: 21.4224779, lng: 39.8261722 };
 const VAKITLER = [
@@ -854,8 +901,10 @@ const VARSAYILAN = {
   tema:'koyu', kerahat:true, ramazanMod:'oto',
   resmi:true, ilce:'9620', resmiIl:'546',   // varsayılan şehir Kayseri ile tutarlı
   cuma:true, cumaSaat:'11:30',
+  dua:true, duaSaat:'09:00',
   imsakiyeAcik:true, diniAcik:false, istatistikAcik:false, kazaAcik:false,
   haritaAcik:false, camiAcik:false, zikirIstAcik:true, esmaAcik:false, tovbeAcik:false,
+  duaArsivAcik:false,
   sapma:0
 };
 let A = yukle();
@@ -1587,6 +1636,7 @@ function tikTak(){
   heroNotTazele(dk);
   kerahatUyari(dk);
   cumaUyari(dk);
+  duaUyari(dk);
   bildirimKontrol(dk);
 
   // Saat başı (ve gece yarısı) günü tazele.
@@ -1787,6 +1837,8 @@ function katlamaKur(btnSel, kartSel, anahtar, ciz){
   };
   uygula(!!A[anahtar]);
   btn.onclick = ()=>{ A[anahtar] = !A[anahtar]; kaydet(); uygula(A[anahtar]); };
+  // Başka bir yerden programlı açmak için (bkz. duaAc): başlığın üstünde durur.
+  btn._ac = ac=>{ A[anahtar] = !!ac; kaydet(); uygula(A[anahtar]); };
 }
 
 /* ==========================================================
@@ -2339,6 +2391,145 @@ function cumaSaatDk(){
 }
 
 /* ==========================================================
+   MÜBAREK GÜN DUALARI
+   Metinler ve "hangi gün hangi dua" kuralı dualar.js'te (saf, test edilebilir).
+   Burada kalan iş: hicri bağlamı üretmek, çizmek ve hatırlatmak.
+   ========================================================== */
+
+/** Bir günün dua bağlamı. Cihazın hicri takvim desteği yoksa null. */
+function duaBaglami(d){
+  try{
+    const yarin = new Date(d); yarin.setDate(yarin.getDate() + 1);
+    const h = hicriParcala(d), y = hicriParcala(yarin);
+    return { ay:h.month, gun:h.day, yarinAy:y.month, yarinGun:y.day, hafta:d.getDay() };
+  }catch(e){ return null; }
+}
+
+/** Bugüne düşen dualar. Ayar kapalıysa veya hicri takvim yoksa boş. */
+function duaBugun(){
+  if(!A.dua) return [];
+  const c = duaBaglami(new Date());
+  return c ? bvDuaListesi(c) : [];
+}
+
+/** Vakitler sayfasındaki "Bugünün duaları" kutusu — Cuma ve Ramazan ile aynı desen. */
+function duaCiz(){
+  const liste = duaBugun();
+  $('#duaKutu').style.display = liste.length ? '' : 'none';
+  if(!liste.length) return;
+  $('#duaKart').innerHTML = liste.map(d=>`
+    <button class="dua-satir bugun" data-dua="${d.id}">
+      <div class="dua-ikon">${d.ikon}</div>
+      <div class="dua-ad">${d.ad}<em>${d.alt}</em></div>
+      <div class="dua-ok" aria-hidden="true">›</div>
+    </button>`).join('');
+  $('#duaKart').querySelectorAll('[data-dua]').forEach(b=>{
+    b.onclick = ()=> duaAc(b.dataset.dua);
+  });
+}
+
+/* Akordeonda açık olan dua — kalıcı değil, oturumla birlikte gider. */
+let _duaAcikId = null;
+
+/** İbadet sayfasındaki tam liste. Bugüne düşenler üstte ve altın çerçeveli. */
+function duaArsivCiz(){
+  const bugunkiler = duaBugun().map(d => d.id);
+  const sirali = BV_DUALAR.slice().sort((a,b)=>
+    (bugunkiler.indexOf(b.id) >= 0) - (bugunkiler.indexOf(a.id) >= 0));
+
+  $('#duaArsivKart').innerHTML = sirali.map(d=>{
+    const acik = _duaAcikId === d.id;
+    const bugun = bugunkiler.indexOf(d.id) >= 0;
+    return `
+      <button class="dua-satir ${bugun ? 'bugun':''}" data-dua="${d.id}"
+              aria-expanded="${acik}" aria-controls="duaGovde-${d.id}">
+        <div class="dua-ikon">${d.ikon}</div>
+        <div class="dua-ad">${d.ad}<em>${bugun ? 'Bugün · ' : ''}${d.alt}</em></div>
+        <div class="dua-ok" aria-hidden="true">⌃</div>
+      </button>
+      ${acik ? `<div class="dua-govde" id="duaGovde-${d.id}">
+        ${d.metin.map(b=>`
+          <div class="dua-blok">
+            ${b.adet ? `<div class="dua-adet">${b.adet}</div>` : ''}
+            ${b.ar ? `<div class="dua-ar" lang="ar" dir="rtl">${b.ar}</div>` : ''}
+            <div class="dua-meal">${b.meal}</div>
+            ${b.not ? `<div class="dua-not">${b.not}</div>` : ''}
+          </div>`).join('')}
+        ${d.tarif.length ? `<ul class="dua-tarif">${d.tarif.map(t=>`<li>${t}</li>`).join('')}</ul>` : ''}
+        <div class="dua-kaynak">Ramazanoğlu Mahmud Sâmi, <b>Dualar ve Zikirler</b>,
+          Erkam Yayınları · s. ${d.sayfa}</div>
+      </div>` : ''}`;
+  }).join('');
+
+  $('#duaArsivKart').querySelectorAll('[data-dua]').forEach(b=>{
+    b.onclick = ()=>{
+      _duaAcikId = _duaAcikId === b.dataset.dua ? null : b.dataset.dua;
+      duaArsivCiz();
+    };
+  });
+}
+
+/** Bir duayı arşivde açıp gösterir — Vakitler sayfasındaki satır buraya götürür. */
+function duaAc(id){
+  _duaAcikId = id;
+  sekmeAc('ibadet');
+  $('#duaArsivBaslik')._ac(true);          // katlamaKur çizimi de yapar
+  // sekmeAc sayfayı en üste alıyor; kaydırma ondan sonra yapılmalı.
+  // requestAnimationFrame değil setTimeout: sekme arka plandayken rAF hiç
+  // tetiklenmiyor ve kaydırma sessizce düşüyor.
+  setTimeout(()=>{
+    const hedef = $(`#duaArsivKart [data-dua="${id}"]`);
+    if(hedef) hedef.scrollIntoView({ behavior:'smooth', block:'start' });
+  }, 0);
+}
+
+/**
+ * Önümüzdeki 30 günün hangisinde hangi uyarı verilecek — bildirim.js'e girdi.
+ * Yalnızca `bildir` işaretli dualar ve yalnızca vesilenin ilk günü: yoksa Receb
+ * ayı boyunca her gün aynı bildirim tekrarlanır.
+ * Aynı güne iki vesile düşerse ikisi de tek bildirimde birleştirilir.
+ */
+function duaGunleri(){
+  if(!A.dua) return {};
+  const harita = {}, bugun = new Date();
+  let dun = duaBaglami(new Date(bugun.getTime() - 86400000));
+  for(let i=0; i<30; i++){
+    const d = new Date(bugun); d.setDate(d.getDate() + i);
+    const c = duaBaglami(d);
+    if(!c) return harita;                  // hicri takvim yok: elde ne varsa o
+    const metinler = BV_DUALAR
+      .filter(x => x.bildir && bvDuaIlkGunMu(x, c, dun))
+      .map(x => x.uyari);
+    if(metinler.length) harita[gunAnahtar(d)] = metinler.join(' · ');
+    dun = c;
+  }
+  return harita;
+}
+
+/** Tarayıcı yolu: mübarek gün girdiğinde belirlenen saatte bir kez hatırlatır. */
+function duaUyari(dk){
+  if(kuyrukVar()) return;          // APK: bildirimler kuyruktan gelir
+  if(!A.dua || !A.bildirimAcik) return;
+  const hedef = duaSaatDk();
+  if(hedef === null || dk < hedef || dk >= hedef + 1) return;
+
+  const metin = duaGunleri()[gunAnahtar(new Date())];
+  if(!metin) return;
+  const anahtar = new Date().toDateString() + 'dua';
+  if(uyariVerildi[anahtar]) return;
+  uyariVerildi[anahtar] = true;
+
+  try{ if(Notification.permission==='granted') new Notification(APP,{ body:metin, tag:'dua' }); }catch(e){}
+  titret([200,100,200]);
+  toast(metin);
+}
+function duaSaatDk(){
+  const s = (A.duaSaat || '09:00').split(':');
+  const dk = (+s[0])*60 + (+s[1]);
+  return isNaN(dk) ? null : dk;
+}
+
+/* ==========================================================
    ANDROID WIDGET KÖPRÜSÜ
    Widget kendi hesabını yapmaz; 30 günlük vakti buradan okur.
    Böylece astronomik motor tek yerde kalır ve uygulama günlerce
@@ -2481,6 +2672,9 @@ function bildirimAyari(){
     kerahatAraliklari: KERAHAT,
     cuma: !!A.cuma,
     cumaSaat: A.cumaSaat || '11:30',
+    dua: !!A.dua,
+    duaSaat: A.duaSaat || '09:00',
+    duaGunleri: duaGunleri(),
     ramazanGunleri: ramazanGunleri(),
     sahurOnce: +A.sahurOnce || 0
   };
@@ -2504,6 +2698,7 @@ function bildirimImza(){
     '|' + (A.sessizBas||'00:00') + '-' + (A.sessizSon||'00:00') +
     '|' + (+A.sahurOnce||0) +
     '|' + (A.kerahat?1:0) + '|' + (A.cuma?1:0) + '|' + (A.cumaSaat||'11:30') +
+    '|' + (A.dua?1:0) + '|' + (A.duaSaat||'09:00') +
     '|' + (A.ramazanMod||'') +
     '|' + A.sehir + '|' + A.lat.toFixed(4) + ',' + A.lng.toFixed(4) +
     '|' + A.rakim + '|' + A.yontem + '|' + A.mezhep + '|' + (A.temkin?1:0) +
@@ -2627,6 +2822,8 @@ function gunuTazele(){
   kerahatCiz();
   ramazanCiz();
   cumaCiz();
+  duaCiz();
+  if(A.duaArsivAcik) duaArsivCiz();
   takipCiz();
   tikTak();
   kibleBilgiTazele();
@@ -3179,9 +3376,15 @@ function ayarlariKur(){
   svicKur('#titresimSvic','titresim');
   $('#tema').value = A.tema;
   $('#tema').onchange = e => { A.tema = e.target.value; kaydet(); temaUygula(); };
-  svicKur('#cumaSvic','cuma', ()=>{ setTimeout(gunuTazele,0); return true; });
+  svicKur('#cumaSvic','cuma', ()=>{ setTimeout(()=>{ gunuTazele(); bildirimKur(); },0); return true; });
   $('#cumaSaat').value = A.cumaSaat || '11:30';
   $('#cumaSaat').onchange = e => { A.cumaSaat = e.target.value || '11:30'; kaydet(); bildirimKur(); };
+
+  // Anahtar A[anahtar] yazılmadan önce çağrılır; kuyruk yeni değerle kurulsun
+  // diye tazeleme bir tik sonraya bırakılır.
+  svicKur('#duaSvic','dua', ()=>{ setTimeout(()=>{ gunuTazele(); bildirimKur(); },0); return true; });
+  $('#duaSaat').value = A.duaSaat || '09:00';
+  $('#duaSaat').onchange = e => { A.duaSaat = e.target.value || '09:00'; kaydet(); bildirimKur(); };
   $('#ramazanMod').value = A.ramazanMod;
   $('#ramazanMod').onchange = e => { A.ramazanMod = e.target.value; kaydet(); gunuTazele(); bildirimKur(); };
   svicKur('#kerahatSvic','kerahat', ()=>{ setTimeout(gunuTazele,0); return true; });
@@ -3381,6 +3584,7 @@ function baslat(){
   };
   katlamaKur('#zikirIstBaslik', '#zikirIstKart', 'zikirIstAcik', zikirIstatistikCiz);
   katlamaKur('#esmaBaslik', '#esmaKart', 'esmaAcik', esmaCiz);
+  katlamaKur('#duaArsivBaslik', '#duaArsivKart', 'duaArsivAcik', duaArsivCiz);
   $('#tesbihSifirla').onclick = ()=>{ ZIKIR.sayac = 0; zikirKaydet(); tesbihCiz(); toast('Sayaç sıfırlandı'); };
   $('#setModuBtn').onclick = ()=>{
     ZIKIR.setModu = !ZIKIR.setModu;

@@ -8,7 +8,7 @@
 
 [**→ Uygulamayı aç**](https://kamilsaim.github.io/besvakit/)
 
-![sürüm](https://img.shields.io/badge/sürüm-0.13.0-22B2AE?style=flat-square)
+![sürüm](https://img.shields.io/badge/sürüm-0.14.0-22B2AE?style=flat-square)
 ![bağımlılık](https://img.shields.io/badge/bağımlılık-yok-D8A93C?style=flat-square)
 ![tek dosya](https://img.shields.io/badge/tek%20dosya-HTML-080C18?style=flat-square)
 
@@ -31,8 +31,9 @@ olmadan da, kaynak kapansa da çalışır. Anahtar yok, hesap yok, veri dışar�
 | **Kıble** | Sekmeye girince başlayan pusula, kalibrasyon, uydu haritasında kıble hattı |
 | **İbadet** | Namaz takibi, seri gün, aylık istatistik, kaza sayacı, zikirmatik (tesbih seti, özel zikir), Esmâ-ül Hüsnâ, Nasûh Tövbesi takibi |
 | **Cuma** | Cuma hatırlatması, Kehf Suresi uyarısı, salâvat sayacı |
+| **Mübarek gün duaları** | Muharrem, Aşûre, Safer, Receb, Regaib, Mirac, Berat, Kadir, iftar, arefe, bayram gecesi, senenin sonu, cuma — o zaman girince kendiliğinden çıkar ve hatırlatır |
 | **Camiler** | 3 km çevrendeki camiler, yön ve yürüme mesafesiyle |
-| **Bildirim** | APK'da uygulama kapalıyken de çalışır: her vakit, her vaktin kendi önceden uyarısı, kerahat, cuma, sahur/iftar, sessiz saatler |
+| **Bildirim** | APK'da uygulama kapalıyken de çalışır: her vakit, her vaktin kendi önceden uyarısı, kerahat, cuma, mübarek gün duaları, sahur/iftar, sessiz saatler |
 | **Çevrimdışı** | Servis işçisiyle uygulama kabuğu; vakitler önbellekte, hesap yedekte |
 
 ## Nasıl hesaplıyor
@@ -96,6 +97,27 @@ kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasın�
   cami araması (Overpass API), yazı tipleri (Google Fonts). Üçü de kapalıyken uygulama çalışmaya devam eder.
 
 ## Sürüm geçmişi
+
+### 0.14.0
+- **Mübarek gün ve gece duaları.** Hicri takvimde belirli ay, gün ve gecelere
+  mahsus dualar var; uygulama hicri tarihi zaten biliyordu ama okunacak metni
+  göstermiyordu. Artık o zamana girilince Vakitler sayfasında **“Bugünün
+  duaları”** kutusu çıkıyor: Muharrem'in ilk on günü, Aşûre, Safer ayı ve
+  çarşambaları, Receb, Leyle-i Regâib, Mi'rac, Berât, Leyle-i Kadir, iftar,
+  arefe, bayram gecesi, senenin sonu, cuma ve hilâl. Satıra dokununca İbadet
+  sayfasındaki **Mübarek gün duaları** bölümü açılıyor: Arapça metin, Türkçe
+  meal, okunuş tarifi ve kaynak sayfası. Bölüm hep orada — arefe duasını
+  arefeyi beklemeden de okuyabilirsin.
+- **O ay veya gece girince hatırlatır.** Ayarlardaki *Mübarek gün duaları*
+  anahtarı ve *Dua hatırlatma saati* ile: vesile başladığı gün, seçilen saatte
+  tek bildirim. Receb ayı boyunca her gün tekrarlamaz — yalnızca ilk günde
+  uyarır. APK'da uygulama kapalıyken de gelir.
+- **Cuma anahtarı bildirim kuyruğunu tazeliyor.** Cuma modu açılıp
+  kapatıldığında kuyruk yeniden kurulmuyordu; ayar değişmiş görünse de bir
+  sonraki tetikleyiciye kadar eski kuyruk geçerli kalıyordu.
+
+Kaynak: Ramazanoğlu Mahmud Sâmi, *Dualar ve Zikirler*, Erkam Yayınları. Her
+duanın altında kitaptaki sayfası yazılı.
 
 ### 0.13.0
 - **Güneş doğuşu için önceden uyarı.** Sabah namazını kaçırmamak için asıl gereken
@@ -289,6 +311,8 @@ kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasın�
 - [x] Ramazan modu — iftar/sahur geri sayımı
 - [x] Kerahat vakitleri uyarısı
 - [x] Cuma modu — salâvat sayacı, Kehf hatırlatması
+- [x] Mübarek gün ve gece duaları — o vakit girince gösterir ve hatırlatır
+- [ ] Duaların Latin harfli okunuşu — şimdilik Arapça asıl metin ve Türkçe meal var
 - [x] Vakitleri Diyanet takvimiyle birebir hizalayan temkin tablosu
 - [x] Güneşe göre kıble — pusulasız yöntem
 - [ ] Ayarları ve kayıtları dışa aktar / geri yükle

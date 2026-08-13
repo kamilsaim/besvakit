@@ -22,6 +22,7 @@ const BV_TUR = {
   sahur: 20,
   iftar: 21,
   cuma: 30,
+  dua: 31,
   // kerahat + ki: ki 0'dan başlar ve üst sınır index.html'deki KERAHAT
   // sabitinin uzunluğu kadardır (bugün 3). Kod bunu sınırlamaz — ki'nin
   // 60'ın altında kalması çağıranın sorumluluğudur, aksi halde kimlikler
@@ -94,8 +95,9 @@ function bvGunButcesi(ayar) {
   if (ayar.kerahat) gunluk += (ayar.kerahatAraliklari || []).length;
   if ((ayar.ramazanGunleri || []).length) gunluk += 2;
 
-  // Cuma haftada bir, bütçeyi kayda değer etkilemez — sayıma katılmaz.
-  if (gunluk <= 0) return ayar.cuma ? BV_TAVAN_GUN : 0;
+  // Cuma haftada bir, mübarek gün duaları yılda birkaç kez — bütçeyi kayda
+  // değer etkilemezler, sayıma katılmazlar.
+  if (gunluk <= 0) return (ayar.cuma || ayar.dua) ? BV_TAVAN_GUN : 0;
 
   return Math.max(BV_TABAN_GUN,
          Math.min(BV_TAVAN_GUN, Math.floor(BV_HEDEF_BILDIRIM / gunluk)));
@@ -189,6 +191,23 @@ function bildirimListesiUret(ayar, gunler, simdi) {
           govde: 'Cuma namazı vakti yaklaşıyor' +
                  (ogleDk ? ' · öğle ' + bvSaatYaz(ogleDk) : ''),
           zaman: bvZaman(gun, cumaDk)
+        });
+      }
+    }
+
+    // Mübarek gün ve gece duaları. Hangi günün hangi metinle uyaracağı
+    // dışarıdan hazır gelir (duaGunleri); hicri hesap ve "vesilenin ilk günü
+    // mü" kararı index.html + dualar.js'te kalır.
+    if (ayar.dua) {
+      const duaMetni = (ayar.duaGunleri || {})[gun];
+      const duaDk = bvSaatDk(ayar.duaSaat);
+      if (duaMetni && duaDk !== null) {
+        liste.push({
+          id: gunSira * 100 + BV_TUR.dua,
+          kanal: bvKanal('ozel', duaDk, ayar.sessiz),
+          baslik: BV_BASLIK,
+          govde: duaMetni,
+          zaman: bvZaman(gun, duaDk)
         });
       }
     }
