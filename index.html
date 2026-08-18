@@ -571,55 +571,63 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
 
   <!-- KIBLE -->
   <section class="sayfa" id="sayfa-kible">
-    <div class="pusula-sar"><svg id="pusula" viewBox="0 0 320 320" aria-label="Kıble pusulası"></svg></div>
-    <div class="pusula-durum">
-      <div class="sapma" id="sapmaYazi">—</div>
-      <div class="pusula-mesaj" id="pusulaMesaj">Pusula başlatılıyor…</div>
-    </div>
-    <div style="margin-top:14px"><button class="btn" id="pusulaBtn">Pusulayı başlat</button></div>
-    <div class="btn-satir">
-      <button class="btn ikincil" id="kalibreBtn">Şu an kıbleye bakıyorum</button>
-      <button class="btn ikincil" id="kalibreSifirla">Sıfırla</button>
-    </div>
-    <p class="bilgi">
-      Pusula sapıyorsa: telefonu elinde 8 çizerek birkaç saniye çevir, metal masa ve mıknatıslı kılıftan uzaklaş.
-      Yönü haritadan doğrulayıp <b>“Şu an kıbleye bakıyorum”</b>a bastığında uygulama telefonunun sapmasını
-      kendisi ölçüp kalıcı olarak düzeltir.
-    </p>
-
-    <div class="baslik">Güneşe göre kıble</div>
-    <div class="kart"><div id="gunesKart"></div></div>
-    <p class="bilgi" style="margin-bottom:10px">
-      Pusulanı sınamak ve düzeltmek için: telefonu <b>yere paralel</b> tut,
-      üst kenarını güneşin ufuktaki izdüşümüne çevir, sonra ölç.
-      Güneşin yönü sadece saat ve koordinattan hesaplanır — manyetik alandan,
-      metalden, kılıftan etkilenmez.
-    </p>
-    <div class="btn-satir">
-      <button class="btn altin" id="gunesOlc">Güneşe doğrulttum, ölç</button>
-    </div>
-    <div id="olcumSonuc"></div>
-
-    <button class="baslik" id="haritaBaslik" aria-expanded="false" aria-controls="haritaKart">
-      Uydudan kıble hattı <span class="ok" aria-hidden="true">⌃</span>
-    </button>
-    <div class="katlanir gizli" id="haritaKart">
-      <div id="harita"><div class="harita-yer" id="haritaYer">Harita yükleniyor…</div></div>
-      <div class="btn-satir">
-        <button class="btn ikincil" id="uyduBtn">Uydu / sokak</button>
-        <button class="btn ikincil" id="camiAraBtn">Yakındaki camiler</button>
+    <div class="bolum">
+      <div class="pusula-sar"><svg id="pusula" viewBox="0 0 320 320" aria-label="Kıble pusulası"></svg></div>
+      <div class="pusula-durum">
+        <div class="sapma" id="sapmaYazi">—</div>
+        <div class="pusula-mesaj" id="pusulaMesaj">Pusula başlatılıyor…</div>
       </div>
-      <p class="bilgi">Turkuaz hat, bulunduğun noktadan Kâbe'ye giden gerçek kıble yönü. Binanın duvarına veya
-        çatı hattına göre bakarak seccadeni pusulasız da doğru yerleştirebilirsin.</p>
+      <div style="margin-top:14px"><button class="btn" id="pusulaBtn">Pusulayı başlat</button></div>
+      <div class="btn-satir">
+        <button class="btn ikincil" id="kalibreBtn">Şu an kıbleye bakıyorum</button>
+        <button class="btn ikincil" id="kalibreSifirla">Sıfırla</button>
+      </div>
+      <p class="bilgi">
+        Pusula sapıyorsa: telefonu elinde 8 çizerek birkaç saniye çevir, metal masa ve mıknatıslı kılıftan uzaklaş.
+        Yönü haritadan doğrulayıp <b>“Şu an kıbleye bakıyorum”</b>a bastığında uygulama telefonunun sapmasını
+        kendisi ölçüp kalıcı olarak düzeltir.
+      </p>
     </div>
 
-    <button class="baslik" id="camiBaslik" aria-expanded="false" aria-controls="camiKart">
-      Yakındaki camiler <span class="ok" aria-hidden="true">⌃</span>
-    </button>
-    <div class="katlanir gizli" id="camiKart">
-      <div class="kart" id="camiListe"><div style="padding:18px 16px;color:var(--hayalet);font-size:13px">
-        Yukarıdaki haritayı açıp “Yakındaki camiler”e dokun; 3 km çevrendeki camileri
-        OpenStreetMap'ten getirir.</div></div>
+    <div class="bolum">
+      <div class="baslik">Güneşe göre kıble</div>
+      <div class="kart"><div id="gunesKart"></div></div>
+      <p class="bilgi" style="margin-bottom:10px">
+        Pusulanı sınamak ve düzeltmek için: telefonu <b>yere paralel</b> tut,
+        üst kenarını güneşin ufuktaki izdüşümüne çevir, sonra ölç.
+        Güneşin yönü sadece saat ve koordinattan hesaplanır — manyetik alandan,
+        metalden, kılıftan etkilenmez.
+      </p>
+      <div class="btn-satir">
+        <button class="btn altin" id="gunesOlc">Güneşe doğrulttum, ölç</button>
+      </div>
+      <div id="olcumSonuc"></div>
+    </div>
+
+    <div class="bolum">
+      <button class="baslik" id="haritaBaslik" aria-expanded="false" aria-controls="haritaKart">
+        Uydudan kıble hattı <span class="ok" aria-hidden="true">⌃</span>
+      </button>
+      <div class="katlanir gizli" id="haritaKart">
+        <div id="harita"><div class="harita-yer" id="haritaYer">Harita yükleniyor…</div></div>
+        <div class="btn-satir">
+          <button class="btn ikincil" id="uyduBtn">Uydu / sokak</button>
+          <button class="btn ikincil" id="camiAraBtn">Yakındaki camiler</button>
+        </div>
+        <p class="bilgi">Turkuaz hat, bulunduğun noktadan Kâbe'ye giden gerçek kıble yönü. Binanın duvarına veya
+          çatı hattına göre bakarak seccadeni pusulasız da doğru yerleştirebilirsin.</p>
+      </div>
+    </div>
+
+    <div class="bolum">
+      <button class="baslik" id="camiBaslik" aria-expanded="false" aria-controls="camiKart">
+        Yakındaki camiler <span class="ok" aria-hidden="true">⌃</span>
+      </button>
+      <div class="katlanir gizli" id="camiKart">
+        <div class="kart" id="camiListe"><div style="padding:18px 16px;color:var(--hayalet);font-size:13px">
+          Yukarıdaki haritayı açıp “Yakındaki camiler”e dokun; 3 km çevrendeki camileri
+          OpenStreetMap'ten getirir.</div></div>
+      </div>
     </div>
   </section>
 
