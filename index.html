@@ -132,6 +132,12 @@ button{background:none;border:0;cursor:pointer}
 .serit-nokta.aktif span{color:var(--pirinc);font-weight:700}
 .serit-simdi{position:absolute;top:6px;width:2px;height:20px;margin-left:-1px;background:var(--cini);
   border-radius:2px;box-shadow:0 0 10px var(--cini);z-index:2}
+.konum-noktalar{position:relative;z-index:2;display:flex;justify-content:center;
+  gap:6px;margin-top:14px}
+.konum-noktalar.gizli{display:none}
+.konum-noktalar i{width:6px;height:6px;border-radius:50%;background:var(--hayalet);
+  transition:background .25s,transform .25s}
+.konum-noktalar i.aktif{background:var(--pirinc);transform:scale(1.3)}
 .serit-kerahat{position:absolute;top:14px;height:4px;background:repeating-linear-gradient(
   45deg,rgba(194,89,107,.85) 0 3px,rgba(194,89,107,.35) 3px 6px);border-radius:2px}
 
@@ -260,6 +266,19 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
 .hakkinda-alt b{color:var(--sis);font-weight:600}
 
 /* ---------- ibadet: namaz takibi ---------- */
+/* konumlarım listesi */
+.konum-satir{display:flex;align-items:center;gap:8px;padding:12px 16px;
+  border-bottom:1px solid var(--cizgi);cursor:pointer}
+.konum-satir:last-child{border-bottom:0}
+.konum-satir.aktif{background:linear-gradient(90deg,rgba(216,169,60,.14),transparent)}
+.konum-satir-ad{flex:1;font-weight:600;font-size:14px;letter-spacing:.01em;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.konum-satir.aktif .konum-satir-ad{color:var(--pirinc)}
+.konum-satir-ok{display:flex;gap:4px;flex:none}
+.konum-satir-ok button{width:28px;height:28px;border-radius:8px;font-size:13px;
+  color:var(--hayalet);background:var(--kat2)}
+.konum-satir-ok button:disabled{opacity:.3}
+.konum-satir-ok .konum-sil{color:var(--gul)}
 .ozet{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:4px}
 .ozet-kutu{background:var(--kat);border:1px solid var(--cizgi);border-radius:var(--r);padding:14px 8px;text-align:center}
 .ozet-kutu b{display:block;font-family:'Antonio',sans-serif;font-size:30px;font-weight:400;line-height:1;
@@ -456,6 +475,7 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
     <div class="serit-gecen" id="seritGecen"></div>
     <div class="serit-simdi" id="seritSimdi"></div>
   </div>
+  <div class="konum-noktalar gizli" id="konumNoktalar"></div>
 </header>
 
 <main>
@@ -633,6 +653,17 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
 
   <!-- AYARLAR -->
   <section class="sayfa" id="sayfa-ayar">
+    <div class="baslik">Konumlarım</div>
+    <div class="kart" id="konumlarKart">
+      <div id="konumListe"></div>
+      <div class="alan">
+        <label>Konum ekle<em>En fazla 5 konum</em></label>
+        <select id="konumEkleSec"><option value="">Seç…</option></select>
+      </div>
+    </div>
+    <p class="bilgi">Bildirimler yalnızca en üstteki konuma göre gelir. Diğer
+      konumlar vakitler sayfasında kaydırarak bakmak içindir.</p>
+
     <div class="baslik">Konum</div>
     <div class="kart">
       <div class="alan">
@@ -845,7 +876,7 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
    Vakitler cihazda hesaplanır; hiçbir sunucuya vakit sorulmaz.
    ========================================================== */
 const APP = 'Beş Vakit';
-const SURUM = '0.14.0';
+const SURUM = '0.15.0';
 const LOGO = 'logo-beyaz.png';
 const KABE = { lat: 21.4224779, lng: 39.8261722 };
 const VAKITLER = [
@@ -904,6 +935,7 @@ const VARSAYILAN = {
   sessizBas:'00:00', sessizSon:'00:00', sahurOnce:45,
   tema:'koyu', kerahat:true, ramazanMod:'oto',
   resmi:true, ilce:'9620', resmiIl:'546',   // varsayılan şehir Kayseri ile tutarlı
+  konumlar:null, aktifKonum:0,
   cuma:true, cumaSaat:'11:30',
   dua:true, duaSaat:'09:00',
   imsakiyeAcik:true, diniAcik:false, istatistikAcik:false, kazaAcik:false,
@@ -911,6 +943,7 @@ const VARSAYILAN = {
   duaArsivAcik:false,
   sapma:0
 };
+const KONUM_ALANLARI = ['sehir','lat','lng','rakim','otoKonum','resmi','resmiIl','ilce'];
 let A = yukle();
 function yukle(){
   try{
@@ -919,8 +952,43 @@ function yukle(){
       { duzeltme:Object.assign({}, VARSAYILAN.duzeltme, h.duzeltme||{}) });
     a.bildirim = bildirimSemasiniTasi(h.bildirim, h.onceden);
     delete a.onceden;
+    konumlariGoc(a);
     return a;
-  }catch(e){ return JSON.parse(JSON.stringify(VARSAYILAN)); }
+  }catch(e){
+    const a = JSON.parse(JSON.stringify(VARSAYILAN));
+    konumlariGoc(a);
+    return a;
+  }
+}
+
+/* Eski şemada konum tek elemandı (A.sehir/lat/lng/...). Yeni şemada
+   A.konumlar dizisi kaynak; yoksa eski tekil alanlardan tek elemanlı
+   dizi kurulur, kullanıcı veri kaybetmez. */
+function konumlariGoc(a){
+  if(Array.isArray(a.konumlar) && a.konumlar.length){
+    if(!(a.aktifKonum >= 0 && a.aktifKonum < a.konumlar.length)) a.aktifKonum = 0;
+    return;
+  }
+  const k = {};
+  KONUM_ALANLARI.forEach(f => k[f] = a[f]);
+  a.konumlar = [k];
+  a.aktifKonum = 0;
+}
+/* A.sehir/lat/lng/... "aktif konumun aynası": tüm mevcut hesap/harita/
+   kıble kodu bu alanları okumaya devam eder, değişmez. kaydet() her
+   çağrıldığında ayna aktif diziye yazılır. */
+function konumSenkronla(){
+  const k = A.konumlar && A.konumlar[A.aktifKonum];
+  if(!k) return;
+  KONUM_ALANLARI.forEach(f => k[f] = A[f]);
+}
+/* Aynayı dizinin idx'inci elemanından tazeler — A.aktifKonum de günceller.
+   kaydet() ÇAĞIRMAZ, çağıran taraf çağırmalı. */
+function konumSec(idx){
+  const k = A.konumlar[idx];
+  if(!k) return;
+  A.aktifKonum = idx;
+  KONUM_ALANLARI.forEach(f => A[f] = k[f]);
 }
 
 /**
@@ -945,7 +1013,7 @@ function bildirimSemasiniTasi(eski, eskiOnceden){
   });
   return yeni;
 }
-function kaydet(){ try{ localStorage.setItem('besvakit', JSON.stringify(A)); }catch(e){} }
+function kaydet(){ konumSenkronla(); try{ localStorage.setItem('besvakit', JSON.stringify(A)); }catch(e){} }
 
 /* İbadet kayıtları ayarlardan ayrı tutulur — zamanla büyüyen tek veri bu. */
 function depoOku(anahtar, varsayilan){
@@ -2685,6 +2753,26 @@ function bildirimAyari(){
 }
 
 /** Önümüzdeki 30 günün vakit tablosu — widgetVeriYaz ile aynı biçim. */
+/* Bildirimler her zaman ANA konuma (A.konumlar[0]) göre kurulur — kullanıcı
+   vakitler sayfasında başka bir konuma kaydırmışken bile. Aynayı geçici olarak
+   0. konuma alıp fn'i çalıştırır, sonra geri koyar. Aktif konum 0 değilse
+   elimizdeki RESMI (Diyanet) verisi aktif konuma ait olduğu için geçici olarak
+   devre dışı bırakılır; ana konuma dönülünce imza değişir ve kuyruk Diyanet
+   verisiyle yeniden kurulur. */
+function anaKonumdaCalistir(fn){
+  if(!A.konumlar || A.aktifKonum === 0) return fn();
+  konumSenkronla();
+  const yedek = {}; KONUM_ALANLARI.forEach(f => yedek[f] = A[f]);
+  const yedekAktif = A.aktifKonum, yedekResmi = RESMI;
+  const ana = A.konumlar[0];
+  KONUM_ALANLARI.forEach(f => A[f] = ana[f]);
+  A.aktifKonum = 0; RESMI = null;
+  try{ return fn(); }
+  finally{
+    KONUM_ALANLARI.forEach(f => A[f] = yedek[f]);
+    A.aktifKonum = yedekAktif; RESMI = yedekResmi;
+  }
+}
 function bildirimGunTablosu(){
   const gunler = {}, bugun = new Date();
   for(let i=0; i<30; i++){
@@ -2737,13 +2825,15 @@ async function bildirimKur(){
 
   _bildirimCalisiyor = (async()=>{
     try{
-      const imza = bildirimImza();
+      const imza = anaKonumdaCalistir(bildirimImza);
       if(imza === _bildirimSonKurulum) return;
 
       await bildirimKanallariKur();
 
       // önce üret: üretim patlarsa mevcut kuyruk dokunulmamış kalır
-      const liste = A.bildirimAcik ? bildirimListesiUret(bildirimAyari(), bildirimGunTablosu(), new Date()) : [];
+      const liste = A.bildirimAcik
+        ? anaKonumdaCalistir(()=> bildirimListesiUret(bildirimAyari(), bildirimGunTablosu(), new Date()))
+        : [];
 
       const bekleyen = await L.getPending();
       if(bekleyen && bekleyen.notifications && bekleyen.notifications.length){
@@ -2817,6 +2907,7 @@ function gunuTazele(){
   const bugun = new Date();
   bugunVakit = vakitAl(bugun);
   $('#konumAd').textContent = A.sehir;
+  konumNoktalariCiz();
   $('#tarih').innerHTML = `${bugun.getDate()} ${AYLAR[bugun.getMonth()]} ${GUNLER[bugun.getDay()]}<br>${hicriYaz(bugun)}`;
   ayiKonumla();                         // tarih yazıldı, ay artık altına hizalanabilir
   vakitListesiCiz();
@@ -3401,6 +3492,130 @@ function ayarlariKur(){
     sapmaYaz();
   });
   alanlariDoldur();
+  konumlariCiz();
+}
+
+/* Vakitler sayfasında (#gokyuzu + #sayfa-vakit) yatay kaydırma ile konum
+   değiştirme. Dikey scroll ile çakışmasın diye ilk hareketin açısına
+   bakılır: yatay hareket dikeyden belirgin büyükse kaydırma kabul edilir. */
+function kaydirmaKur(){
+  let x0=0, y0=0, dx=0, yatay=false, aktifDokunma=false;
+  function baslasin(e){
+    if(!A.konumlar || A.konumlar.length <= 1) return;
+    if(!$('#sayfa-vakit').classList.contains('acik')) return;
+    if(e.touches.length !== 1) return;
+    const t = e.touches[0];
+    x0 = t.clientX; y0 = t.clientY; dx = 0; yatay = false; aktifDokunma = true;
+  }
+  function devam(e){
+    if(!aktifDokunma) return;
+    const t = e.touches[0];
+    dx = t.clientX - x0;
+    const dy = t.clientY - y0;
+    if(!yatay && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.3) yatay = true;
+    if(yatay) e.preventDefault();
+  }
+  function bitsin(){
+    if(!aktifDokunma) return;
+    aktifDokunma = false;
+    if(!yatay) return;
+    const ESIK = 60;
+    if(dx <= -ESIK && A.aktifKonum < A.konumlar.length - 1) konumAktifYap(A.aktifKonum + 1);
+    else if(dx >= ESIK && A.aktifKonum > 0) konumAktifYap(A.aktifKonum - 1);
+  }
+  ['gokyuzu','sayfa-vakit'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.addEventListener('touchstart', baslasin, {passive:true});
+    el.addEventListener('touchmove', devam, {passive:false});
+    el.addEventListener('touchend', bitsin);
+    el.addEventListener('touchcancel', ()=>{ aktifDokunma = false; });
+  });
+}
+
+/* ---------- konumlarım ---------- */
+function konumNoktalariCiz(){
+  const el = $('#konumNoktalar');
+  if(!el) return;
+  if(!A.konumlar || A.konumlar.length <= 1){ el.classList.add('gizli'); el.innerHTML=''; return; }
+  el.classList.remove('gizli');
+  el.innerHTML = A.konumlar.map((_,i)=>`<i class="${i===A.aktifKonum?'aktif':''}"></i>`).join('');
+}
+function konumlariCiz(){
+  const el = $('#konumListe');
+  if(!el){ konumNoktalariCiz(); return; }
+  el.innerHTML = A.konumlar.map((k,i)=>`
+    <div class="konum-satir ${i===A.aktifKonum?'aktif':''}" data-i="${i}">
+      <span class="konum-satir-ad">${k.otoKonum ? '📍 ' : ''}${k.sehir}</span>
+      <div class="konum-satir-ok">
+        <button class="konum-yon" data-yon="-1" data-i="${i}" ${i===0?'disabled':''} aria-label="Yukarı taşı">↑</button>
+        <button class="konum-yon" data-yon="1" data-i="${i}" ${i===A.konumlar.length-1?'disabled':''} aria-label="Aşağı taşı">↓</button>
+        ${!k.otoKonum && A.konumlar.length>1 ? `<button class="konum-sil" data-i="${i}" aria-label="Sil">✕</button>` : ''}
+      </div>
+    </div>`).join('');
+  $$('#konumListe .konum-satir').forEach(satir => satir.onclick = e=>{
+    if(e.target.closest('button')) return;
+    konumAktifYap(+satir.dataset.i);
+  });
+  $$('#konumListe .konum-yon').forEach(b => b.onclick = e=>{
+    e.stopPropagation(); konumTasi(+b.dataset.i, +b.dataset.yon);
+  });
+  $$('#konumListe .konum-sil').forEach(b => b.onclick = e=>{
+    e.stopPropagation(); konumSil(+b.dataset.i);
+  });
+
+  const sec = $('#konumEkleSec');
+  if(sec){
+    sec.innerHTML = '<option value="">Seç…</option>' +
+      SEHIRLER.slice(1).map(s=>`<option value="${s[0]}">${s[0]}</option>`).join('');
+    sec.disabled = A.konumlar.length >= 5;
+    sec.onchange = ()=>{ if(sec.value){ konumEkle(sec.value); sec.value=''; } };
+  }
+  konumNoktalariCiz();
+}
+function konumEkle(sehirAdi){
+  if(A.konumlar.length >= 5){ toast('En fazla 5 konum eklenebilir'); return; }
+  const s = SEHIRLER.find(x=>x[0]===sehirAdi);
+  if(!s || s[1] == null) return;
+  konumSenkronla();
+  A.konumlar.push({ sehir:s[0], lat:s[1], lng:s[2], rakim:s[3],
+                    otoKonum:false, resmi:A.resmi, resmiIl:null, ilce:null });
+  konumAktifYap(A.konumlar.length - 1).then(()=> ilceEslestir(s[0]));
+  toast(s[0] + ' eklendi');
+}
+function konumSil(idx){
+  if(A.konumlar.length <= 1) return;
+  if(A.konumlar[idx].otoKonum) return;
+  konumSenkronla();
+  A.konumlar.splice(idx, 1);
+  if(A.aktifKonum >= A.konumlar.length) A.aktifKonum = A.konumlar.length - 1;
+  else if(A.aktifKonum > idx) A.aktifKonum--;
+  konumSec(A.aktifKonum);
+  kaydet();
+  RESMI = null;
+  resmiYukle().then(()=>{ alanlariDoldur(); gunuTazele(); konumlariCiz(); });
+}
+function konumTasi(idx, yon){
+  const j = idx + yon;
+  if(j < 0 || j >= A.konumlar.length) return;
+  konumSenkronla();
+  const t = A.konumlar[idx]; A.konumlar[idx] = A.konumlar[j]; A.konumlar[j] = t;
+  if(A.aktifKonum === idx) A.aktifKonum = j;
+  else if(A.aktifKonum === j) A.aktifKonum = idx;
+  kaydet();
+  konumlariCiz();
+  bildirimKur();   // 0. sıra değişmiş olabilir: bildirimler ana konuma göre kurulur
+}
+async function konumAktifYap(idx){
+  if(idx === A.aktifKonum || !A.konumlar[idx]) return;
+  konumSenkronla();
+  konumSec(idx);
+  kaydet();
+  RESMI = null;
+  await resmiYukle();
+  alanlariDoldur();
+  gunuTazele();
+  konumlariCiz();
 }
 /* ---------- il / ilçe seçimi ----------
    yerler.json (ülke → il → ilçe ağacı) yalnızca ayarlar açılınca indirilir. */
@@ -3516,10 +3731,24 @@ async function uyanikAyarla(ac){
     else if(uyanikKilit){ uyanikKilit.release(); uyanikKilit = null; }
   }catch(e){}
 }
+/* GPS konumu her zaman A.konumlar[0]'da durur — tasarım gereği "sabit ana
+   konum". 0. sırada zaten GPS yoksa oraya yeni bir eleman eklenir (5 sınırı
+   aşılırsa son eleman düşer); varsa yerinde güncellenir. */
+function gpsYuvasiniHazirla(){
+  konumSenkronla();   // ayna kaybolmasın: mevcut aktif konum diziye yazılsın
+  if(A.konumlar[0] && A.konumlar[0].otoKonum) return;
+  A.konumlar.unshift({ sehir:'Konumum', lat:A.lat, lng:A.lng, rakim:A.rakim,
+                       otoKonum:true, resmi:A.resmi, resmiIl:null, ilce:null });
+  A.aktifKonum++;                                  // bütün indisler bir kaydı
+  if(A.konumlar.length > 5) A.konumlar.pop();
+  if(A.aktifKonum >= A.konumlar.length) A.aktifKonum = A.konumlar.length - 1;
+}
 function konumBul(){
   if(!navigator.geolocation){ toast('Cihaz konum desteklemiyor'); return; }
   toast('Konum alınıyor…');
   navigator.geolocation.getCurrentPosition(p=>{
+    gpsYuvasiniHazirla();
+    A.aktifKonum = 0;
     A.lat = +p.coords.latitude.toFixed(5);
     A.lng = +p.coords.longitude.toFixed(5);
     if(p.coords.altitude != null) A.rakim = Math.max(0, Math.round(p.coords.altitude));
@@ -3528,6 +3757,7 @@ function konumBul(){
     if(y && y[1] < 60) A.sehir = y[0];
     kaydet(); alanlariDoldur(); gunuTazele(); toast(A.sehir + ' · konum güncellendi');
     ilceEslestir(A.sehir);
+    if(typeof konumlariCiz === 'function') konumlariCiz();
   }, err=>{
     toast('Konum alınamadı — şehri elle seçebilirsin');
   }, { enableHighAccuracy:true, timeout:12000, maximumAge:60000 });
@@ -3563,6 +3793,7 @@ function baslat(){
   yildizlariCiz();
   addEventListener('resize', ayiKonumla);   // ekran dönünce sağ kenar boşluğu kaysın
   ayarlariKur();
+  kaydirmaKur();
   // Resmi takvim önbellekten anında, ağdan gelince tazelenir.
   resmiYukle().then(()=>{ gunuTazele(); resmiDurumYaz(); });
   $('#surumYazi').textContent = SURUM;

@@ -8,7 +8,7 @@
 
 [**→ Uygulamayı aç**](https://kamilsaim.github.io/besvakit/)
 
-![sürüm](https://img.shields.io/badge/sürüm-0.14.0-22B2AE?style=flat-square)
+![sürüm](https://img.shields.io/badge/sürüm-0.15.0-22B2AE?style=flat-square)
 ![bağımlılık](https://img.shields.io/badge/bağımlılık-yok-D8A93C?style=flat-square)
 ![tek dosya](https://img.shields.io/badge/tek%20dosya-HTML-080C18?style=flat-square)
 
@@ -97,6 +97,20 @@ kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasın�
   cami araması (Overpass API), yazı tipleri (Google Fonts). Üçü de kapalıyken uygulama çalışmaya devam eder.
 
 ## Sürüm geçmişi
+
+### 0.15.0
+- **Çoklu konum.** Ayarlar sayfasına **Konumlarım** kartı geldi: en fazla beş
+  şehir eklenebiliyor, sıraları ↑/↓ ile değiştirilebiliyor, satıra dokununca o
+  konum aktif oluyor. GPS ile bulunan konum listede her zaman 📍 ile en üstte
+  sabit duruyor.
+- **Kaydırarak konum değiştirme.** Vakitler sayfasında sağa/sola kaydırınca
+  eklenen konumlar arasında geçiliyor; başlığın altındaki noktalar hangi
+  konumda olunduğunu gösteriyor. Dikey kaydırma etkilenmiyor — yalnızca
+  belirgin yatay hareket konum değiştiriyor.
+- **Bildirimler ana konuma bağlı.** Başka bir konuma kaydırılmış olsa da
+  bildirim kuyruğu her zaman listenin en üstündeki konuma göre kuruluyor.
+- Eski tek konumlu kayıtlar açılışta otomatik olarak yeni listeye taşınıyor;
+  ayar kaybı olmuyor.
 
 ### 0.14.0
 - **Mübarek gün ve gece duaları.** Hicri takvimde belirli ay, gün ve gecelere
