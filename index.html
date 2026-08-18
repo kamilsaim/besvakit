@@ -35,6 +35,13 @@
   --safe-b:env(safe-area-inset-bottom,0px);
   --safe-t:env(safe-area-inset-top,0px);
   --tabbar:rgba(10,14,28,.88);
+  /* cam bolum kapsulleri — bkz. docs/superpowers/specs/2026-08-18-zikirmatik-ust-ve-cam-bolumler-design.md */
+  --cam:rgba(242,238,226,.05);
+  --cam-cizgi:rgba(242,238,226,.13);
+  --cam-parlak:rgba(242,238,226,.10);
+  --cam-ic:rgba(242,238,226,.05);
+  --cam-ic-cizgi:rgba(242,238,226,.10);
+  --cam-golge:0 8px 26px rgba(0,0,0,.30);
 }
 
 /* Açık tema — Selçuklu paleti korunur, zemin/metin ters çevrilir.
@@ -53,6 +60,12 @@
   --hayalet:rgba(24,48,45,.45);
   --cizgi:rgba(24,48,45,.14);
   --tabbar:rgba(255,255,255,.90);
+  --cam:rgba(255,255,255,.55);
+  --cam-cizgi:rgba(24,48,45,.10);
+  --cam-parlak:rgba(255,255,255,.85);
+  --cam-ic:rgba(255,255,255,.75);
+  --cam-ic-cizgi:rgba(24,48,45,.08);
+  --cam-golge:0 4px 14px rgba(24,48,45,.08);
 }
 /* AMOLED — tam siyah, pikseller sönük kalsın */
 :root[data-tema=amoled]{
@@ -62,6 +75,12 @@
   --kat2:#161616;
   --cizgi:rgba(242,238,226,.14);
   --tabbar:rgba(0,0,0,.92);
+  --cam:transparent;
+  --cam-cizgi:rgba(242,238,226,.14);
+  --cam-parlak:transparent;
+  --cam-ic:#0A0A0A;
+  --cam-ic-cizgi:rgba(242,238,226,.12);
+  --cam-golge:none;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
@@ -178,6 +197,30 @@ main{padding:4px 16px 24px;max-width:640px;margin:0 auto}
   font-weight:700;margin:26px 0 10px}
 .baslik:first-child{margin-top:14px}
 .kart{background:var(--kat);border:1px solid var(--cizgi);border-radius:var(--r);overflow:hidden}
+/* ---------- cam bolum kapsulu ----------
+   Her bolum (baslik + icerigi) bu sarmalayicinin icine girer. Bolumler arasi
+   dikey ritmi artik .baslik'in ust bosluklari degil, kapsulun margin-bottom'u
+   kurar; bu yuzden kapsul icindeki basligin ust bosluklari sifirlanir.
+
+   backdrop-filter kasitli olarak kullanilmiyor: <main> arkasinda duz
+   var(--gece) zemin var, bulaniklastirilacak bir sey yok. Blur goruntuye
+   hicbir sey katmadan 27 panelde GPU maliyeti cikarirdi. Arka plana ileride
+   doku/fotograf/hareket eklenirse bu karar yeniden degerlendirilmeli. */
+.bolum{
+  background:var(--cam);
+  border:1px solid var(--cam-cizgi);
+  border-radius:20px;
+  box-shadow:inset 0 1px 0 var(--cam-parlak), var(--cam-golge);
+  padding:12px 12px 14px;
+  margin-bottom:12px;
+}
+.bolum .baslik{margin:2px 0 10px;padding-left:2px}
+.bolum .baslik:first-child{margin-top:2px}
+/* kart icinde kart katmanlasmasini onler */
+.bolum .kart,
+.bolum .ozet-kutu{background:var(--cam-ic);border-color:var(--cam-ic-cizgi)}
+/* kapsulun son cocugunun alt boslugu kapsulun padding'iyle cift olmasin */
+.bolum > :last-child{margin-bottom:0}
 
 /* vakit listesi */
 .vakit-satir{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--cizgi);
