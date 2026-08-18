@@ -80,7 +80,9 @@
   --cam-parlak:transparent;
   --cam-ic:#0A0A0A;
   --cam-ic-cizgi:rgba(242,238,226,.12);
-  --cam-golge:none;
+  /* liste ogesi olarak 'none' gecersizdir ve box-shadow bildiriminin tamamini
+     dusururdu; seffaf sifir golge ayni sonucu gecerli CSS ile verir */
+  --cam-golge:0 0 0 transparent;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}

@@ -37,6 +37,13 @@ function sayfa(id) {
  *
  * Donus: { toplamBaslik, kapsulsuzBaslik: [...metin], bolumSayisi }
  */
+/* class niteliginde tam sinif adi arar. /bolum/ yetmez: tire de kelime
+   siniri sayildigi icin "bolum-dar" gibi bir sinifa da eslesirdi. */
+function sinifVar(nitelik, ad) {
+  const m = nitelik.match(/class="([^"]*)"/);
+  return !!m && m[1].split(/\s+/).includes(ad);
+}
+
 function bolumDenetle(govde) {
   const etiket = /<(\/?)(div|button|section)\b([^>]*)>/g;
   let m, derinlik = 0;
@@ -115,7 +122,7 @@ test('cekilen zikirler bolumu bugunku namazlardan once gelir', () => {
 });
 
 test('cam degiskenleri uc temada da tanimli', () => {
-  const DEGISKENLER = ['--cam', '--cam-cizgi', '--cam-parlak', '--cam-ic', '--cam-ic-cizgi'];
+  const DEGISKENLER = ['--cam', '--cam-cizgi', '--cam-parlak', '--cam-ic', '--cam-ic-cizgi', '--cam-golge'];
   const stil = HTML.slice(HTML.indexOf('<style>'), HTML.indexOf('</style>'));
   const bloklar = {
     koyu: stil.slice(stil.indexOf(':root{'), stil.indexOf(':root[data-tema=acik]')),
@@ -129,3 +136,46 @@ test('cam degiskenleri uc temada da tanimli', () => {
     }
   }
 });
+
+/**
+ * Katlanir bir bolumde baslik butonu ile onun `aria-controls` ile isaret
+ * ettigi kart AYNI kapsulun icinde olmali. Ayri kapsullere duserlerse
+ * basliga dokunma davranisi gorsel olarak bozulur — ustelik `bolumDenetle`
+ * bunu yakalamaz, cunku hem baslik sayimi hem kapsul sayisi dogru kalir.
+ *
+ * Her sayfanin govdesini kapsul kapsul parcalar; her kapsul icin o kapsulde
+ * gecen aria-controls degerlerini ve tanimli id'leri karsilastirir.
+ */
+function kapsulleriAyikla(govde) {
+  const etiket = /<(\/?)(div|button)\b([^>]*)>/g;
+  let m, derinlik = 0, acik = null;
+  const kapsuller = [];
+  while ((m = etiket.exec(govde)) !== null) {
+    if (m[1] !== '/') {
+      if (sinifVar(m[3], 'bolum')) acik = { derinlik, nitelikler: [] };
+      else if (acik) acik.nitelikler.push(m[3]);
+      derinlik++;
+    } else {
+      derinlik--;
+      if (acik && derinlik === acik.derinlik) { kapsuller.push(acik); acik = null; }
+    }
+  }
+  return kapsuller;
+}
+
+for (const [id] of SAYFALAR) {
+  test(id + ' — aria-controls hedefi basligiyla ayni kapsulde', () => {
+    const kapsuller = kapsulleriAyikla(sayfa(id));
+    const kopuk = [];
+    for (const k of kapsuller) {
+      const hedefler = k.nitelikler
+        .map(n => (n.match(/aria-controls="([^"]+)"/) || [])[1])
+        .filter(Boolean);
+      for (const h of hedefler) {
+        if (!k.nitelikler.some(n => n.includes('id="' + h + '"'))) kopuk.push(h);
+      }
+    }
+    assert.deepStrictEqual(kopuk, [],
+      'basligindan ayri kapsulde kalan kart(lar): ' + kopuk.join(', '));
+  });
+}
