@@ -618,34 +618,6 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
 
   <!-- İBADET -->
   <section class="sayfa" id="sayfa-ibadet">
-    <div class="baslik">Bugünkü namazlar</div>
-    <div class="ozet">
-      <div class="ozet-kutu"><b id="ozetBugun">0/5</b><span>Bugün</span></div>
-      <div class="ozet-kutu"><b id="ozetSeri">0</b><span>Gün seri</span></div>
-      <div class="ozet-kutu"><b id="ozetAy">%0</b><span>Bu ay</span></div>
-    </div>
-    <div class="kart" id="takipListe" style="margin-top:10px"></div>
-    <p class="bilgi">Kaydın yalnızca bu cihazda tutulur; hiçbir yere gönderilmez.
-      Vakti girmemiş namazlar soluk görünür.</p>
-
-    <button class="baslik" id="istatistikBaslik" aria-expanded="false" aria-controls="istatistikKart">
-      Son 30 gün ve istatistik <span class="ok" aria-hidden="true">⌃</span>
-    </button>
-    <div class="kart katlanir gizli" id="istatistikKart">
-      <div class="izgara" id="izgara"></div>
-      <div style="border-top:1px solid var(--cizgi);padding:6px 0 10px" id="cubuklar"></div>
-    </div>
-
-    <button class="baslik" id="kazaBaslik" aria-expanded="false" aria-controls="kazaKart">
-      Kaza namazı sayacı <span class="ok" aria-hidden="true">⌃</span>
-    </button>
-    <div class="kart katlanir gizli" id="kazaKart"></div>
-
-    <button class="baslik" id="tovbeBaslik" aria-expanded="false" aria-controls="tovbeKart">
-      Nasûh Tövbesi <span class="ok" aria-hidden="true">⌃</span>
-    </button>
-    <div class="kart katlanir gizli" id="tovbeKart"></div>
-
     <div class="baslik">Zikirmatik</div>
     <button class="tesbih-set-btn" id="setModuBtn">Namaz sonrası tesbih seti
       <em>Sübhânallâh 33 · Elhamdülillâh 33 · Allâhüekber 34 — hedefe ulaşınca otomatik geçer</em></button>
@@ -680,6 +652,34 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
     </button>
     <div class="kart katlanir" id="zikirIstKart"></div>
     <p class="bilgi" id="zikirGunluk"></p>
+    <div class="baslik">Bugünkü namazlar</div>
+    <div class="ozet">
+      <div class="ozet-kutu"><b id="ozetBugun">0/5</b><span>Bugün</span></div>
+      <div class="ozet-kutu"><b id="ozetSeri">0</b><span>Gün seri</span></div>
+      <div class="ozet-kutu"><b id="ozetAy">%0</b><span>Bu ay</span></div>
+    </div>
+    <div class="kart" id="takipListe" style="margin-top:10px"></div>
+    <p class="bilgi">Kaydın yalnızca bu cihazda tutulur; hiçbir yere gönderilmez.
+      Vakti girmemiş namazlar soluk görünür.</p>
+
+    <button class="baslik" id="istatistikBaslik" aria-expanded="false" aria-controls="istatistikKart">
+      Son 30 gün ve istatistik <span class="ok" aria-hidden="true">⌃</span>
+    </button>
+    <div class="kart katlanir gizli" id="istatistikKart">
+      <div class="izgara" id="izgara"></div>
+      <div style="border-top:1px solid var(--cizgi);padding:6px 0 10px" id="cubuklar"></div>
+    </div>
+
+    <button class="baslik" id="kazaBaslik" aria-expanded="false" aria-controls="kazaKart">
+      Kaza namazı sayacı <span class="ok" aria-hidden="true">⌃</span>
+    </button>
+    <div class="kart katlanir gizli" id="kazaKart"></div>
+
+    <button class="baslik" id="tovbeBaslik" aria-expanded="false" aria-controls="tovbeKart">
+      Nasûh Tövbesi <span class="ok" aria-hidden="true">⌃</span>
+    </button>
+    <div class="kart katlanir gizli" id="tovbeKart"></div>
+
 
     <button class="baslik" id="esmaBaslik" aria-expanded="false" aria-controls="esmaKart">
       Esmâ-ül Hüsnâ <span class="ok" aria-hidden="true">⌃</span>
