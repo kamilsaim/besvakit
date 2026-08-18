@@ -524,42 +524,49 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
 <main>
   <!-- VAKİTLER -->
   <section class="sayfa acik" id="sayfa-vakit">
-    <div id="ramazanKutu" style="display:none">
+    <div class="bolum" id="ramazanKutu" style="display:none">
       <div class="baslik">Ramazan</div>
       <div class="kart"><div class="ramazan" id="ramazanKart"></div></div>
     </div>
 
-    <div class="baslik">Bugün</div>
-    <div class="kart" id="vakitListe"></div>
-    <p class="bilgi" id="kaynakNotu" style="display:none"></p>
+    <div class="bolum">
+      <div class="baslik">Bugün</div>
+      <div class="kart" id="vakitListe"></div>
+      <p class="bilgi" id="kaynakNotu" style="display:none"></p>
+    </div>
 
-    <div id="cumaKutu" style="display:none">
+    <div class="bolum" id="cumaKutu" style="display:none">
       <div class="baslik">Cuma</div>
       <div class="kart"><div class="cuma" id="cumaKart"></div></div>
     </div>
 
-    <div id="duaKutu" style="display:none">
+    <div class="bolum" id="duaKutu" style="display:none">
       <div class="baslik">Bugünün duaları</div>
       <div class="kart" id="duaKart"></div>
     </div>
 
-    <div id="kerahatKutu">
+    <div class="bolum" id="kerahatKutu">
       <div class="baslik">Kerahat vakitleri</div>
       <div class="kart" id="kerahatListe"></div>
       <p class="bilgi">Bu üç aralıkta nafile namaz kılınmaz. Kaçırılan farz namaz
         her vakitte kılınabilir.</p>
     </div>
-    <button class="baslik" id="imsakiyeBaslik" aria-expanded="true" aria-controls="imsakiyeKart">
-      Bu ayın imsakiyesi <span class="ok" aria-hidden="true">⌃</span>
-    </button>
-    <div class="kart katlanir" id="imsakiyeKart" style="padding:0 10px">
-      <table class="imsakiye" id="imsakiye"></table>
+
+    <div class="bolum">
+      <button class="baslik" id="imsakiyeBaslik" aria-expanded="true" aria-controls="imsakiyeKart">
+        Bu ayın imsakiyesi <span class="ok" aria-hidden="true">⌃</span>
+      </button>
+      <div class="kart katlanir" id="imsakiyeKart" style="padding:0 10px">
+        <table class="imsakiye" id="imsakiye"></table>
+      </div>
     </div>
 
-    <button class="baslik" id="diniBaslik" aria-expanded="false" aria-controls="diniKart">
-      Dini günler ve geceler <span class="ok" aria-hidden="true">⌃</span>
-    </button>
-    <div class="kart katlanir gizli" id="diniKart"></div>
+    <div class="bolum">
+      <button class="baslik" id="diniBaslik" aria-expanded="false" aria-controls="diniKart">
+        Dini günler ve geceler <span class="ok" aria-hidden="true">⌃</span>
+      </button>
+      <div class="kart katlanir gizli" id="diniKart"></div>
+    </div>
   </section>
 
   <!-- KIBLE -->
