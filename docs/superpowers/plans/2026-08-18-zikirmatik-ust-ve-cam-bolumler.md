@@ -14,7 +14,7 @@
 
 **Derleme adımı yok.** `index.html` tarayıcıda doğrudan açılan tek dosyadır. CSS `<style>` içinde (satır ~18-457), HTML `<body>` içinde (~460-870), JavaScript `<script>` içinde (~875-3885) yaşar. `npm install` yoktur, `package.json` yoktur.
 
-**Testler:** `araclar/*.test.cjs`, Node'un yerleşik `node:test` modülüyle yazılır. Koşturma: `node --test araclar/`. Mevcut iki test (`bildirim.test.cjs`, `dualar.test.cjs`) `bildirim.js` ve `dualar.js` içindeki saf fonksiyonları sınar; DOM'a bakmazlar.
+**Testler:** `araclar/*.test.cjs`, Node'un yerleşik `node:test` modülüyle yazılır. Koşturma: `node --test "araclar/*.test.cjs"`. (Çıplak dizin argümanı — `node --test araclar/` — bu makinedeki Node 24 / Windows kurulumunda MODULE_NOT_FOUND ile düşüyor; glob biçimini kullan.) Mevcut iki test (`bildirim.test.cjs`, `dualar.test.cjs`) `bildirim.js` ve `dualar.js` içindeki saf fonksiyonları sınar; DOM'a bakmazlar.
 
 **Dil:** Kod, yorumlar, commit mesajları ve kullanıcıya görünen her metin Türkçedir. Commit mesajlarında Türkçe karakter kullanma (depo geçmişi ASCII'dir: "Coklu konum ve kaydirmali gecis").
 
@@ -193,7 +193,7 @@ test('cam degiskenleri uc temada da tanimli', () => {
 
 Beklenen: BAŞARISIZ. Şu an hiçbir `.bolum` yok, `--cam` değişkenleri yok ve zikirmatik en üstte değil. Yani `bolum sayisi` testleri `0 !== 7` diye, `her baslik bir .bolum kapsulunun icinde` testleri kapsülsüz başlık listesiyle, `ibadet sayfasinin ilk bolumu Zikirmatik` testi "ilk başlık Zikirmatik değil" diye, `cam degiskenleri` testi "koyu temasinda --cam tanimli degil" diye düşer.
 
-Diğer testlerin bozulmadığını da doğrula: `node --test araclar/` — `bildirim.test.cjs` ve `dualar.test.cjs` geçmeye devam etmeli.
+Diğer testlerin bozulmadığını da doğrula: `node --test "araclar/*.test.cjs"` — `bildirim.test.cjs` ve `dualar.test.cjs` geçmeye devam etmeli.
 
 - [ ] **Step 3: Commit**
 
@@ -685,7 +685,7 @@ Her birini şu kalıpla sar:
 
 - [ ] **Step 2: Testi koştur**
 
-Çalıştır: `node --test araclar/`
+Çalıştır: `node --test "araclar/*.test.cjs"`
 
 Beklenen: **bütün** testler GEÇER — `bolum.test.cjs`'teki dokuz test dahil, `bildirim.test.cjs` ve `dualar.test.cjs` de dahil.
 
@@ -738,7 +738,7 @@ const SURUM = 'besvakit-v11';
 
 - [ ] **Step 3: Bütün testleri koştur**
 
-Çalıştır: `node --test araclar/`
+Çalıştır: `node --test "araclar/*.test.cjs"`
 
 Beklenen: hepsi PASS. Çıktının sonunda `# fail 0` görmelisin.
 
