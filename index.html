@@ -727,199 +727,215 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
 
   <!-- AYARLAR -->
   <section class="sayfa" id="sayfa-ayar">
-    <div class="baslik">Konumlarım</div>
-    <div class="kart" id="konumlarKart">
-      <div id="konumListe"></div>
-      <div class="alan">
-        <label>Konum ekle<em>En fazla 5 konum</em></label>
-        <select id="konumEkleSec"><option value="">Seç…</option></select>
+    <div class="bolum">
+      <div class="baslik">Konumlarım</div>
+      <div class="kart" id="konumlarKart">
+        <div id="konumListe"></div>
+        <div class="alan">
+          <label>Konum ekle<em>En fazla 5 konum</em></label>
+          <select id="konumEkleSec"><option value="">Seç…</option></select>
+        </div>
       </div>
-    </div>
-    <p class="bilgi">Bildirimler yalnızca en üstteki konuma göre gelir. Diğer
-      konumlar vakitler sayfasında kaydırarak bakmak içindir.</p>
-
-    <div class="baslik">Konum</div>
-    <div class="kart">
-      <div class="alan">
-        <label>Şehir<em>Manuel seçim GPS'i devre dışı bırakır</em></label>
-        <select id="sehirSec"></select>
-      </div>
-      <div class="alan">
-        <label>Enlem</label><input type="number" step="0.0001" id="enlem">
-      </div>
-      <div class="alan">
-        <label>Boylam</label><input type="number" step="0.0001" id="boylam">
-      </div>
-      <div class="alan">
-        <label>Rakım<em>metre — güneş ve akşam vaktini etkiler</em></label>
-        <input type="number" id="rakim">
-      </div>
-      <div class="alan"><button class="btn" id="gpsBtn" style="padding:11px">Konumumu bul</button></div>
+      <p class="bilgi">Bildirimler yalnızca en üstteki konuma göre gelir. Diğer
+        konumlar vakitler sayfasında kaydırarak bakmak içindir.</p>
     </div>
 
-    <div class="baslik">Diyanet takvimi</div>
-    <div class="kart">
-      <div class="alan">
-        <label>Resmi vakitleri kullan<em>Diyanet takvimiyle birebir</em></label>
-        <button class="svic" id="resmiSvic" role="switch"></button>
-      </div>
-      <div class="alan">
-        <label>İl</label>
-        <select id="resmiIl"><option value="">Yükleniyor…</option></select>
-      </div>
-      <div class="alan">
-        <label>İlçe<em>Vakitler ilçeye göre değişir</em></label>
-        <select id="resmiIlce"><option value="">Önce il seç</option></select>
-      </div>
-      <div class="alan"><label id="resmiDurum" style="font-weight:500;font-size:12.5px;color:var(--hayalet)">—</label></div>
-    </div>
-    <p class="bilgi">Vakitler Diyanet takviminden alınıp depoya kaydedilir, ayda iki kez
-      tazelenir. Uygulama çalışırken hiçbir servise bağlanmaz; veri indirildikten sonra
-      çevrimdışı da çalışır. Kapsam dışı bir gün veya konum olursa uygulama kendi
-      astronomik hesabına düşer.</p>
-
-    <div class="baslik">Hesaplama</div>
-    <p class="bilgi" style="margin:-4px 0 10px">Aşağıdakiler yalnızca resmi takvim
-      kullanılmadığında geçerlidir.</p>
-    <div class="kart">
-      <div class="alan">
-        <label>Yöntem<em>Diyanet: imsak 18°, yatsı 17°</em></label>
-        <select id="yontem">
-          <option value="diyanet">Diyanet (Türkiye)</option>
-          <option value="mwl">Müslüman Dünya Birliği</option>
-          <option value="isna">ISNA (Kuzey Amerika)</option>
-          <option value="egypt">Mısır Genel Araştırma</option>
-          <option value="karachi">Karaçi</option>
-        </select>
-      </div>
-      <div class="alan">
-        <label>İkindi<em>Hanefî, gölge iki katı olunca</em></label>
-        <select id="mezhep"><option value="1">Şâfiî / Diyanet</option><option value="2">Hanefî</option></select>
-      </div>
-    </div>
-    <p class="bilgi">Diyanet yöntemi seçiliyken takvimin ihtiyat payı (öğlede +5, ikindide
-      +4 dakika gibi) kendiliğinden eklenir.</p>
-
-    <div class="baslik">Dakika düzeltmesi</div>
-    <div class="kart" id="duzeltmeler"></div>
-    <p class="bilgi">Mahalle caminle birkaç dakika fark varsa buradan hizala. Bir kere ayarla, hep öyle kalır.</p>
-
-    <div class="baslik">Bildirim ve görünüm</div>
-    <div class="kart">
-      <div class="alan">
-        <label>Bildirimler<em>Tümünü açar veya kapatır</em></label>
-        <button class="svic" id="bildirimSvic" role="switch"></button>
-      </div>
-      <div class="alan">
-        <label>Sessiz saatler başlangıcı<em>Bu aralıkta sessiz bildirim gelir</em></label>
-        <input type="time" id="sessizBas">
-      </div>
-      <div class="alan">
-        <label>Sessiz saatler bitişi<em>Başlangıçla aynıysa kapalı</em></label>
-        <input type="time" id="sessizSon">
-      </div>
-      <div class="alan">
-        <label>Sahur uyarısı<em>İmsaktan kaç dakika önce</em></label>
-        <select id="sahurOnce">
-          <option value="0">Kapalı</option>
-          <option value="30">30 dk önce</option>
-          <option value="45">45 dk önce</option>
-          <option value="60">1 saat önce</option>
-          <option value="90">1,5 saat önce</option>
-        </select>
-      </div>
-      <div class="alan">
-        <label>Sesli uyarı<em>Tarayıcıda çalışır. APK'da bildirim sesi Android ayarından.</em></label>
-        <button class="svic" id="sesSvic" role="switch"></button>
-      </div>
-      <div class="alan">
-        <label>Titreşim<em>Tesbih ve kıble için. Bildirim titreşimi Android ayarından.</em></label>
-        <button class="svic" id="titresimSvic" role="switch"></button>
-      </div>
-      <div class="alan">
-        <label>Tema</label>
-        <select id="tema">
-          <option value="koyu">Koyu (Selçuklu)</option>
-          <option value="acik">Açık</option>
-          <option value="amoled">AMOLED siyah</option>
-        </select>
-      </div>
-      <div class="alan">
-        <label>Gökyüzü rengi<em>Vakte göre arka plan</em></label>
-        <button class="svic" id="gokSvic" role="switch"></button>
-      </div>
-      <div class="alan">
-        <label>Kerahat vakitleri<em>Girince uyarır, gün şeridinde gösterir</em></label>
-        <button class="svic" id="kerahatSvic" role="switch"></button>
-      </div>
-      <div class="alan">
-        <label>Cuma modu<em>Cuma hatırlatması ve Kehf Suresi</em></label>
-        <button class="svic" id="cumaSvic" role="switch"></button>
-      </div>
-      <div class="alan">
-        <label>Cuma hatırlatma saati<em>Cuma günü bu saatte uyarır</em></label>
-        <input type="time" id="cumaSaat">
-      </div>
-      <div class="alan">
-        <label>Mübarek gün duaları<em>O ay veya gece girince gösterir ve hatırlatır</em></label>
-        <button class="svic" id="duaSvic" role="switch"></button>
-      </div>
-      <div class="alan">
-        <label>Dua hatırlatma saati<em>Mübarek gün girdiğinde bu saatte uyarır</em></label>
-        <input type="time" id="duaSaat">
-      </div>
-      <div class="alan">
-        <label>Ramazan modu<em>İftar ve sahur geri sayımı</em></label>
-        <select id="ramazanMod">
-          <option value="oto">Otomatik</option>
-          <option value="acik">Her zaman açık</option>
-          <option value="kapali">Kapalı</option>
-        </select>
-      </div>
-      <div class="alan">
-        <label>Ekranı açık tut<em>Kıble ve geri sayım için</em></label>
-        <button class="svic" id="uyanikSvic" role="switch"></button>
-      </div>
-      <div class="alan" id="sesAyarAlani" style="display:none">
-        <label>Bildirim sesleri<em>Her tür için ayrı ses ve titreşim</em></label>
-        <select id="sesKanal">
-          <option value="">Seç…</option>
-          <option value="vakit">Namaz vakitleri</option>
-          <option value="once">Vakit öncesi uyarı</option>
-          <option value="oruc">Sahur ve iftar</option>
-          <option value="ozel">Cuma ve kerahat</option>
-          <option value="sessiz">Sessiz saatler</option>
-        </select>
-      </div>
-      <div class="alan uyari" id="izinAlani" style="display:none">
-        <label>Bildirim izni kapalı<em>Bu haliyle hiçbir vakit bildirimi gelmez</em></label>
-        <button class="alan-dugme" id="izinDugme">Düzelt</button>
-      </div>
-      <div class="alan" id="pilAlani" style="display:none">
-        <label>Bildirimler gecikiyor mu?<em>Pil ayarından uygulamayı serbest bırak</em></label>
-        <button class="alan-dugme" id="pilDugme">Aç</button>
+    <div class="bolum">
+      <div class="baslik">Konum</div>
+      <div class="kart">
+        <div class="alan">
+          <label>Şehir<em>Manuel seçim GPS'i devre dışı bırakır</em></label>
+          <select id="sehirSec"></select>
+        </div>
+        <div class="alan">
+          <label>Enlem</label><input type="number" step="0.0001" id="enlem">
+        </div>
+        <div class="alan">
+          <label>Boylam</label><input type="number" step="0.0001" id="boylam">
+        </div>
+        <div class="alan">
+          <label>Rakım<em>metre — güneş ve akşam vaktini etkiler</em></label>
+          <input type="number" id="rakim">
+        </div>
+        <div class="alan"><button class="btn" id="gpsBtn" style="padding:11px">Konumumu bul</button></div>
       </div>
     </div>
 
-    <div class="baslik">Pusula</div>
-    <div class="kart">
-      <div class="alan">
-        <label>Sapma düzeltmesi<em>Kalibrasyonla otomatik dolar</em></label>
-        <div class="duzeltme">
-          <button data-sapma="-1">−</button><span id="sapmaDeger">0°</span><button data-sapma="1">+</button>
+    <div class="bolum">
+      <div class="baslik">Diyanet takvimi</div>
+      <div class="kart">
+        <div class="alan">
+          <label>Resmi vakitleri kullan<em>Diyanet takvimiyle birebir</em></label>
+          <button class="svic" id="resmiSvic" role="switch"></button>
+        </div>
+        <div class="alan">
+          <label>İl</label>
+          <select id="resmiIl"><option value="">Yükleniyor…</option></select>
+        </div>
+        <div class="alan">
+          <label>İlçe<em>Vakitler ilçeye göre değişir</em></label>
+          <select id="resmiIlce"><option value="">Önce il seç</option></select>
+        </div>
+        <div class="alan"><label id="resmiDurum" style="font-weight:500;font-size:12.5px;color:var(--hayalet)">—</label></div>
+      </div>
+      <p class="bilgi">Vakitler Diyanet takviminden alınıp depoya kaydedilir, ayda iki kez
+        tazelenir. Uygulama çalışırken hiçbir servise bağlanmaz; veri indirildikten sonra
+        çevrimdışı da çalışır. Kapsam dışı bir gün veya konum olursa uygulama kendi
+        astronomik hesabına düşer.</p>
+    </div>
+
+    <div class="bolum">
+      <div class="baslik">Hesaplama</div>
+      <p class="bilgi" style="margin:-4px 0 10px">Aşağıdakiler yalnızca resmi takvim
+        kullanılmadığında geçerlidir.</p>
+      <div class="kart">
+        <div class="alan">
+          <label>Yöntem<em>Diyanet: imsak 18°, yatsı 17°</em></label>
+          <select id="yontem">
+            <option value="diyanet">Diyanet (Türkiye)</option>
+            <option value="mwl">Müslüman Dünya Birliği</option>
+            <option value="isna">ISNA (Kuzey Amerika)</option>
+            <option value="egypt">Mısır Genel Araştırma</option>
+            <option value="karachi">Karaçi</option>
+          </select>
+        </div>
+        <div class="alan">
+          <label>İkindi<em>Hanefî, gölge iki katı olunca</em></label>
+          <select id="mezhep"><option value="1">Şâfiî / Diyanet</option><option value="2">Hanefî</option></select>
+        </div>
+      </div>
+      <p class="bilgi">Diyanet yöntemi seçiliyken takvimin ihtiyat payı (öğlede +5, ikindide
+        +4 dakika gibi) kendiliğinden eklenir.</p>
+    </div>
+
+    <div class="bolum">
+      <div class="baslik">Dakika düzeltmesi</div>
+      <div class="kart" id="duzeltmeler"></div>
+      <p class="bilgi">Mahalle caminle birkaç dakika fark varsa buradan hizala. Bir kere ayarla, hep öyle kalır.</p>
+    </div>
+
+    <div class="bolum">
+      <div class="baslik">Bildirim ve görünüm</div>
+      <div class="kart">
+        <div class="alan">
+          <label>Bildirimler<em>Tümünü açar veya kapatır</em></label>
+          <button class="svic" id="bildirimSvic" role="switch"></button>
+        </div>
+        <div class="alan">
+          <label>Sessiz saatler başlangıcı<em>Bu aralıkta sessiz bildirim gelir</em></label>
+          <input type="time" id="sessizBas">
+        </div>
+        <div class="alan">
+          <label>Sessiz saatler bitişi<em>Başlangıçla aynıysa kapalı</em></label>
+          <input type="time" id="sessizSon">
+        </div>
+        <div class="alan">
+          <label>Sahur uyarısı<em>İmsaktan kaç dakika önce</em></label>
+          <select id="sahurOnce">
+            <option value="0">Kapalı</option>
+            <option value="30">30 dk önce</option>
+            <option value="45">45 dk önce</option>
+            <option value="60">1 saat önce</option>
+            <option value="90">1,5 saat önce</option>
+          </select>
+        </div>
+        <div class="alan">
+          <label>Sesli uyarı<em>Tarayıcıda çalışır. APK'da bildirim sesi Android ayarından.</em></label>
+          <button class="svic" id="sesSvic" role="switch"></button>
+        </div>
+        <div class="alan">
+          <label>Titreşim<em>Tesbih ve kıble için. Bildirim titreşimi Android ayarından.</em></label>
+          <button class="svic" id="titresimSvic" role="switch"></button>
+        </div>
+        <div class="alan">
+          <label>Tema</label>
+          <select id="tema">
+            <option value="koyu">Koyu (Selçuklu)</option>
+            <option value="acik">Açık</option>
+            <option value="amoled">AMOLED siyah</option>
+          </select>
+        </div>
+        <div class="alan">
+          <label>Gökyüzü rengi<em>Vakte göre arka plan</em></label>
+          <button class="svic" id="gokSvic" role="switch"></button>
+        </div>
+        <div class="alan">
+          <label>Kerahat vakitleri<em>Girince uyarır, gün şeridinde gösterir</em></label>
+          <button class="svic" id="kerahatSvic" role="switch"></button>
+        </div>
+        <div class="alan">
+          <label>Cuma modu<em>Cuma hatırlatması ve Kehf Suresi</em></label>
+          <button class="svic" id="cumaSvic" role="switch"></button>
+        </div>
+        <div class="alan">
+          <label>Cuma hatırlatma saati<em>Cuma günü bu saatte uyarır</em></label>
+          <input type="time" id="cumaSaat">
+        </div>
+        <div class="alan">
+          <label>Mübarek gün duaları<em>O ay veya gece girince gösterir ve hatırlatır</em></label>
+          <button class="svic" id="duaSvic" role="switch"></button>
+        </div>
+        <div class="alan">
+          <label>Dua hatırlatma saati<em>Mübarek gün girdiğinde bu saatte uyarır</em></label>
+          <input type="time" id="duaSaat">
+        </div>
+        <div class="alan">
+          <label>Ramazan modu<em>İftar ve sahur geri sayımı</em></label>
+          <select id="ramazanMod">
+            <option value="oto">Otomatik</option>
+            <option value="acik">Her zaman açık</option>
+            <option value="kapali">Kapalı</option>
+          </select>
+        </div>
+        <div class="alan">
+          <label>Ekranı açık tut<em>Kıble ve geri sayım için</em></label>
+          <button class="svic" id="uyanikSvic" role="switch"></button>
+        </div>
+        <div class="alan" id="sesAyarAlani" style="display:none">
+          <label>Bildirim sesleri<em>Her tür için ayrı ses ve titreşim</em></label>
+          <select id="sesKanal">
+            <option value="">Seç…</option>
+            <option value="vakit">Namaz vakitleri</option>
+            <option value="once">Vakit öncesi uyarı</option>
+            <option value="oruc">Sahur ve iftar</option>
+            <option value="ozel">Cuma ve kerahat</option>
+            <option value="sessiz">Sessiz saatler</option>
+          </select>
+        </div>
+        <div class="alan uyari" id="izinAlani" style="display:none">
+          <label>Bildirim izni kapalı<em>Bu haliyle hiçbir vakit bildirimi gelmez</em></label>
+          <button class="alan-dugme" id="izinDugme">Düzelt</button>
+        </div>
+        <div class="alan" id="pilAlani" style="display:none">
+          <label>Bildirimler gecikiyor mu?<em>Pil ayarından uygulamayı serbest bırak</em></label>
+          <button class="alan-dugme" id="pilDugme">Aç</button>
         </div>
       </div>
     </div>
 
-    <div class="baslik">Hakkında</div>
-    <div class="kart">
-      <div class="hakkinda">
-        <img src="logos.png" alt="Beş Vakit logosu">
-        <div>
-          <div class="hakkinda-ad">Beş Vakit</div>
-          <div class="hakkinda-alt">
-            Sürüm <b id="surumYazi">—</b> · reklamsız, ücretsiz, internetsiz<br>
-            Vakitler cihazında hesaplanır, hiçbir sunucuya sorulmaz.
+    <div class="bolum">
+      <div class="baslik">Pusula</div>
+      <div class="kart">
+        <div class="alan">
+          <label>Sapma düzeltmesi<em>Kalibrasyonla otomatik dolar</em></label>
+          <div class="duzeltme">
+            <button data-sapma="-1">−</button><span id="sapmaDeger">0°</span><button data-sapma="1">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bolum">
+      <div class="baslik">Hakkında</div>
+      <div class="kart">
+        <div class="hakkinda">
+          <img src="logos.png" alt="Beş Vakit logosu">
+          <div>
+            <div class="hakkinda-ad">Beş Vakit</div>
+            <div class="hakkinda-alt">
+              Sürüm <b id="surumYazi">—</b> · reklamsız, ücretsiz, internetsiz<br>
+              Vakitler cihazında hesaplanır, hiçbir sunucuya sorulmaz.
+            </div>
           </div>
         </div>
       </div>
