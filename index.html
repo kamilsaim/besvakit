@@ -618,80 +618,96 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
 
   <!-- İBADET -->
   <section class="sayfa" id="sayfa-ibadet">
-    <div class="baslik">Zikirmatik</div>
-    <button class="tesbih-set-btn" id="setModuBtn">Namaz sonrası tesbih seti
-      <em>Sübhânallâh 33 · Elhamdülillâh 33 · Allâhüekber 34 — hedefe ulaşınca otomatik geçer</em></button>
-    <div class="zikir-sec-sar">
-      <div class="zikir-sec" id="zikirSec"></div>
-      <button id="zikirEkleBtn" aria-label="Yeni zikir ekle">+</button>
-    </div>
-    <div class="kart katlanir gizli" id="zikirEkleForm">
-      <div class="alan"><label>Zikir adı</label><input type="text" id="ozelZikirAd" maxlength="40" placeholder="ör. Yâ Latîf"></div>
-      <div class="alan"><label>Hedef <em>0 = serbest sayaç</em></label><input type="number" id="ozelZikirHedef" value="33" min="0" max="9999" style="width:80px;text-align:right"></div>
-      <div class="btn-satir" style="padding:0 16px 14px">
-        <button class="btn ikincil" id="ozelZikirVazgec">Vazgeç</button>
-        <button class="btn" id="ozelZikirKaydet">Ekle</button>
+    <div class="bolum">
+      <div class="baslik">Zikirmatik</div>
+      <button class="tesbih-set-btn" id="setModuBtn">Namaz sonrası tesbih seti
+        <em>Sübhânallâh 33 · Elhamdülillâh 33 · Allâhüekber 34 — hedefe ulaşınca otomatik geçer</em></button>
+      <div class="zikir-sec-sar">
+        <div class="zikir-sec" id="zikirSec"></div>
+        <button id="zikirEkleBtn" aria-label="Yeni zikir ekle">+</button>
+      </div>
+      <div class="kart katlanir gizli" id="zikirEkleForm">
+        <div class="alan"><label>Zikir adı</label><input type="text" id="ozelZikirAd" maxlength="40" placeholder="ör. Yâ Latîf"></div>
+        <div class="alan"><label>Hedef <em>0 = serbest sayaç</em></label><input type="number" id="ozelZikirHedef" value="33" min="0" max="9999" style="width:80px;text-align:right"></div>
+        <div class="btn-satir" style="padding:0 16px 14px">
+          <button class="btn ikincil" id="ozelZikirVazgec">Vazgeç</button>
+          <button class="btn" id="ozelZikirKaydet">Ekle</button>
+        </div>
+      </div>
+      <div class="tesbih-zikir" id="tesbihZikir"></div>
+      <div class="tesbih-sar">
+        <button id="tesbihBtn" aria-label="Zikir sayacı — dokunarak arttır">
+          <div>
+            <div class="tesbih-sayi" id="tesbihSayi">0</div>
+            <div class="tesbih-hedef" id="tesbihHedef">hedef 33</div>
+          </div>
+        </button>
+      </div>
+      <div class="btn-satir">
+        <button class="btn ikincil" id="tesbihGeri">Bir geri</button>
+        <button class="btn ikincil" id="tesbihSifirla">Sıfırla</button>
       </div>
     </div>
-    <div class="tesbih-zikir" id="tesbihZikir"></div>
-    <div class="tesbih-sar">
-      <button id="tesbihBtn" aria-label="Zikir sayacı — dokunarak arttır">
-        <div>
-          <div class="tesbih-sayi" id="tesbihSayi">0</div>
-          <div class="tesbih-hedef" id="tesbihHedef">hedef 33</div>
-        </div>
+
+    <div class="bolum">
+      <button class="baslik" id="zikirIstBaslik" aria-expanded="true" aria-controls="zikirIstKart">
+        Çekilen zikirler <span class="ok" aria-hidden="true">⌃</span>
       </button>
+      <div class="kart katlanir" id="zikirIstKart"></div>
+      <p class="bilgi" id="zikirGunluk"></p>
     </div>
-    <div class="btn-satir">
-      <button class="btn ikincil" id="tesbihGeri">Bir geri</button>
-      <button class="btn ikincil" id="tesbihSifirla">Sıfırla</button>
-    </div>
-
-    <button class="baslik" id="zikirIstBaslik" aria-expanded="true" aria-controls="zikirIstKart">
-      Çekilen zikirler <span class="ok" aria-hidden="true">⌃</span>
-    </button>
-    <div class="kart katlanir" id="zikirIstKart"></div>
-    <p class="bilgi" id="zikirGunluk"></p>
-    <div class="baslik">Bugünkü namazlar</div>
-    <div class="ozet">
-      <div class="ozet-kutu"><b id="ozetBugun">0/5</b><span>Bugün</span></div>
-      <div class="ozet-kutu"><b id="ozetSeri">0</b><span>Gün seri</span></div>
-      <div class="ozet-kutu"><b id="ozetAy">%0</b><span>Bu ay</span></div>
-    </div>
-    <div class="kart" id="takipListe" style="margin-top:10px"></div>
-    <p class="bilgi">Kaydın yalnızca bu cihazda tutulur; hiçbir yere gönderilmez.
-      Vakti girmemiş namazlar soluk görünür.</p>
-
-    <button class="baslik" id="istatistikBaslik" aria-expanded="false" aria-controls="istatistikKart">
-      Son 30 gün ve istatistik <span class="ok" aria-hidden="true">⌃</span>
-    </button>
-    <div class="kart katlanir gizli" id="istatistikKart">
-      <div class="izgara" id="izgara"></div>
-      <div style="border-top:1px solid var(--cizgi);padding:6px 0 10px" id="cubuklar"></div>
+    <div class="bolum">
+      <div class="baslik">Bugünkü namazlar</div>
+      <div class="ozet">
+        <div class="ozet-kutu"><b id="ozetBugun">0/5</b><span>Bugün</span></div>
+        <div class="ozet-kutu"><b id="ozetSeri">0</b><span>Gün seri</span></div>
+        <div class="ozet-kutu"><b id="ozetAy">%0</b><span>Bu ay</span></div>
+      </div>
+      <div class="kart" id="takipListe" style="margin-top:10px"></div>
+      <p class="bilgi">Kaydın yalnızca bu cihazda tutulur; hiçbir yere gönderilmez.
+        Vakti girmemiş namazlar soluk görünür.</p>
     </div>
 
-    <button class="baslik" id="kazaBaslik" aria-expanded="false" aria-controls="kazaKart">
-      Kaza namazı sayacı <span class="ok" aria-hidden="true">⌃</span>
-    </button>
-    <div class="kart katlanir gizli" id="kazaKart"></div>
+    <div class="bolum">
+      <button class="baslik" id="istatistikBaslik" aria-expanded="false" aria-controls="istatistikKart">
+        Son 30 gün ve istatistik <span class="ok" aria-hidden="true">⌃</span>
+      </button>
+      <div class="kart katlanir gizli" id="istatistikKart">
+        <div class="izgara" id="izgara"></div>
+        <div style="border-top:1px solid var(--cizgi);padding:6px 0 10px" id="cubuklar"></div>
+      </div>
+    </div>
 
-    <button class="baslik" id="tovbeBaslik" aria-expanded="false" aria-controls="tovbeKart">
-      Nasûh Tövbesi <span class="ok" aria-hidden="true">⌃</span>
-    </button>
-    <div class="kart katlanir gizli" id="tovbeKart"></div>
+    <div class="bolum">
+      <button class="baslik" id="kazaBaslik" aria-expanded="false" aria-controls="kazaKart">
+        Kaza namazı sayacı <span class="ok" aria-hidden="true">⌃</span>
+      </button>
+      <div class="kart katlanir gizli" id="kazaKart"></div>
+    </div>
+
+    <div class="bolum">
+      <button class="baslik" id="tovbeBaslik" aria-expanded="false" aria-controls="tovbeKart">
+        Nasûh Tövbesi <span class="ok" aria-hidden="true">⌃</span>
+      </button>
+      <div class="kart katlanir gizli" id="tovbeKart"></div>
+    </div>
 
 
-    <button class="baslik" id="esmaBaslik" aria-expanded="false" aria-controls="esmaKart">
-      Esmâ-ül Hüsnâ <span class="ok" aria-hidden="true">⌃</span>
-    </button>
-    <div class="kart katlanir gizli" id="esmaKart"></div>
+    <div class="bolum">
+      <button class="baslik" id="esmaBaslik" aria-expanded="false" aria-controls="esmaKart">
+        Esmâ-ül Hüsnâ <span class="ok" aria-hidden="true">⌃</span>
+      </button>
+      <div class="kart katlanir gizli" id="esmaKart"></div>
+    </div>
 
-    <button class="baslik" id="duaArsivBaslik" aria-expanded="false" aria-controls="duaArsivKart">
-      Mübarek gün duaları <span class="ok" aria-hidden="true">⌃</span>
-    </button>
-    <div class="kart katlanir gizli" id="duaArsivKart"></div>
-    <p class="bilgi" id="duaKaynakNotu">Kaynak: Ramazanoğlu Mahmud Sâmi,
-      <b>Dualar ve Zikirler</b>, Erkam Yayınları. Her duanın altında kitaptaki sayfası yazılıdır.</p>
+    <div class="bolum">
+      <button class="baslik" id="duaArsivBaslik" aria-expanded="false" aria-controls="duaArsivKart">
+        Mübarek gün duaları <span class="ok" aria-hidden="true">⌃</span>
+      </button>
+      <div class="kart katlanir gizli" id="duaArsivKart"></div>
+      <p class="bilgi" id="duaKaynakNotu">Kaynak: Ramazanoğlu Mahmud Sâmi,
+        <b>Dualar ve Zikirler</b>, Erkam Yayınları. Her duanın altında kitaptaki sayfası yazılıdır.</p>
+    </div>
   </section>
 
   <!-- AYARLAR -->
