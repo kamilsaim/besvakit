@@ -1431,10 +1431,18 @@ function saatYaz(dk){
 }
 const AYLAR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 const GUNLER = ['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
+const HICRI_AYLAR = ['Muharrem','Safer','Rebiülevvel','Rebiülahir','Cemaziyelevvel',
+  'Cemaziyelahir','Recep','Şaban','Ramazan','Şevval','Zilkade','Zilhicce'];
+/* Ay adını yerelden almayız: bazı cihazların ICU verisinde ümmülkura takviminin
+   Türkçe ay/çağ adları yok; oralarda 'tr-TR-u-ca-islamic-umalqura' Gregoryen ay
+   adıyla ve "MÖ" çağ etiketiyle biçimliyordu. Sayısal parçalar her yerde doğru,
+   adı kendimiz yazıyoruz. */
 function hicriYaz(d){
   try{
-    return new Intl.DateTimeFormat('tr-TR-u-ca-islamic-umalqura',
-      {day:'numeric',month:'long',year:'numeric'}).format(d).replace(' Hicri','');
+    const h = hicriParcala(d);
+    const ad = HICRI_AYLAR[(h.month-1) % 12];
+    if(!h.day || !ad || !h.year) return '';
+    return h.day+' '+ad+' '+h.year;
   }catch(e){ return ''; }
 }
 
@@ -1942,8 +1950,6 @@ function ayDurumSatiri(){
   let h;
   try{ h = hicriParcala(new Date()); }catch(e){ return ''; }
   const ay = ayDurumu(new Date());
-  const HICRI_AYLAR = ['Muharrem','Safer','Rebiülevvel','Rebiülahir','Cemaziyelevvel',
-    'Cemaziyelahir','Recep','Şaban','Ramazan','Şevval','Zilkade','Zilhicce'];
   const adi = HICRI_AYLAR[(h.month-1) % 12] || '';
   const kalan = Math.round(ay.yeniAyaKalan);
   const db = ayDogusBatisi(new Date(), A.lat, A.lng);
