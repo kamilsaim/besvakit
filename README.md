@@ -8,7 +8,7 @@
 
 [**→ Uygulamayı aç**](https://kamilsaim.github.io/besvakit/)
 
-![sürüm](https://img.shields.io/badge/sürüm-0.15.0-22B2AE?style=flat-square)
+![sürüm](https://img.shields.io/badge/sürüm-0.16.0-22B2AE?style=flat-square)
 ![bağımlılık](https://img.shields.io/badge/bağımlılık-yok-D8A93C?style=flat-square)
 ![tek dosya](https://img.shields.io/badge/tek%20dosya-HTML-080C18?style=flat-square)
 
@@ -97,6 +97,24 @@ kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasın�
   cami araması (Overpass API), yazı tipleri (Google Fonts). Üçü de kapalıyken uygulama çalışmaya devam eder.
 
 ## Sürüm geçmişi
+
+### 0.16.0
+- **Zikirmatik İbadet sayfasının en üstüne alındı.** En sık dokunulan şey en
+  aşağıdaydı; her açılışta kaydırmak gerekiyordu. Artık sayfa açılır açılmaz
+  sayaç elin altında.
+- **Bölümler cam kapsüllere girdi.** Dört sayfadaki 27 bölüm — Vakitler 7,
+  İbadet 8, Kıble 4, Ayarlar 8 — aynı yarı saydam kapsül diline oturdu. Önceden
+  her sayfa kendi ayrım biçimini kullanıyordu; başlıklar, katlanma davranışı ve
+  boşluklar sayfadan sayfaya değişiyordu. Kapsüller tek bir `.bolum` sınıfı ve
+  ortak değişkenler üzerinden çiziliyor, yani üç temada da tutarlı.
+- **AMOLED temada bölüm gölgesi geri geldi.** `--cam-golge` değeri `none` idi;
+  `box-shadow` listesinde geçersiz olduğu için tarayıcı bildirimin tamamını
+  düşürüyordu. Siyah zeminde kapsüllerin kenarı hiç görünmüyordu.
+- **Hicri tarih bazı cihazlarda yanlış yazılıyordu.** Ay adı sistemin takvim
+  verisinden alınıyordu; o veride ümmülkura takviminin Türkçe ay adları
+  bulunmayan cihazlarda Gregoryen ay adı ve yanlış çağ etiketi çıkıyordu —
+  widget'ta "MÖ 05 Mart 1448" gibi. Ay adı artık uygulamanın kendi listesinden
+  yazılıyor.
 
 ### 0.15.0
 - **Çoklu konum.** Ayarlar sayfasına **Konumlarım** kartı geldi: en fazla beş
