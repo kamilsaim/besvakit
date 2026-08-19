@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gizlilik Politikası — Beş Vakit</title>
+<meta name="description" content="Beş Vakit uygulamasının gizlilik politikası: veri toplanmaz, konum cihazdan çıkmaz.">
+<link rel="icon" type="image/png" href="logo-beyaz.png">
+<style>
+  :root{
+    --gece:#080C18; --lacivert:#121A33; --cini:#22B2AE; --pirinc:#D8A93C;
+    --kagit:#F2EEE2; --sis:rgba(242,238,226,.62); --cizgi:rgba(242,238,226,.12);
+    --cam:rgba(242,238,226,.05); --cam-cizgi:rgba(242,238,226,.13);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:32px 20px 64px; background:var(--gece); color:var(--kagit);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    font-size:16px; line-height:1.65; -webkit-text-size-adjust:100%;
+  }
+  main{max-width:720px; margin:0 auto}
+  header{text-align:center; margin-bottom:40px}
+  header img{width:72px; height:72px}
+  h1{font-size:26px; margin:16px 0 6px; letter-spacing:.01em}
+  .ust{color:var(--sis); font-size:14px; margin:0}
+  h2{font-size:18px; margin:36px 0 10px; color:var(--cini)}
+  p,li{color:var(--kagit)}
+  ul{padding-left:20px; margin:10px 0}
+  li{margin:6px 0}
+  .ozet{
+    background:var(--cam); border:1px solid var(--cam-cizgi); border-radius:16px;
+    padding:18px 20px; margin:28px 0;
+  }
+  .ozet p{margin:0; font-size:17px}
+  a{color:var(--cini)}
+  footer{
+    margin-top:48px; padding-top:20px; border-top:1px solid var(--cizgi);
+    color:var(--sis); font-size:14px; text-align:center;
+  }
+  @media (max-width:480px){ body{padding:24px 16px 48px} h1{font-size:22px} }
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <img src="logo-beyaz.png" alt="Beş Vakit">
+  <h1>Gizlilik Politikası</h1>
+  <p class="ust">Beş Vakit · Son güncelleme: 19 Ağustos 2026</p>
+</header>
+
+<div class="ozet">
+  <p><strong>Beş Vakit hiçbir kişisel veri toplamaz, saklamaz veya paylaşmaz.</strong>
+  Sunucumuz yok, kullanıcı hesabı yok, reklam yok, analitik yok. Konumunuz dâhil
+  her şey yalnızca sizin cihazınızda kalır.</p>
+</div>
+
+<h2>Cihazınızda kalan bilgiler</h2>
+<p>Uygulama şunları yalnızca telefonunuzun kendi deposunda (<code>localStorage</code>
+ve uygulama ayarları) tutar. Bu bilgiler cihazdan hiçbir zaman dışarı gönderilmez:</p>
+<ul>
+  <li>Seçtiğiniz şehir/ilçe ve varsa GPS ile bulunan konumunuz</li>
+  <li>Hesap yöntemi, dakika düzeltmeleri, tema ve bildirim ayarlarınız</li>
+  <li>Namaz takibi, kaza sayacı, zikirmatik sayıları ve tövbe takibi gibi kayıtlarınız</li>
+  <li>Diyanet takviminden indirilen namaz vakti tablosu</li>
+</ul>
+<p>Uygulamayı kaldırdığınızda bu verilerin tamamı cihazınızdan silinir. Bizde bir
+kopyası bulunmaz, çünkü bize hiç ulaşmaz.</p>
+
+<h2>Konum izni</h2>
+<p>Konum izni yalnızca iki şey için istenir: bulunduğunuz yere en yakın ilçenin
+namaz vakitlerini seçmek ve kıble yönünü hesaplamak. Her iki hesap da telefonun
+içinde yapılır. Koordinatınız hiçbir sunucuya gönderilmez. İzni vermeseniz de
+uygulama çalışır — şehri elle seçebilirsiniz.</p>
+<p>Tek istisna, sizin başlattığınız <strong>yakındaki camiler</strong> aramasıdır:
+o arama sırasında koordinatınız OpenStreetMap'in Overpass servisine sorgu olarak
+gider. Bu bölümü hiç açmazsanız böyle bir istek de olmaz.</p>
+
+<h2>Dışarıya bağlanılan yerler</h2>
+<p>Uygulama namaz vakitlerini gösterirken hiçbir servise bağlanmaz. Yalnızca
+aşağıdaki isteğe bağlı durumlarda dışarıya bağlantı kurulur:</p>
+<ul>
+  <li><strong>Namaz vakti verisi</strong> — GitHub Pages üzerinde duran statik bir
+      dosya; cihaza bir kez indirilir. Hesap veya anahtar gerektirmez.</li>
+  <li><strong>Harita ve uydu görüntüsü</strong> — yalnızca haritayı açtığınızda;
+      OpenStreetMap, Esri ve harita kütüphanesi için unpkg.com.</li>
+  <li><strong>Cami araması</strong> — yalnızca siz aradığınızda; Overpass API.</li>
+  <li><strong>Yazı tipleri</strong> — Google Fonts.</li>
+</ul>
+<p>Bu servisler, internet üzerindeki her istekte olduğu gibi IP adresinizi görür ve
+kendi gizlilik politikalarına tabidir. Bizim onlara gönderdiğimiz ek bir bilgi yoktur.
+Bu bölümleri hiç kullanmazsanız uygulama çalışmaya devam eder.</p>
+
+<h2>Bildirimler</h2>
+<p>Bildirimler telefonunuzun kendi alarm sistemiyle, cihazın içinde kurulur.
+Sunucudan gönderilen bir bildirim (push) yoktur; bu yüzden bildirimler için
+herhangi bir cihaz kimliği veya kayıt bilgisi kimseye iletilmez.</p>
+
+<h2>Çocuklar</h2>
+<p>Uygulama hiç kimseden, hiçbir yaş grubundan veri toplamaz.</p>
+
+<h2>Değişiklikler</h2>
+<p>Bu politika değişirse bu sayfa güncellenir ve yukarıdaki tarih değiştirilir.</p>
+
+<h2>İletişim</h2>
+<p>Soru ve talepleriniz için: <a href="mailto:saimkamil@gmail.com">saimkamil@gmail.com</a></p>
+
+<footer>
+  <a href="./">Uygulamaya dön</a> ·
+  <a href="https://github.com/kamilsaim/besvakit">Kaynak kodu</a>
+</footer>
+
+</main>
+</body>
+</html>

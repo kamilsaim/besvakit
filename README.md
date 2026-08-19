@@ -96,6 +96,8 @@ kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasın�
 - Yalnızca **isteğe bağlı** olarak dışarı bağlanılan yerler: harita karoları (Esri / OpenStreetMap),
   cami araması (Overpass API), yazı tipleri (Google Fonts). Üçü de kapalıyken uygulama çalışmaya devam eder.
 
+Tam metin: [**Gizlilik Politikası**](https://kamilsaim.github.io/besvakit/gizlilik.html)
+
 ## Sürüm geçmişi
 
 ### 0.16.0
