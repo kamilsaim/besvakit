@@ -547,6 +547,11 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
       <div class="kart" id="duaKart"></div>
     </div>
 
+    <div class="bolum" id="ayKutu">
+      <div class="baslik">Ay durumu</div>
+      <div class="kart" id="ayKart"></div>
+    </div>
+
     <div class="bolum" id="kerahatKutu">
       <div class="baslik">Kerahat vakitleri</div>
       <div class="kart" id="kerahatListe"></div>
@@ -812,6 +817,12 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
 
     <div class="bolum">
       <div class="baslik">Dakika düzeltmesi</div>
+      <div class="kart">
+        <div class="alan">
+          <label>Dakika düzeltmesi<em>Kapalıyken vakitlere hiç dokunulmaz</em></label>
+          <button class="svic" id="duzeltmeSvic" role="switch"></button>
+        </div>
+      </div>
       <div class="kart" id="duzeltmeler"></div>
       <p class="bilgi">Mahalle caminle birkaç dakika fark varsa buradan hizala. Bir kere ayarla, hep öyle kalır.</p>
     </div>
@@ -1019,6 +1030,7 @@ const SEHIRLER = [
 const VARSAYILAN = {
   sehir:'Kayseri', lat:38.7312, lng:35.4787, rakim:1050, otoKonum:true,
   yontem:'diyanet', mezhep:1,
+  duzeltmeAcik:false,
   duzeltme:{ imsak:0, gunes:0, ogle:0, ikindi:0, aksam:0, yatsi:0 },
   bildirim:{ imsak:{bildir:true,  once:0}, gunes:{bildir:false, once:0},
              ogle: {bildir:true,  once:0}, ikindi:{bildir:true, once:0},
@@ -1042,6 +1054,9 @@ function yukle(){
     const h = JSON.parse(localStorage.getItem('besvakit') || '{}');
     const a = Object.assign({}, VARSAYILAN, h,
       { duzeltme:Object.assign({}, VARSAYILAN.duzeltme, h.duzeltme||{}) });
+    // Eskiden düzeltme hep açıktı: sıfırdan farklı ayarı olanın ayarı kaybolmasın.
+    if(h.duzeltmeAcik === undefined && h.duzeltme)
+      a.duzeltmeAcik = Object.values(h.duzeltme).some(x => +x !== 0);
     a.bildirim = bildirimSemasiniTasi(h.bildirim, h.onceden);
     delete a.onceden;
     konumlariGoc(a);
@@ -1164,6 +1179,11 @@ function ikindiZamani(jd, lat, kat, t){
  * Bir gün için altı vakti dakika cinsinden (yerel saat) döndürür.
  * @returns {{imsak:number,gunes:number,ogle:number,ikindi:number,aksam:number,yatsi:number}}
  */
+/** Dakika düzeltmesi kapalıyken vakitlere hiç dokunulmaz. */
+function duzeltmeDk(ayar, k){
+  return ayar.duzeltmeAcik ? (ayar.duzeltme[k] || 0) : 0;
+}
+
 function vakitleriHesapla(tarih, ayar){
   const lat = ayar.lat, lng = ayar.lng;
   const tz  = -tarih.getTimezoneOffset()/60;
@@ -1186,7 +1206,7 @@ function vakitleriHesapla(tarih, ayar){
   const out = {};
   VAKITLER.forEach(v=>{
     let saat = t[v.k]*24 + tz - lng/15;
-    let dk = Math.round(saat*60) + (ayar.duzeltme[v.k]||0) + (temkinli ? TEMKIN[v.k] : 0);
+    let dk = Math.round(saat*60) + duzeltmeDk(ayar, v.k) + (temkinli ? TEMKIN[v.k] : 0);
     out[v.k] = isNaN(dk) ? NaN : mod(dk, 1440);
   });
   return out;
@@ -1209,7 +1229,7 @@ function resmiVakit(tarih){
   const s = RESMI.v[i];
   if(!s || s.length < 6) return null;
   const o = {};
-  VAKITLER.forEach((v, k) => { o[v.k] = mod(s[k] + (A.duzeltme[v.k] || 0), 1440); });
+  VAKITLER.forEach((v, k) => { o[v.k] = mod(s[k] + duzeltmeDk(A, v.k), 1440); });
   return o;
 }
 
@@ -1979,6 +1999,13 @@ function ayDurumSatiri(){
     </div>` : ''}`;
 }
 
+/** Ay durumu kutusu — kerahat vakitlerinin üstünde, tek başına. */
+function ayDurumuCiz(){
+  const satir = ayDurumSatiri();
+  $('#ayKutu').style.display = satir ? '' : 'none';
+  $('#ayKart').innerHTML = satir;
+}
+
 function diniGunleriCiz(){
   const liste = diniGunListesi();
   if(!liste.length){
@@ -1986,7 +2013,7 @@ function diniGunleriCiz(){
     return;
   }
   const bugun = gunBasi(new Date());
-  $('#diniKart').innerHTML = ayDurumSatiri() + liste.map(x=>{
+  $('#diniKart').innerHTML = liste.map(x=>{
     const fark = Math.round((x.tarih - bugun)/86400000);
     const kalan = fark === 0 ? ['Bugün',''] : fark === 1 ? ['Yarın',''] : [String(fark),'gün'];
     return `<div class="dini-satir ${fark <= 7 ? 'yakin':''}">
@@ -2892,7 +2919,7 @@ function bildirimImza(){
     '|' + (A.ramazanMod||'') +
     '|' + A.sehir + '|' + A.lat.toFixed(4) + ',' + A.lng.toFixed(4) +
     '|' + A.rakim + '|' + A.yontem + '|' + A.mezhep + '|' + (A.temkin?1:0) +
-    '|' + VAKITLER.map(v=>A.duzeltme[v.k]).join(',');
+    '|' + (A.duzeltmeAcik?1:0) + '|' + VAKITLER.map(v=>A.duzeltme[v.k]).join(',');
 }
 
 let _bildirimSonKurulum = '';
@@ -2977,7 +3004,7 @@ async function widgetVeriYaz(){
   const imza = gunAnahtar(bugun) + '|' + A.sehir + '|' + A.lat.toFixed(4) + ',' + A.lng.toFixed(4) +
                '|' + A.rakim + '|' + A.yontem + '|' + A.mezhep + '|' + (A.temkin?1:0) +
                '|' + A.ramazanMod +
-               '|' + VAKITLER.map(v=>A.duzeltme[v.k]).join(',');
+               '|' + (A.duzeltmeAcik?1:0) + '|' + VAKITLER.map(v=>A.duzeltme[v.k]).join(',');
   if(imza === _widgetSonYazim) return;
 
   const gunler = {}, hicri = {};
@@ -3012,6 +3039,7 @@ function gunuTazele(){
   kaynakNotuYaz();
   if(A.imsakiyeAcik) imsakiyeCiz();
   if(A.diniAcik) diniGunleriCiz();
+  ayDurumuCiz();
   kerahatCiz();
   ramazanCiz();
   cumaCiz();
@@ -3500,6 +3528,13 @@ function ayarlariKur(){
     return true;
   });
   yerleriKur();
+
+  const duzeltmeGoster = ()=>{ $('#duzeltmeler').style.display = A.duzeltmeAcik ? '' : 'none'; };
+  svicKur('#duzeltmeSvic','duzeltmeAcik', v=>{
+    setTimeout(()=>{ duzeltmeGoster(); gunuTazele(); }, 0);
+    return true;
+  });
+  duzeltmeGoster();
 
   $('#duzeltmeler').innerHTML = VAKITLER.map(v=>`
     <div class="alan"><label>${v.ad}</label>
