@@ -8,7 +8,7 @@
 
 [**→ Uygulamayı aç**](https://kamilsaim.github.io/besvakit/)
 
-![sürüm](https://img.shields.io/badge/sürüm-0.16.0-22B2AE?style=flat-square)
+![sürüm](https://img.shields.io/badge/sürüm-0.16.2-22B2AE?style=flat-square)
 ![bağımlılık](https://img.shields.io/badge/bağımlılık-yok-D8A93C?style=flat-square)
 ![tek dosya](https://img.shields.io/badge/tek%20dosya-HTML-080C18?style=flat-square)
 
@@ -99,6 +99,35 @@ kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasın�
 Tam metin: [**Gizlilik Politikası**](https://kamilsaim.github.io/besvakit/gizlilik.html)
 
 ## Sürüm geçmişi
+
+### 0.16.2
+- **iOS'ta ana ekrana eklenmiş uygulamada alt sekme çubuğu kayarken sıçrıyordu.**
+  Ayarlar gibi kısa sayfalarda elastik kaydırma (rubber-band) tetiklenince
+  WebKit sabit konumlu (`position:fixed`) çubuğu geç yakalıyor, çubuk görünürde
+  yukarı fırlayıp geri düşüyordu. Çubuğu kendi GPU katmanına alınca (`transform:
+  translateZ(0)`) gecikme ortadan kalktı.
+
+### 0.16.1
+- **Widget bazen bir önceki saatin geri sayımını gösteriyordu.** Tazeleme alarmı
+  zincirleme kuruluyordu — her alarm bir sonrakini kurar — ama sıradan bir
+  alarmdı ve Doze'da ertelenip düşebiliyordu. Bir halka kaçınca zincir tamamen
+  kopuyor, widget yalnızca sistemin 30 dakikalık periyoduna kalıyordu; o da
+  uykuda ertelendiği için ekranda saatlerce eski süre kalabiliyordu. Alarm artık
+  Doze'u delerek kuruluyor.
+- **Telefon yeniden başlatılınca widget donuyordu.** Açılış yayınının izni
+  alınmıştı ama onu dinleyen bir filtre yoktu; yeniden başlatmada silinen alarm
+  zincirini kimse kurmuyordu. Uygulama güncellemesi de aynı etkiyi yapıyordu.
+  İkisi de artık zinciri yeniden kuruyor.
+- **Widget her boyutta düzgün duruyor.** Kart içerik kadar yer kaplıyordu ama
+  başlatıcı yeri satır satır verdiği için ayrılan yükseklik hep fazlaydı; altta
+  boş, üstelik dokunulduğunda hiçbir şey yapmayan bir alan kalıyordu. Kart artık
+  hücrenin tamamını kaplıyor ve **boyuta göre üç düzen** arasından seçim yapıyor:
+  geniş ve yüksekse konum, iki takvim ve altı vakit iri kutularda; geniş ama
+  alçaksa başlık tek satıra inip altı vakit yine tam görünüyor; dar ve alçaksa
+  sıradaki vakit büyük puntoda, yanında ondan sonraki iki vakit kutucukta.
+  Hiçbirinde boş alan kalmıyor.
+- **Açılış ekranındaki eski logo değişti.** Uygulama ikonu yenilenmişti ama
+  açılış görselinin 11 varyantı eski logoda kalmıştı.
 
 ### 0.16.0
 - **Zikirmatik İbadet sayfasının en üstüne alındı.** En sık dokunulan şey en
