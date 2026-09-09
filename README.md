@@ -6,8 +6,9 @@
 
 **Reklamsız, ücretsiz, internetsiz çalışan namaz vakti ve kıble uygulaması.**
 
-[**→ Uygulamayı aç**](https://kamilsaim.github.io/besvakit/)
+[**→ Tarayıcıda aç**](https://kamilsaim.github.io/besvakit/) &nbsp;·&nbsp; [**→ Google Play**](https://play.google.com/store/apps/details?id=com.kamilsaim.besvakit)
 
+[![Google Play](https://img.shields.io/badge/Google%20Play-yayında-22B2AE?style=flat-square&logo=googleplay&logoColor=white)](https://play.google.com/store/apps/details?id=com.kamilsaim.besvakit)
 ![sürüm](https://img.shields.io/badge/sürüm-0.16.2-22B2AE?style=flat-square)
 ![bağımlılık](https://img.shields.io/badge/bağımlılık-yok-D8A93C?style=flat-square)
 ![tek dosya](https://img.shields.io/badge/tek%20dosya-HTML-080C18?style=flat-square)
@@ -35,6 +36,13 @@ olmadan da, kaynak kapansa da çalışır. Anahtar yok, hesap yok, veri dışar�
 | **Camiler** | 3 km çevrendeki camiler, yön ve yürüme mesafesiyle |
 | **Bildirim** | APK'da uygulama kapalıyken de çalışır: her vakit, her vaktin kendi önceden uyarısı, kerahat, cuma, mübarek gün duaları, sahur/iftar, sessiz saatler |
 | **Çevrimdışı** | Servis işçisiyle uygulama kabuğu; vakitler önbellekte, hesap yedekte |
+
+## Nasıl edinilir
+
+| | |
+|---|---|
+| **Android** | [Google Play](https://play.google.com/store/apps/details?id=com.kamilsaim.besvakit) — kapalı testten çıkıp yayına alındı. Bildirimler uygulama kapalıyken de gelir, ana ekran widget'ları buradadır. |
+| **iPhone / masaüstü** | [Tarayıcıda aç](https://kamilsaim.github.io/besvakit/) ve ana ekrana ekle. Kurulum gerekmez, çevrimdışı çalışır. |
 
 ## Nasıl hesaplıyor
 
@@ -99,6 +107,10 @@ kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasın�
 Tam metin: [**Gizlilik Politikası**](https://kamilsaim.github.io/besvakit/gizlilik.html)
 
 ## Sürüm geçmişi
+
+### Google Play (9 Eylül 2026)
+- **Uygulama kapalı testten çıkıp Google Play'de yayına alındı.**
+  Paket adı `com.kamilsaim.besvakit`.
 
 ### 0.16.2
 - **iOS'ta ana ekrana eklenmiş uygulamada alt sekme çubuğu kayarken sıçrıyordu.**
@@ -368,6 +380,7 @@ duanın altında kitaptaki sayfası yazılı.
 - [x] Çevrimdışı kabuk, vakit öncesi hatırlatma
 - [x] Android ana ekran widget'ları — büyük (vakitler + hicri tarih) ve yalnızca geri sayım
 - [x] Capacitor kabuk (APK) — uygulama kapalıyken de bildirim
+- [x] Google Play'de yayın — kapalı test tamamlandı
 - [ ] Gerçek ezan sesi — kanal sistem sesiyle kuruldu; ezan dosyası eklenecek
 - [ ] Wear OS — kadran üzeri complication ve kaydır-eriş kartı (planı hazır)
 - [x] Açık tema ve AMOLED tema
