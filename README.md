@@ -61,8 +61,10 @@ olarak commit'ler, GitHub Pages statik dosya olarak servis eder, uygulama bir ke
 `localStorage`'a önbellekler. Anahtar yok, CORS yok, kullanıcı başına istek yok — kaynak
 bir gün kapansa bile elimizdeki veri çalışmaya devam eder.
 
-Türkiye'nin **868 ilçesi** kapsanıyor. Kapsam dışı bir gün veya konum olursa uygulama
-sessizce kendi astronomik hesabına düşer; yani veri olmadan da çalışır.
+Türkiye'nin **868 ilçesi** kapsanıyor. GPS konumu en yakın il merkezine (81 il) bağlanır.
+Verinin bittiği günlerde hesap, Diyanet takviminin son günlerine hizalanır (±1 dk);
+Türkiye dışında ya da veri hiç yoksa uygulama kendi astronomik hesabına düşer ve bunu
+ekranda yazar — yani veri olmadan da çalışır. Hicri tarih de Diyanet'in takviminden gelir.
 
 ### Astronomik hesap (yedek)
 
@@ -101,8 +103,9 @@ kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasın�
 - Konum cihazdan çıkmaz, hesap tarayıcıda yapılır
 - Ayarlar yalnızca `localStorage`'da tutulur
 - Sunucu, hesap, takip, analitik, reklam — hiçbiri yok
-- Yalnızca **isteğe bağlı** olarak dışarı bağlanılan yerler: harita karoları (Esri / OpenStreetMap),
-  cami araması (Overpass API), yazı tipleri (Google Fonts). Üçü de kapalıyken uygulama çalışmaya devam eder.
+- Yalnızca **isteğe bağlı** olarak dışarı bağlanılan yerler: harita karoları (Esri / OpenStreetMap)
+  ve harita kütüphanesi (unpkg.com), cami araması (Overpass API), yazı tipleri (Google Fonts).
+  Hepsi kapalıyken uygulama çalışmaya devam eder.
 
 Tam metin: [**Gizlilik Politikası**](https://kamilsaim.github.io/besvakit/gizlilik.html)
 
