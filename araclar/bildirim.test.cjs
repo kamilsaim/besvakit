@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const { bildirimListesiUret, bvGunButcesi, bvZaman, bvSaatDk, bvSaatYaz } = require('../bildirim.js');
+const { bildirimListesiUret, bvGunButcesi, bvZaman, bvSaatDk, bvSaatYaz, BV_TUR } = require('../bildirim.js');
 
 /** Testlerde kullanılan sabit gün tablosu: iki gün, altı vakit (dakika). */
 const GUNLER = {
@@ -369,7 +369,8 @@ test('bütçe üretilen gün sayısını sınırlar', () => {
 
   const liste = bildirimListesiUret(ayar, uzun, simdi);
 
-  assert.strictEqual(liste.length, 30);
+  // kuyruk hatırlatması hariç: 30 gün × 1 öğle
+  assert.strictEqual(liste.filter(b => b.govde === 'Öğle vakti girdi').length, 30);
 });
 
 test('toplam bildirim sayısı 400\'ü aşmaz', () => {
@@ -603,4 +604,86 @@ test('eksik imsak ve akşam vaktiyle sahur/iftar bildirimi üretilmez', () => {
   const ayar = ayarKur({ ramazanGunleri: ['2026-08-12'], sahurOnce: 45 });
   const liste = bildirimListesiUret(ayar, EKSIK, new Date(2026, 7, 11, 0, 0, 0));
   assert.strictEqual(liste.length, 0);
+});
+
+/* Kuyruk sınırlı (en fazla 30 gün). Uygulama o süre hiç açılmazsa bildirimler
+   sessizce biter; bitmeden önce kullanıcıya uygulamayı açmasını hatırlatırız. */
+function otuzGun(bas) {
+  const t = {};
+  for (let i = 0; i < 30; i++) {
+    const d = new Date(bas.getFullYear(), bas.getMonth(), bas.getDate() + i);
+    const k = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' +
+              String(d.getDate()).padStart(2, '0');
+    t[k] = [236, 334, 769, 999, 1195, 1285];
+  }
+  return t;
+}
+const kuyrukUyarisi = l => l.filter(b => b.id % 100 === BV_TUR.kuyruk);
+
+test('kuyruğun sondan bir önceki gününe tek hatırlatma koyar', () => {
+  const ayar = ayarKur();
+  ayar.vakit.ogle.bildir = true;
+  const simdi = new Date(2026, 9, 6, 0, 0, 0);
+  const liste = bildirimListesiUret(ayar, otuzGun(simdi), simdi);
+  const u = kuyrukUyarisi(liste);
+  assert.strictEqual(u.length, 1);
+  // bütçe 30 gün: son gün 4 Kasım, uyarı 3 Kasım 10:00
+  assert.strictEqual(u[0].zaman.getMonth(), 10);
+  assert.strictEqual(u[0].zaman.getDate(), 3);
+  assert.strictEqual(u[0].zaman.getHours(), 10);
+  assert.strictEqual(u[0].kanal, 'ozel');
+  assert.match(u[0].govde, /aç/);
+});
+
+test('bütçe daralınca hatırlatma da öne gelir', () => {
+  const ayar = ayarKur({ kerahat: true, kerahatAraliklari: [
+    { ad: 'İşrak',  bas: 'gunes', basEk: 0,   son: 'gunes', sonEk: 45 },
+    { ad: 'İstiva', bas: 'ogle',  basEk: -45, son: 'ogle',  sonEk: 0 },
+    { ad: 'Gurub',  bas: 'aksam', basEk: -45, son: 'aksam', sonEk: 0 }] });
+  for (const k of Object.keys(ayar.vakit)) ayar.vakit[k] = { bildir: true, once: 10 };
+  const simdi = new Date(2026, 9, 6, 0, 0, 0);
+  const gun = bvGunButcesi(ayar);                 // günde 15 bildirim → 400 / 15 = 26 gün
+  assert.strictEqual(gun, 26);
+  const liste = bildirimListesiUret(ayar, otuzGun(simdi), simdi);
+  const u = kuyrukUyarisi(liste);
+  assert.strictEqual(u.length, 1);
+  assert.strictEqual(u[0].zaman.getTime(), new Date(2026, 9, 6 + gun - 2, 10, 0).getTime());
+  // kimlik çakışması yok
+  assert.strictEqual(new Set(liste.map(b => b.id)).size, liste.length);
+});
+
+test('hatırlatma sessiz saate düşerse sessiz kanala gider', () => {
+  const ayar = ayarKur({ sessiz: { bas: '09:00', son: '11:00' } });
+  ayar.vakit.ogle.bildir = true;
+  const simdi = new Date(2026, 9, 6, 0, 0, 0);
+  const u = kuyrukUyarisi(bildirimListesiUret(ayar, otuzGun(simdi), simdi));
+  assert.strictEqual(u[0].kanal, 'sessiz');
+});
+
+test('hiç bildirim yoksa hatırlatma da yok', () => {
+  const ayar = ayarKur();
+  const simdi = new Date(2026, 9, 6, 0, 0, 0);
+  assert.deepStrictEqual(bildirimListesiUret(ayar, otuzGun(simdi), simdi), []);
+});
+
+test('kısa tablo (7 günden az) için hatırlatma kurulmaz', () => {
+  const ayar = ayarKur();
+  ayar.vakit.ogle.bildir = true;
+  const liste = bildirimListesiUret(ayar, GUNLER, new Date(2026, 7, 11, 0, 0, 0));
+  assert.strictEqual(kuyrukUyarisi(liste).length, 0);
+});
+
+test('hatırlatma dahil toplam 400 sınırı aşılmaz (günde 16 bildirim)', () => {
+  const simdi = new Date(2026, 9, 6, 0, 0, 0);
+  const tablo = otuzGun(simdi);
+  const ayar = ayarKur({ kerahat: true, ramazanGunleri: Object.keys(tablo), kerahatAraliklari: [
+    { ad: 'İşrak',  bas: 'gunes', basEk: 0,   son: 'gunes', sonEk: 45 },
+    { ad: 'İstiva', bas: 'ogle',  basEk: -45, son: 'ogle',  sonEk: 0 },
+    { ad: 'Gurub',  bas: 'aksam', basEk: -45, son: 'aksam', sonEk: 0 }] });
+  for (const k of Object.keys(ayar.vakit)) ayar.vakit[k] = { bildir: true, once: k === 'yatsi' ? 0 : 10 };
+  // 6 vakit + 5 önce + 3 kerahat + sahur + iftar = 16 → 400/16 = 25 gün tam 400 ederdi
+  assert.ok(bvGunButcesi(ayar) * 16 + 1 <= 400);
+  const liste = bildirimListesiUret(ayar, tablo, simdi);
+  assert.ok(liste.length <= 400, 'toplam ' + liste.length);
+  assert.strictEqual(kuyrukUyarisi(liste).length, 1);
 });

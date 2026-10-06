@@ -25,9 +25,10 @@ const BV_TUR = {
   dua: 31,
   // kerahat + ki: ki 0'dan başlar ve üst sınır index.html'deki KERAHAT
   // sabitinin uzunluğu kadardır (bugün 3). Kod bunu sınırlamaz — ki'nin
-  // 60'ın altında kalması çağıranın sorumluluğudur, aksi halde kimlikler
-  // bir sonraki günün 0-99 bloğuna taşıp çakışır.
-  kerahat: 40
+  // 10'un altında kalması çağıranın sorumluluğudur, aksi halde kimlikler
+  // kuyruk hatırlatmasıyla (50) çakışır.
+  kerahat: 40,
+  kuyruk: 50       // kuyruk bitmeden "uygulamayı aç" hatırlatması
 };
 
 /** 'YYYY-MM-DD' + gece yarısından itibaren dakika -> yerel saatli Date.
@@ -80,6 +81,14 @@ const BV_HEDEF_BILDIRIM = 400;
 const BV_TABAN_GUN = 7;
 const BV_TAVAN_GUN = 30;
 
+/* Kuyruk yalnızca uygulama açılınca yeniden kurulur. Kullanıcı uygulamayı
+   kuyruk süresince hiç açmazsa bildirimler sessizce biterdi; sondan bir önceki
+   gün bunu söyleyen tek bir bildirim koyuyoruz. Uygulama açılınca kuyruk
+   baştan kurulduğu için bu hatırlatma da ileri kayar — normal kullanımda
+   hiç görünmez. */
+const BV_KUYRUK_SAAT = 10 * 60;
+const BV_KUYRUK_METIN = "Vakit bildirimleri yarından sonra duracak — sürmesi için Beş Vakit'i bir kez aç";
+
 /** Ayarlara göre kaç gün ileriye kuyruk kurulacağını hesaplar. */
 function bvGunButcesi(ayar) {
   if (!ayar) return 0;
@@ -100,7 +109,7 @@ function bvGunButcesi(ayar) {
   if (gunluk <= 0) return (ayar.cuma || ayar.dua) ? BV_TAVAN_GUN : 0;
 
   return Math.max(BV_TABAN_GUN,
-         Math.min(BV_TAVAN_GUN, Math.floor(BV_HEDEF_BILDIRIM / gunluk)));
+         Math.min(BV_TAVAN_GUN, Math.floor((BV_HEDEF_BILDIRIM - 1) / gunluk)));  // 1: kuyruk hatırlatması
 }
 
 function bildirimListesiUret(ayar, gunler, simdi) {
@@ -242,7 +251,24 @@ function bildirimListesiUret(ayar, gunler, simdi) {
     }
   });
 
-  return liste.filter(b => b.zaman.getTime() > simdi.getTime());
+  const gelecek = liste.filter(b => b.zaman.getTime() > simdi.getTime());
+
+  // Kısa tablolarda (yalnız testlerde olur; uygulama hep 30 gün verir)
+  // hatırlatma anlamsız: kuyruk zaten birkaç gün sonra bitiyor gibi görünür.
+  if (gelecek.length && anahtarlar.length >= BV_TABAN_GUN) {
+    const sira = anahtarlar.length - 2;
+    const zaman = bvZaman(anahtarlar[sira], BV_KUYRUK_SAAT);
+    if (zaman.getTime() > simdi.getTime()) {
+      gelecek.push({
+        id: sira * 100 + BV_TUR.kuyruk,
+        kanal: bvKanal('ozel', BV_KUYRUK_SAAT, ayar.sessiz),
+        baslik: BV_BASLIK,
+        govde: BV_KUYRUK_METIN,
+        zaman
+      });
+    }
+  }
+  return gelecek;
 }
 
 /* Hem tarayıcıda (script etiketiyle) hem Node'da (require ile) çalışsın. */
