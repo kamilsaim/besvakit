@@ -103,21 +103,36 @@ async function kaynakVakitleri(ilceId) {
     const t = isoTarih(g.MiladiTarihKisa);
     const v = [g.Imsak, g.Gunes, g.Ogle, g.Ikindi, g.Aksam, g.Yatsi].map(dk);
     if (!t || v.some(x => x === null)) continue;
-    satirlar.push({ t, v });
+    satirlar.push({ t, v, h: hicri(g.HicriTarihKisa) });
   }
   if (!satirlar.length) return null;
   satirlar.sort((a, b) => a.t.localeCompare(b.t));
 
   // Günler ardışık olmalı; değilse boşluğu atlamak yerine kayıt bozuk sayılır.
   const bas = satirlar[0].t;
-  const v = [];
+  const v = [], h = [];
   for (const s of satirlar) {
     const i = gunFarki(bas, s.t);
     if (i < 0 || i > 400) continue;
     v[i] = s.v;
+    h[i] = s.h;
   }
-  for (let i = 0; i < v.length; i++) if (!v[i]) return { bas, v: v.slice(0, i) };
-  return { bas, v };
+  let n = v.length;
+  for (let i = 0; i < v.length; i++) if (!v[i]) { n = i; break; }
+  // Hicri tarih Diyanet'in kendi takviminden: Ümmülkura ile ayın başı bir gün
+  // kayabiliyor (1447 Ramazanı Ümmülkura'da 18, Diyanet'te 19 Şubat). Bir gün
+  // bile eksikse hicri dizi hiç yazılmaz — uygulama o zaman hesaba düşer.
+  const hk = h.slice(0, n);
+  const hTam = hk.length === n && hk.every(Boolean);
+  return hTam ? { bas, v: v.slice(0, n), h: hk } : { bas, v: v.slice(0, n) };
+}
+
+/** 'G.A.YYYY' -> [gün, ay, yıl]. Bozuksa null. */
+function hicri(s) {
+  const m = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec((s || '').trim());
+  if (!m) return null;
+  const g = +m[1], a = +m[2], y = +m[3];
+  return (g >= 1 && g <= 30 && a >= 1 && a <= 12) ? [g, a, y] : null;
 }
 
 /* ---------------------------------------------------------------- ana akış */
@@ -195,7 +210,8 @@ async function main() {
       ilce: x.ilce.IlceID, ad: x.ilce.IlceAdi,
       il: x.sehir.SehirAdi, ulke: x.ulke.UlkeAdi,
       cekim: new Date().toISOString().slice(0, 10),
-      bas: v.bas, v: v.v
+      bas: v.bas, v: v.v,
+      ...(v.h ? { h: v.h } : {})
     };
     await fs.writeFile(path.join(HEDEF, x.ilce.IlceID + '.json'), JSON.stringify(kayit));
     dizin[x.ilce.IlceID] = { ad: x.ilce.IlceAdi, il: x.sehir.SehirAdi, ulke: x.ulke.UlkeAdi,

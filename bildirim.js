@@ -161,8 +161,11 @@ function bildirimListesiUret(ayar, gunler, simdi) {
     // burada çoğaltılmaz.
     if (ayar.kerahat) {
       (ayar.kerahatAraliklari || []).forEach((ker, ki) => {
-        const basDk = vakitler[BV_VAKIT_SIRA.indexOf(ker.bas)] + ker.basEk;
-        const sonDk = vakitler[BV_VAKIT_SIRA.indexOf(ker.son)] + ker.sonEk;
+        const basV = vakitler[BV_VAKIT_SIRA.indexOf(ker.bas)];
+        const sonV = vakitler[BV_VAKIT_SIRA.indexOf(ker.son)];
+        if (!basV || !sonV) return;            // 0 = eksik vakit (bkz. yukarı)
+        const basDk = basV + ker.basEk;
+        const sonDk = sonV + ker.sonEk;
         if (isNaN(basDk) || isNaN(sonDk)) return;
 
         liste.push({
@@ -219,7 +222,7 @@ function bildirimListesiUret(ayar, gunler, simdi) {
       const aksamDk = vakitler[BV_VAKIT_SIRA.indexOf('aksam')];
       const sahurOnce = +ayar.sahurOnce || 0;
 
-      if (sahurOnce > 0) {
+      if (sahurOnce > 0 && imsakDk) {
         liste.push({
           id: gunSira * 100 + BV_TUR.sahur,
           kanal: bvKanal('oruc', imsakDk - sahurOnce, ayar.sessiz),
@@ -229,7 +232,7 @@ function bildirimListesiUret(ayar, gunler, simdi) {
         });
       }
 
-      liste.push({
+      if (aksamDk) liste.push({
         id: gunSira * 100 + BV_TUR.iftar,
         kanal: bvKanal('oruc', aksamDk, ayar.sessiz),
         baslik: BV_BASLIK,

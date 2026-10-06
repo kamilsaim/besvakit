@@ -992,7 +992,7 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
    Vakitler cihazda hesaplanır; hiçbir sunucuya vakit sorulmaz.
    ========================================================== */
 const APP = 'Beş Vakit';
-const SURUM = '0.16.2';
+const SURUM = '0.17.0';
 const LOGO = 'logo-beyaz.png';
 const KABE = { lat: 21.4224779, lng: 39.8261722 };
 const VAKITLER = [
@@ -1022,21 +1022,37 @@ const YONTEMLER = {
   egypt:  { imsak:19.5, yatsi:17.5 },
   karachi:{ imsak:18, yatsi:18 }
 };
+/* 81 il merkezi — ad, enlem, boylam, rakım (m). GPS konumu en yakın il
+   merkezine bağlanır; Diyanet ilçesi de bu ile göre seçilir. */
 const SEHIRLER = [
   ['Konumumu kullan',null,null,null],
-  ['Adana',37.0000,35.3213,25],['Ankara',39.9334,32.8597,890],['Antalya',36.8969,30.7133,30],
-  ['Aydın',37.8560,27.8416,60],['Balıkesir',39.6484,27.8826,140],['Bursa',40.1826,29.0665,100],
-  ['Çanakkale',40.1553,26.4142,10],['Denizli',37.7765,29.0864,354],['Diyarbakır',37.9144,40.2306,675],
-  ['Elazığ',38.6810,39.2264,1067],['Erzurum',39.9000,41.2700,1890],['Eskişehir',39.7767,30.5206,792],
-  ['Gaziantep',37.0662,37.3833,850],['Hatay',36.2028,36.1600,85],['Isparta',37.7648,30.5566,1035],
+  ['Adana',37.0000,35.3213,25],['Adıyaman',37.7648,38.2786,670],['Afyonkarahisar',38.7507,30.5567,1034],
+  ['Ağrı',39.7191,43.0503,1640],['Aksaray',38.3687,34.0370,980],['Amasya',40.6499,35.8353,410],
+  ['Ankara',39.9334,32.8597,890],['Antalya',36.8969,30.7133,30],['Ardahan',41.1105,42.7022,1829],
+  ['Artvin',41.1828,41.8183,500],['Aydın',37.8560,27.8416,60],['Balıkesir',39.6484,27.8826,140],
+  ['Bartın',41.6344,32.3375,25],['Batman',37.8812,41.1351,540],['Bayburt',40.2552,40.2249,1550],
+  ['Bilecik',40.1451,29.9799,500],['Bingöl',38.8847,40.4939,1150],['Bitlis',38.4006,42.1095,1550],
+  ['Bolu',40.7350,31.6061,725],['Burdur',37.7203,30.2908,950],['Bursa',40.1826,29.0665,100],
+  ['Çanakkale',40.1553,26.4142,10],['Çankırı',40.6013,33.6134,750],['Çorum',40.5506,34.9556,800],
+  ['Denizli',37.7765,29.0864,354],['Diyarbakır',37.9144,40.2306,675],['Düzce',40.8438,31.1565,150],
+  ['Edirne',41.6771,26.5557,45],['Elazığ',38.6810,39.2264,1067],['Erzincan',39.7500,39.5000,1185],
+  ['Erzurum',39.9000,41.2700,1890],['Eskişehir',39.7767,30.5206,792],['Gaziantep',37.0662,37.3833,850],
+  ['Giresun',40.9128,38.3895,10],['Gümüşhane',40.4386,39.5086,1150],['Hakkari',37.5744,43.7408,1720],
+  ['Hatay',36.2028,36.1600,85],['Iğdır',39.9237,44.0450,850],['Isparta',37.7648,30.5566,1035],
   ['İstanbul',41.0082,28.9784,40],['İzmir',38.4237,27.1428,25],['Kahramanmaraş',37.5858,36.9371,568],
-  ['Kayseri',38.7312,35.4787,1050],['Kocaeli',40.8533,29.8815,100],['Konya',37.8746,32.4932,1016],
+  ['Karabük',41.2061,32.6204,280],['Karaman',37.1759,33.2287,1030],['Kars',40.6013,43.0975,1768],
+  ['Kastamonu',41.3887,33.7827,780],['Kayseri',38.7312,35.4787,1050],['Kilis',36.7184,37.1212,680],
+  ['Kırıkkale',39.8468,33.5153,740],['Kırklareli',41.7333,27.2167,200],['Kırşehir',39.1425,34.1709,980],
+  ['Kocaeli',40.8533,29.8815,100],['Konya',37.8746,32.4932,1016],['Kütahya',39.4167,29.9833,970],
   ['Malatya',38.3552,38.3095,950],['Manisa',38.6191,27.4289,71],['Mardin',37.3212,40.7245,1083],
-  ['Mersin',36.8000,34.6333,10],['Muğla',37.2153,28.3636,646],['Nevşehir',38.6939,34.6857,1224],
-  ['Ordu',40.9839,37.8764,10],['Rize',41.0201,40.5234,10],['Sakarya',40.7569,30.3783,31],
-  ['Samsun',41.2867,36.3300,15],['Şanlıurfa',37.1591,38.7969,518],['Sivas',39.7477,37.0179,1285],
-  ['Tokat',40.3167,36.5500,623],['Trabzon',41.0015,39.7178,10],['Van',38.4891,43.4089,1727],
-  ['Yozgat',39.8181,34.8147,1301],['Zonguldak',41.4564,31.7987,10]
+  ['Mersin',36.8000,34.6333,10],['Muğla',37.2153,28.3636,646],['Muş',38.9462,41.7539,1350],
+  ['Nevşehir',38.6939,34.6857,1224],['Niğde',37.9667,34.6833,1229],['Ordu',40.9839,37.8764,10],
+  ['Osmaniye',37.0742,36.2478,120],['Rize',41.0201,40.5234,10],['Sakarya',40.7569,30.3783,31],
+  ['Samsun',41.2867,36.3300,15],['Siirt',37.9333,41.9500,900],['Sinop',42.0231,35.1531,30],
+  ['Sivas',39.7477,37.0179,1285],['Şanlıurfa',37.1591,38.7969,518],['Şırnak',37.5164,42.4611,1400],
+  ['Tekirdağ',40.9781,27.5117,10],['Tokat',40.3167,36.5500,623],['Trabzon',41.0015,39.7178,10],
+  ['Tunceli',39.1079,39.5401,900],['Uşak',38.6823,29.4082,910],['Van',38.4891,43.4089,1727],
+  ['Yalova',40.6500,29.2667,10],['Yozgat',39.8181,34.8147,1301],['Zonguldak',41.4564,31.7987,10]
 ];
 
 /* ---------- ayarlar ---------- */
@@ -1234,9 +1250,16 @@ function vakitleriHesapla(tarih, ayar){
    sessizce astronomik hesaba düşülür.
    ========================================================== */
 let RESMI = null;
+let _diniOnbellek = null;   // dini günler listesi — hicri veri gelince sıfırlanır
+
+/* Elimizdeki veri aktif konumun ilçesine ait mi? Konum değişirken ya da
+   ağdan geç gelen bir yanıt yüzünden RESMI başka bir ilçede kalabilir;
+   o durumda başka bir yerin takvimini göstermektense hesaba düşülür. */
+const resmiGecerli = ()=>
+  !!(RESMI && A.resmi && A.ilce && RESMI.v && String(RESMI.ilce) === String(A.ilce));
 
 function resmiVakit(tarih){
-  if(!RESMI || !A.resmi || !RESMI.v) return null;
+  if(!resmiGecerli()) return null;
   const i = Math.round(
     (Date.parse(gunAnahtar(tarih) + 'T00:00:00Z') - Date.parse(RESMI.bas + 'T00:00:00Z')) / 86400000);
   const s = RESMI.v[i];
@@ -1246,28 +1269,176 @@ function resmiVakit(tarih){
   return o;
 }
 
-/** Tek giriş noktası: resmi veri varsa onu, yoksa hesabı döndürür. */
+/** Tek giriş noktası: resmi veri varsa onu, yoksa (hizalı) hesabı döndürür. */
 function vakitAl(tarih){
-  return resmiVakit(tarih) || vakitleriHesapla(tarih, A);
+  return resmiVakit(tarih) || hizaliHesap(tarih);
 }
 const resmiKullaniliyorMu = () => !!resmiVakit(new Date());
 
-async function resmiYukle(){
-  if(!A.resmi || !A.ilce){ RESMI = null; return; }
+/**
+ * Diyanet verisi ~32 gün; bildirim kuyruğu ve widget 30 gün ileriye bakıyor,
+ * yani son günler çoğu zaman verinin dışında kalıyor. Orada çıplak hesap
+ * bazı illerde ±5 dk sapıyor. Bunun yerine hesabı, verinin son yedi gününde
+ * ölçülen vakit başına farkla (medyan) hizalıyoruz — fark günden güne
+ * neredeyse sabit, çünkü kaynağı Diyanet'in temkin ve rakım değerleri.
+ */
+let _hiza = { anahtar:null, fark:null };
+function resmiFarki(){
+  if(!resmiGecerli()) return null;
+  const anahtar = RESMI.ilce + '|' + RESMI.bas + '|' + RESMI.v.length + '|' + A.lat + ',' + A.lng +
+                  '|' + A.rakim + '|' + A.yontem + '|' + A.mezhep;
+  if(_hiza.anahtar === anahtar) return _hiza.fark;
+  const ham = Object.assign({}, A, { duzeltmeAcik:false });   // düzeltme iki tarafta da yok
+  const n = RESMI.v.length, farklar = {};
+  VAKITLER.forEach(v => farklar[v.k] = []);
+  for(let i = Math.max(0, n - 7); i < n; i++){
+    const g = new Date(Date.parse(RESMI.bas + 'T00:00:00Z') + i * 86400000);
+    const h = vakitleriHesapla(new Date(g.getUTCFullYear(), g.getUTCMonth(), g.getUTCDate()), ham);
+    const s = RESMI.v[i];
+    VAKITLER.forEach((v, k) => { if(s && !isNaN(h[v.k])) farklar[v.k].push(s[k] - h[v.k]); });
+  }
+  const fark = {};
+  VAKITLER.forEach(v => {
+    const a = farklar[v.k].sort((x, y) => x - y);
+    const f = a.length ? a[Math.floor(a.length / 2)] : 0;
+    fark[v.k] = Math.abs(f) <= 30 ? f : 0;     // saçma bir fark ölçüldüyse hizalama yapma
+  });
+  _hiza = { anahtar, fark };
+  return fark;
+}
+function hizaliHesap(tarih){
+  const h = vakitleriHesapla(tarih, A);
+  const f = resmiFarki();
+  if(!f) return h;
+  const o = {};
+  VAKITLER.forEach(v => { o[v.k] = isNaN(h[v.k]) ? NaN : mod(h[v.k] + f[v.k], 1440); });
+  return o;
+}
+
+/* Önbellek ilçe başına ayrı tutulur. Eskiden tek anahtar vardı; konumlar
+   arasında geçince ana konumun verisi siliniyor, bildirimler hesaba düşüyordu. */
+const RESMI_ONEK = 'besvakit_resmi_';
+function resmiOnbellekOku(ilce){
+  if(!ilce) return null;
+  try{
+    const c = JSON.parse(localStorage.getItem(RESMI_ONEK + ilce) || 'null');
+    return c && String(c.ilce) === String(ilce) && Array.isArray(c.v) ? c : null;
+  }catch(e){ return null; }
+}
+/** Hiçbir konumun kullanmadığı ilçelerin önbelleğini siler. */
+function resmiOnbellekBuda(){
+  try{
+    const gerekli = new Set((A.konumlar || []).map(k => String(k.ilce)).concat(String(A.ilce)));
+    for(let i = localStorage.length - 1; i >= 0; i--){
+      const k = localStorage.key(i);
+      if(k && k.startsWith(RESMI_ONEK) && !gerekli.has(k.slice(RESMI_ONEK.length)))
+        localStorage.removeItem(k);
+    }
+  }catch(e){}
+}
+/* Eski tek anahtarlı önbelleği yeni biçime taşır — çevrimdışı açılış bozulmasın. */
+(function(){
   try{
     const c = JSON.parse(localStorage.getItem('besvakit_resmi') || 'null');
-    if(c && String(c.ilce) === String(A.ilce)) RESMI = c;      // önce önbellek: çevrimdışı da açılsın
+    if(c && c.ilce && Array.isArray(c.v) && !localStorage.getItem(RESMI_ONEK + c.ilce))
+      localStorage.setItem(RESMI_ONEK + c.ilce, JSON.stringify(c));
+    localStorage.removeItem('besvakit_resmi');
   }catch(e){}
+})();
+
+/** İlçe dosyasını indirip önbelleğe yazar. Başarısızsa null. */
+async function resmiIndir(ilce){
+  ilce = String(ilce);
   try{
-    const r = await fetch('vakitler/' + A.ilce + '.json', { cache:'no-cache' });
-    if(r.ok){
-      const d = await r.json();
-      if(d && d.bas && Array.isArray(d.v)){
-        RESMI = d;
-        try{ localStorage.setItem('besvakit_resmi', JSON.stringify(d)); }catch(e){}
-      }
-    }
-  }catch(e){ /* çevrimdışı — önbellek varsa o kullanılır */ }
+    const r = await fetch('vakitler/' + ilce + '.json', { cache:'no-cache' });
+    if(!r.ok) return null;
+    const d = await r.json();
+    if(!d || !d.bas || !Array.isArray(d.v) || String(d.ilce) !== ilce) return null;
+    try{ localStorage.setItem(RESMI_ONEK + ilce, JSON.stringify(d)); }catch(e){}
+    hicriKaydet(d);
+    resmiOnbellekBuda();
+    return d;
+  }catch(e){ return null; }   // çevrimdışı — önbellek varsa o kullanılır
+}
+
+async function resmiYukle(){
+  if(!A.resmi || !A.ilce){ RESMI = null; return; }
+  const ilce = String(A.ilce);
+  RESMI = resmiOnbellekOku(ilce);            // önce önbellek: çevrimdışı da açılsın
+  const d = await resmiIndir(ilce);
+  // Beklerken konum değişmiş olabilir: yanıt artık başka ilçeye aitse bırak.
+  if(d && String(A.ilce) === ilce && A.resmi) RESMI = d;
+}
+
+/** Kuyruk ve widget imzası için: hangi Diyanet verisiyle kuruldu. */
+const resmiOzet = ()=> resmiGecerli()
+  ? RESMI.ilce + ':' + RESMI.bas + ':' + RESMI.v.length + ':' + (RESMI.cekim || '')
+  : '-';
+
+/* ==========================================================
+   HİCRİ TAKVİM
+   Diyanet'in hicri takvimi Ümmülkura ile her ay örtüşmüyor: 1447 Ramazanı
+   Ümmülkura'da 18, Diyanet'te 19 Şubat 2026'da başladı. Kandiller, Ramazan
+   bildirimleri ve mübarek gün duaları bu tarihe bağlı olduğu için bir günlük
+   kayma doğrudan yanlış bildirim demek. Bu yüzden:
+   - verinin kapsadığı günlerde Diyanet'in kendi hicri tarihi (ilçe dosyasındaki
+     `h` dizisi; Türkiye'nin tamamında aynı) kullanılır,
+   - kapsam dışında Ümmülkura, son gün ölçülen kaymayla (±2 gün) kaydırılır.
+   ========================================================== */
+let HICRI = null;
+try{
+  const c = JSON.parse(localStorage.getItem('besvakit_hicri') || 'null');
+  if(c && c.bas && Array.isArray(c.h)) HICRI = c;
+}catch(e){}
+let _hicriKayma = null;
+
+function hicriKaydet(d){
+  if(!d || !Array.isArray(d.h) || !d.h.length || d.h.length !== d.v.length) return;
+  if(HICRI && HICRI.bas === d.bas && HICRI.h.length === d.h.length) return;
+  HICRI = { bas:d.bas, h:d.h };
+  _hicriKayma = null; _diniOnbellek = null;
+  try{ localStorage.setItem('besvakit_hicri', JSON.stringify(HICRI)); }catch(e){}
+}
+const hicriOzet = ()=> HICRI ? HICRI.bas + ':' + HICRI.h.length : '-';
+
+const _ummulkura = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura',
+  { day:'numeric', month:'numeric', year:'numeric' });
+function hicriUmmulkura(d){
+  const o = {};
+  _ummulkura.formatToParts(d).forEach(x => {
+    if(x.type!=='literal' && x.type!=='era') o[x.type] = parseInt(x.value,10);
+  });
+  return o;
+}
+function hicriResmi(d){
+  if(!HICRI) return null;
+  const i = Math.round((Date.parse(gunAnahtar(d) + 'T00:00:00Z') -
+                        Date.parse(HICRI.bas + 'T00:00:00Z')) / 86400000);
+  const h = HICRI.h[i];
+  return h ? { day:h[0], month:h[1], year:h[2] } : null;
+}
+/** Diyanet ile Ümmülkura arasındaki gün kayması — verinin son gününde ölçülür. */
+function hicriKayma(){
+  if(_hicriKayma !== null) return _hicriKayma;
+  _hicriKayma = 0;
+  if(!HICRI) return 0;
+  const son = HICRI.h.length - 1, h = HICRI.h[son];
+  const g = new Date(Date.parse(HICRI.bas + 'T00:00:00Z') + son * 86400000);
+  const yerel = new Date(g.getUTCFullYear(), g.getUTCMonth(), g.getUTCDate(), 12);
+  for(const k of [0, -1, 1, -2, 2]){
+    const x = new Date(yerel); x.setDate(x.getDate() + k);
+    const u = hicriUmmulkura(x);
+    if(u.day === h[0] && u.month === h[1] && u.year === h[2]){ _hicriKayma = k; break; }
+  }
+  return _hicriKayma;
+}
+function hicriParcala(d){
+  const r = hicriResmi(d);
+  if(r) return r;
+  const k = hicriKayma();
+  if(!k) return hicriUmmulkura(d);
+  const x = new Date(d); x.setDate(x.getDate() + k);
+  return hicriUmmulkura(x);
 }
 
 /* ==========================================================
@@ -1483,6 +1654,9 @@ function hicriYaz(d){
    ARAYÜZ
    ========================================================== */
 const $ = s => document.querySelector(s);
+/* Dışarıdan ya da kullanıcıdan gelen metin innerHTML'e girmeden önce. */
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g,
+  c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const $$ = s => [...document.querySelectorAll(s)];
 let bugunVakit = {}, siradaki = null, uyariVerildi = {}, uyanikKilit = null, sonTazeleme = null;
 
@@ -1773,7 +1947,8 @@ function kaynakNotuYaz(){
     !A.resmi ? 'Diyanet takvimi kapalı — vakitler cihazda hesaplanıyor (±1 dk sapabilir).'
     : !A.ilce ? 'Vakitler cihazda hesaplanıyor (±1 dk sapabilir). Birebir Diyanet takvimi için ' +
                 '<b>Ayarlar → Diyanet takvimi</b>’nden ilçeni seç.'
-    : 'Bu tarih Diyanet takviminin kapsamı dışında; vakitler cihazda hesaplanıyor (±1 dk sapabilir).';
+    : resmiFarki() ? 'Bu tarih Diyanet takviminin kapsamı dışında; vakitler cihazda hesaplanıp takvimin son günlerine hizalanıyor.'
+    : 'Bu tarih için Diyanet verisi yok; vakitler cihazda hesaplanıyor (±1 dk sapabilir).';
 }
 
 function aktifVakit(dk){
@@ -1918,7 +2093,8 @@ function imsakiyeCiz(){
 }
 
 /* ---------- dini günler ve geceler ----------
-   Hicri tarihler Ümmülkura takviminden (Intl) çözülür; hesap yine cihazda yapılır.
+   Hicri tarihler hicriParcala'dan gelir: veri kapsamında Diyanet'in takvimi,
+   ötesinde ona hizalanmış Ümmülkura (bkz. HİCRİ TAKVİM).
    Kandiller gece ibadeti olduğu için ilgili hicri günün bir önceki akşamına yazılır. */
 const DINI = [
   { ad:'Üç Ayların Başlangıcı', alt:'Recep ayı girer',            ay:7,  gun:1,  ikon:'◈' },
@@ -1935,15 +2111,7 @@ const DINI = [
   { ad:'Aşure Günü',            alt:'10 Muharrem',                ay:1,  gun:10, ikon:'◈' },
   { ad:'Mevlid Kandili',        alt:'12 Rebiülevvel gecesi',      ay:3,  gun:12, gece:true, ikon:'✦' }
 ];
-let _diniOnbellek = null;
 
-function hicriParcala(d){
-  const p = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura',
-    { day:'numeric', month:'numeric', year:'numeric' }).formatToParts(d);
-  const o = {};
-  p.forEach(x => { if(x.type!=='literal' && x.type!=='era') o[x.type] = parseInt(x.value,10); });
-  return o;
-}
 const gunBasi = d => { const x = new Date(d); x.setHours(0,0,0,0); return x; };
 
 function diniGunListesi(){
@@ -2449,7 +2617,7 @@ function tesbihCiz(){
   const liste = zikirListesi();
   const z = liste[ZIKIR.secili] || liste[0];
   $('#zikirSec').innerHTML = liste.map((x,i)=>
-    `<button data-zikir="${i}" class="${i===ZIKIR.secili?'acik':''} ${i>=ZIKIRLER.length?'ozel':''}">${x.ad}</button>`).join('');
+    `<button data-zikir="${i}" class="${i===ZIKIR.secili?'acik':''} ${i>=ZIKIRLER.length?'ozel':''}">${esc(x.ad)}</button>`).join('');
   $$('[data-zikir]').forEach(b => b.onclick = ()=>{
     const i = +b.dataset.zikir;
     if(i >= ZIKIRLER.length && i === ZIKIR.secili){
@@ -2461,7 +2629,7 @@ function tesbihCiz(){
     }
     zikirKaydet(); tesbihCiz();
   });
-  $('#tesbihZikir').innerHTML = `<b>${z.ad}</b><em>${z.anlam}</em>`;
+  $('#tesbihZikir').innerHTML = `<b>${esc(z.ad)}</b><em>${esc(z.anlam)}</em>`;
   $('#tesbihSayi').textContent = ZIKIR.sayac;
   $('#tesbihHedef').textContent = z.hedef ? 'hedef ' + z.hedef : 'serbest';
   const bugunZikir = ZIKIR.gunluk[gunAnahtar(new Date())] || 0;
@@ -2525,7 +2693,7 @@ function zikirIstatistikCiz(){
   }
   $('#zikirIstKart').innerHTML = satirlar.map(x=>`
     <div class="zikir-satir ${x.ad===z.ad?'acik':''}">
-      <div class="ad">${x.ad}<em>${x.anlam}</em></div>
+      <div class="ad">${esc(x.ad)}<em>${esc(x.anlam)}</em></div>
       <div class="zikir-sayi"><b style="color:var(--cini)">${bugun[x.ad]||0}</b><span>bugün</span></div>
       <div class="zikir-sayi"><b style="color:var(--pirinc)">${toplam[x.ad]||0}</b><span>toplam</span></div>
     </div>`).join('') +
@@ -2896,8 +3064,8 @@ function bildirimAyari(){
    vakitler sayfasında başka bir konuma kaydırmışken bile. Aynayı geçici olarak
    0. konuma alıp fn'i çalıştırır, sonra geri koyar. Aktif konum 0 değilse
    elimizdeki RESMI (Diyanet) verisi aktif konuma ait olduğu için geçici olarak
-   devre dışı bırakılır; ana konuma dönülünce imza değişir ve kuyruk Diyanet
-   verisiyle yeniden kurulur. */
+   ana konumun ilçe önbelleğiyle değiştirilir — bildirimler başka konumdayken
+   de Diyanet takvimiyle kurulur. */
 function anaKonumdaCalistir(fn){
   if(!A.konumlar || A.aktifKonum === 0) return fn();
   konumSenkronla();
@@ -2905,7 +3073,8 @@ function anaKonumdaCalistir(fn){
   const yedekAktif = A.aktifKonum, yedekResmi = RESMI;
   const ana = A.konumlar[0];
   KONUM_ALANLARI.forEach(f => A[f] = ana[f]);
-  A.aktifKonum = 0; RESMI = null;
+  A.aktifKonum = 0;
+  RESMI = (ana.resmi && ana.ilce) ? resmiOnbellekOku(ana.ilce) : null;
   try{ return fn(); }
   finally{
     KONUM_ALANLARI.forEach(f => A[f] = yedek[f]);
@@ -2932,7 +3101,8 @@ function bildirimImza(){
     '|' + (A.dua?1:0) + '|' + (A.duaSaat||'09:00') +
     '|' + (A.ramazanMod||'') +
     '|' + A.sehir + '|' + A.lat.toFixed(4) + ',' + A.lng.toFixed(4) +
-    '|' + A.rakim + '|' + A.yontem + '|' + A.mezhep + '|' + (A.temkin?1:0) +
+    '|' + A.rakim + '|' + A.yontem + '|' + A.mezhep +
+    '|' + (A.resmi?1:0) + '|' + A.ilce + '|' + resmiOzet() + '|' + hicriOzet() +
     '|' + (A.duzeltmeAcik?1:0) + '|' + VAKITLER.map(v=>A.duzeltme[v.k]).join(',');
 }
 
@@ -3010,16 +3180,27 @@ async function bildirimKur(){
 }
 
 let _widgetSonYazim = '';
+/* Widget da bildirimler gibi ANA konumu gösterir — vakitler sayfasında en son
+   hangi konuma kaydırıldıysa onu değil. */
 async function widgetVeriYaz(){
   const P = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Preferences;
   if(!P) return;
+  const veri = anaKonumdaCalistir(widgetVerisi);
+  if(!veri) return;
+  try{
+    await P.set({ key:'bv_widget', value: JSON.stringify(veri.deger) });
+    _widgetSonYazim = veri.imza;
+  }catch(e){}
+}
+function widgetVerisi(){
   const bugun = new Date();
   // aynı gün ve aynı ayarlarla ikinci kez yazma
   const imza = gunAnahtar(bugun) + '|' + A.sehir + '|' + A.lat.toFixed(4) + ',' + A.lng.toFixed(4) +
-               '|' + A.rakim + '|' + A.yontem + '|' + A.mezhep + '|' + (A.temkin?1:0) +
+               '|' + A.rakim + '|' + A.yontem + '|' + A.mezhep +
+               '|' + (A.resmi?1:0) + '|' + A.ilce + '|' + resmiOzet() + '|' + hicriOzet() +
                '|' + A.ramazanMod +
                '|' + (A.duzeltmeAcik?1:0) + '|' + VAKITLER.map(v=>A.duzeltme[v.k]).join(',');
-  if(imza === _widgetSonYazim) return;
+  if(imza === _widgetSonYazim) return null;
 
   const gunler = {}, hicri = {};
   for(let i=0; i<30; i++){
@@ -3031,13 +3212,10 @@ async function widgetVeriYaz(){
     // tarafında var, Java'daki karşılığı başka bir gün verebilirdi.
     hicri[k] = hicriYaz(d);
   }
-  try{
-    await P.set({ key:'bv_widget', value: JSON.stringify({
-      sehir: A.sehir, yazan: gunAnahtar(bugun), gunler, hicri,
-      ramazan: ramazanGunleri()
-    })});
-    _widgetSonYazim = imza;
-  }catch(e){}
+  return { imza, deger: {
+    sehir: A.sehir, yazan: gunAnahtar(bugun), gunler, hicri,
+    ramazan: ramazanGunleri()
+  }};
 }
 
 /* ---------- günü tazele ---------- */
@@ -3384,9 +3562,12 @@ function leafletYukle(){
     if(window.L) return res();
     const css = document.createElement('link');
     css.rel='stylesheet'; css.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    // Bütünlük özeti: CDN'deki dosya değiştirilirse tarayıcı yüklemeyi reddeder.
+    css.integrity='sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY='; css.crossOrigin='';
     document.head.appendChild(css);
     const js = document.createElement('script');
     js.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    js.integrity='sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo='; js.crossOrigin='';
     js.onload=res; js.onerror=()=>rej(new Error('Leaflet yüklenemedi'));
     document.head.appendChild(js);
   });
@@ -3496,7 +3677,7 @@ function camileriYaz(liste){
   $('#camiListe').innerHTML = liste.map((c,i)=>`
     <button class="cami" data-i="${i}">
       <div class="cami-yon" style="transform:rotate(${c.aci.toFixed(0)}deg)">↑</div>
-      <div class="cami-ad">${c.ad}<em>${yonAdi(c.aci)} · ${Math.round(c.uzak/70)} dk yürüyüş</em></div>
+      <div class="cami-ad">${esc(c.ad)}<em>${yonAdi(c.aci)} · ${Math.round(c.uzak/70)} dk yürüyüş</em></div>
       <div class="cami-uzak">${c.uzak<1000 ? Math.round(c.uzak)+' m' : (c.uzak/1000).toFixed(1)+' km'}</div>
     </button>`).join('');
   $$('#camiListe .cami').forEach(el => el.onclick = ()=>{
@@ -3509,7 +3690,7 @@ function camileriYaz(liste){
   if(harita){
     camiKatman.clearLayers();
     liste.forEach(c => L.circleMarker([c.lat,c.lng], {radius:5,color:'#22B2AE',weight:2,fillColor:'#0A0E1C',fillOpacity:1})
-      .bindTooltip(c.ad).addTo(camiKatman));
+      .bindTooltip(esc(c.ad)).addTo(camiKatman));
   }
 }
 const kutu = m => `<div style="padding:18px 16px;color:var(--hayalet);font-size:13px">${m}</div>`;
@@ -3524,8 +3705,11 @@ function ayarlariKur(){
   sec.onchange = ()=>{
     const s = SEHIRLER.find(x=>x[0]===sec.value);
     if(!s[1]){ A.otoKonum = true; kaydet(); konumBul(); return; }
+    const degisti = A.sehir !== s[0];
     A.otoKonum=false; A.sehir=s[0]; A.lat=s[1]; A.lng=s[2]; A.rakim=s[3];
     kaydet(); alanlariDoldur(); gunuTazele(); toast(s[0]+' seçildi');
+    // Eskiden yalnız koordinat değişiyor, Diyanet ilçesi eski şehirde kalıyordu.
+    ilceEslestir(s[0], degisti);
   };
   $('#enlem').onchange = e => { A.lat = +e.target.value; A.otoKonum=false; kaydet(); gunuTazele(); };
   $('#boylam').onchange = e => { A.lng = +e.target.value; A.otoKonum=false; kaydet(); gunuTazele(); };
@@ -3785,14 +3969,14 @@ async function yerleriKur(){
   const iller = (tr.sehirler || []).slice().sort((a,b)=> a.ad.localeCompare(b.ad,'tr'));
 
   ilSec.innerHTML = '<option value="">Seç…</option>' +
-    iller.map(s => `<option value="${s.id}">${s.ad}</option>`).join('');
+    iller.map(s => `<option value="${esc(s.id)}">${esc(s.ad)}</option>`).join('');
   if(A.resmiIl) ilSec.value = A.resmiIl;
 
   const ilceleriDoldur = ()=>{
     const il = iller.find(s => String(s.id) === String(ilSec.value));
     const liste = (il ? il.ilceler : []).slice().sort((a,b)=> a.ad.localeCompare(b.ad,'tr'));
     ilceSec.innerHTML = liste.length
-      ? '<option value="">Seç…</option>' + liste.map(i => `<option value="${i.id}">${i.ad}</option>`).join('')
+      ? '<option value="">Seç…</option>' + liste.map(i => `<option value="${esc(i.id)}">${esc(i.ad)}</option>`).join('')
       : '<option value="">Önce il seç</option>';
     if(A.ilce) ilceSec.value = A.ilce;
   };
@@ -3809,33 +3993,65 @@ async function yerleriKur(){
   };
   resmiDurumYaz();
 }
+/* Türkçe büyük harfe çevirip aksanları atar: 'Muğla' ile 'MUĞLA' eşleşsin.
+   Eskiden küçük ğ/ü/ş/ö/ç dönüştürülmüyordu; Eskişehir, Muğla, Nevşehir gibi
+   iller hiç eşleşmiyor, eski ilçenin takvimi kalıyordu. */
+const trSade = s => String(s || '').toLocaleUpperCase('tr').replace(/İ/g,'I')
+  .replace(/Ş/g,'S').replace(/Ğ/g,'G').replace(/Ü/g,'U').replace(/Ö/g,'O').replace(/Ç/g,'C');
+
+/** İlçeyi bırakıp hesaba düşer — başka bir yerin takvimini göstermekten iyidir. */
+function ilceBirak(){
+  if(!A.ilce && !A.resmiIl) return false;
+  A.ilce = null; A.resmiIl = null; kaydet();
+  RESMI = null;
+  return true;
+}
+
 /**
- * GPS ile bulunan şehri Diyanet ilçesine bağlar (il merkezi).
- * Böylece kullanıcı ayarlara hiç girmeden resmi takvimi görür.
- * Yalnızca kullanıcı elle bir ilçe seçmemişse ya da şehir değiştiyse çalışır.
+ * Şehri Diyanet ilçesine bağlar (il merkezi), böylece kullanıcı ayarlara
+ * hiç girmeden resmi takvimi görür.
+ * - Seçili ilçe zaten o ilin içindeyse dokunulmaz: elle seçilen ilçe korunur.
+ * - Şehir hiçbir ile eşleşmiyorsa (yurt dışı ya da il merkezlerinden uzak)
+ *   ilçe bırakılır. Eskiden eski ilçe — varsayılan olarak Kayseri — kalıyor,
+ *   örneğin Edirne'deki kullanıcıya Kayseri'nin vakitleri gösteriliyordu.
+ * - sehirDegisti: liste indirilemezse (çevrimdışı) eski ilçe yine bırakılır.
  */
-async function ilceEslestir(sehirAdi){
+async function ilceEslestir(sehirAdi, sehirDegisti){
   if(!A.resmi || !sehirAdi) return;
   if(!YERLER){
     try{
       const r = await fetch('vakitler/yerler.json', { cache:'no-cache' });
       YERLER = r.ok ? await r.json() : null;
-    }catch(e){ return; }
+    }catch(e){ YERLER = null; }
   }
-  if(!YERLER) return;
+  if(!YERLER){
+    if(sehirDegisti && ilceBirak()){ gunuTazele(); resmiDurumYaz(); }
+    return;
+  }
   const tr = YERLER.find(u => String(u.id) === '2') || YERLER[0];
-  const sadelestir = s => s.replace(/İ/g,'I').replace(/ı/g,'i').replace(/Ş/g,'S')
-    .replace(/Ğ/g,'G').replace(/Ü/g,'U').replace(/Ö/g,'O').replace(/Ç/g,'C').toUpperCase();
-  const hedef = sadelestir(sehirAdi);
-  const il = (tr.sehirler || []).find(s => sadelestir(s.ad) === hedef);
-  if(!il) return;
-  const merkez = (il.ilceler || []).find(i => sadelestir(i.ad) === hedef) || (il.ilceler || [])[0];
-  if(!merkez || String(merkez.id) === String(A.ilce)) return;
+  const hedef = trSade(sehirAdi);
+  const il = (tr.sehirler || []).find(s => trSade(s.ad) === hedef);
+  if(!il){
+    if(ilceBirak()){
+      gunuTazele(); resmiDurumYaz();
+      if($('#resmiIl')) yerleriKur();
+      toast('Bu konum için Diyanet takvimi yok — vakitler cihazda hesaplanıyor');
+    }
+    return;
+  }
+  const ilceler = il.ilceler || [];
+  if(ilceler.some(i => String(i.id) === String(A.ilce))){
+    if(String(A.resmiIl) !== String(il.id)){ A.resmiIl = String(il.id); kaydet(); }
+    return;
+  }
+  const merkez = ilceler.find(i => trSade(i.ad) === hedef) || ilceler[0];
+  if(!merkez) return;
 
   A.resmiIl = String(il.id); A.ilce = String(merkez.id); kaydet();
   RESMI = null;
   await resmiYukle();
   gunuTazele();
+  resmiDurumYaz();
   if($('#resmiIl')) yerleriKur();
   if(resmiKullaniliyorMu()) toast(il.ad + ' Diyanet takvimi yüklendi');
 }
@@ -3848,7 +4064,7 @@ function resmiDurumYaz(){
   if(resmiKullaniliyorMu()){
     const son = RESMI && RESMI.v ? RESMI.v.length : 0;
     const bit = new Date(Date.parse(RESMI.bas + 'T00:00:00Z') + (son - 1) * 86400000);
-    el.innerHTML = `<b style="color:var(--cini)">Etkin</b> — ${RESMI.ad} · ${son} günlük takvim, ` +
+    el.innerHTML = `<b style="color:var(--cini)">Etkin</b> — ${esc(RESMI.ad)} · ${son} günlük takvim, ` +
                    `${bit.getDate()} ${AYLAR[bit.getMonth()]} tarihine kadar.`;
   }else{
     el.textContent = 'Bu tarih için veri yok — cihazdaki hesap kullanılıyor.';
@@ -3895,15 +4111,24 @@ function konumBul(){
   toast('Konum alınıyor…');
   navigator.geolocation.getCurrentPosition(p=>{
     gpsYuvasiniHazirla();
-    A.aktifKonum = 0;
+    // Yalnızca indisi değiştirmek yetmez: ayna (A.ilce, A.resmiIl...) önceki
+    // aktif konumda kalır ve kaydet() onu GPS konumunun üstüne yazardı.
+    konumSec(0);
+    const eskiSehir = A.sehir;
     A.lat = +p.coords.latitude.toFixed(5);
     A.lng = +p.coords.longitude.toFixed(5);
     if(p.coords.altitude != null) A.rakim = Math.max(0, Math.round(p.coords.altitude));
     A.otoKonum = true; A.sehir = 'Konumum';
     const y = SEHIRLER.slice(1).map(s=>[s[0], mesafeKm(A.lat,A.lng,s[1],s[2])]).sort((a,b)=>a[1]-b[1])[0];
-    if(y && y[1] < 60) A.sehir = y[0];
+    // 81 il merkezinin hepsi listede; Türkiye içinde en uzak nokta bile bir
+    // merkeze 100 km'den yakın. Ötesi yurt dışı sayılır.
+    if(y && y[1] < 100) A.sehir = y[0];
+    const degisti = A.sehir !== eskiSehir;
+    if(degisti && A.sehir === 'Konumum') ilceBirak();
+    // Başka bir konumdan GPS'e dönüldüyse RESMI hâlâ o konumun ilçesinde.
+    if(!resmiGecerli() && A.resmi && A.ilce) RESMI = resmiOnbellekOku(A.ilce);
     kaydet(); alanlariDoldur(); gunuTazele(); toast(A.sehir + ' · konum güncellendi');
-    ilceEslestir(A.sehir);
+    ilceEslestir(A.sehir, degisti);
     if(typeof konumlariCiz === 'function') konumlariCiz();
   }, err=>{
     toast('Konum alınamadı — şehri elle seçebilirsin');
@@ -3943,6 +4168,11 @@ function baslat(){
   kaydirmaKur();
   // Resmi takvim önbellekten anında, ağdan gelince tazelenir.
   resmiYukle().then(()=>{ gunuTazele(); resmiDurumYaz(); });
+  // Başka bir konumdayken açıldıysa bildirim ve widget'ın kullandığı ana konum
+  // önbelleği de tazelensin; imza değişeceği için kuyruk yeniden kurulur.
+  const ana = A.konumlar && A.konumlar[0];
+  if(A.aktifKonum !== 0 && ana && ana.resmi && ana.ilce && String(ana.ilce) !== String(A.ilce))
+    resmiIndir(ana.ilce).then(d=>{ if(d){ widgetVeriYaz(); bildirimKur(); } });
   $('#surumYazi').textContent = SURUM;
   katlamaKur('#imsakiyeBaslik', '#imsakiyeKart', 'imsakiyeAcik', imsakiyeCiz);
   katlamaKur('#diniBaslik', '#diniKart', 'diniAcik', diniGunleriCiz);

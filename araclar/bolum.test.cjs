@@ -84,7 +84,7 @@ function bolumDenetle(govde) {
 }
 
 const SAYFALAR = [
-  ['sayfa-vakit', 7],
+  ['sayfa-vakit', 8],   // ay durumu ayrı bölüm (0bfc05c)
   ['sayfa-kible', 4],
   ['sayfa-ibadet', 8],
   ['sayfa-ayar', 8]

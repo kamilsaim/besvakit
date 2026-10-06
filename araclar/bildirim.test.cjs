@@ -585,3 +585,22 @@ test('yalnızca dua açıkken bütçe tavan gün olur', () => {
   assert.strictEqual(bvGunButcesi(ayarKur({ dua: true })), 30);
   assert.strictEqual(bvGunButcesi(ayarKur()), 0);
 });
+
+/* 0, "hesaplanamadı" işaretidir (bkz. bildirimGunTablosu). Kerahat ve Ramazan
+   bildirimleri de bu işareti gerçek gece yarısı sanmamalı. */
+const EKSIK = { '2026-08-12': [0, 0, 769, 999, 0, 0] };
+
+test('eksik güneş vaktiyle kerahat bildirimi üretilmez', () => {
+  const ayar = ayarKur({
+    kerahat: true,
+    kerahatAraliklari: [{ ad: 'Sabah', bas: 'gunes', basEk: 0, son: 'gunes', sonEk: 45 }]
+  });
+  const liste = bildirimListesiUret(ayar, EKSIK, new Date(2026, 7, 11, 0, 0, 0));
+  assert.strictEqual(liste.length, 0);
+});
+
+test('eksik imsak ve akşam vaktiyle sahur/iftar bildirimi üretilmez', () => {
+  const ayar = ayarKur({ ramazanGunleri: ['2026-08-12'], sahurOnce: 45 });
+  const liste = bildirimListesiUret(ayar, EKSIK, new Date(2026, 7, 11, 0, 0, 0));
+  assert.strictEqual(liste.length, 0);
+});

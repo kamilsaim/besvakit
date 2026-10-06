@@ -9,7 +9,7 @@
 [**→ Tarayıcıda aç**](https://kamilsaim.github.io/besvakit/) &nbsp;·&nbsp; [**→ Google Play**](https://play.google.com/store/apps/details?id=com.kamilsaim.besvakit)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-yayında-22B2AE?style=flat-square&logo=googleplay&logoColor=white)](https://play.google.com/store/apps/details?id=com.kamilsaim.besvakit)
-![sürüm](https://img.shields.io/badge/sürüm-0.16.2-22B2AE?style=flat-square)
+![sürüm](https://img.shields.io/badge/sürüm-0.17.0-22B2AE?style=flat-square)
 ![bağımlılık](https://img.shields.io/badge/bağımlılık-yok-D8A93C?style=flat-square)
 ![tek dosya](https://img.shields.io/badge/tek%20dosya-HTML-080C18?style=flat-square)
 
@@ -107,6 +107,47 @@ kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasın�
 Tam metin: [**Gizlilik Politikası**](https://kamilsaim.github.io/besvakit/gizlilik.html)
 
 ## Sürüm geçmişi
+
+### 0.17.0
+- **GPS konumu yanlış ilin Diyanet takvimine bağlanıyordu.** Konum, listedeki
+  39 şehirden birine 60 km'den uzaksa "Konumum" adını alıyor, ilçe eşleşmiyor
+  ve önceki ilçe — varsayılan olarak Kayseri — kalıyordu. Edirne, Bolu,
+  Kastamonu, Kars, Hakkari gibi illerde kullanıcı başka bir ilin vakitlerini
+  görüyordu (Edirne'de ~35 dk fark), üstelik "Diyanet takvimi etkin" yazısıyla.
+  Şehir listesi artık **81 il merkezinin tamamı**; konum en yakın il merkezine
+  bağlanıyor, Türkiye dışındaysa ilçe bırakılıp hesaba düşülüyor. Uygulama,
+  takvimin aktif konumun ilçesine ait olduğunu her okumada denetliyor.
+- **Eskişehir, Muğla, Nevşehir, Kahramanmaraş gibi illerde ilçe hiç eşleşmiyordu.**
+  Harf sadeleştirme küçük ğ/ü/ş/ö/ç'yi çevirmediği için "Muğla" ile "MUĞLA"
+  aynı sayılmıyordu.
+- **Ayarlardan şehir seçmek Diyanet ilçesini değiştirmiyordu.** Yalnızca
+  koordinat değişiyor, vakitler eski şehrin takviminden gelmeye devam ediyordu.
+  Elle seçilmiş bir ilçe aynı ilin içindeyse artık korunuyor.
+- **Bildirim kuyruğu ve widget yanlış veriyle takılı kalabiliyordu.** Kuyruğun
+  ne zaman yeniden kurulacağını belirleyen imzada ilçe ve Diyanet verisi
+  yoktu: ilçe değişince, Diyanet anahtarı açılıp kapanınca ya da ilk
+  kurulumda veri ağdan gelince kuyruk o gün yenilenmiyordu.
+- **Çoklu konumda bildirimler hesaba düşüyordu.** Diyanet önbelleği tek bir
+  ilçeyi tutuyordu; başka konuma kaydırınca ana konumun verisi siliniyor,
+  bildirimler hesapla kuruluyordu. Önbellek artık ilçe başına. **Widget da
+  bildirimler gibi ana konumu gösteriyor** — en son kaydırılan konumu değil.
+- **Hicri takvim Diyanet'e göre.** Ümmülkura takvimi bazı aylarda Diyanet'ten
+  bir gün kayıyor: 1447 Ramazanı Ümmülkura'da 18, Diyanet'te 19 Şubat'ta
+  başladı. Kandiller, Ramazan bildirimleri ve mübarek gün duaları bu yüzden
+  bir gün erken çıkabiliyordu. Artık Diyanet'in kendi hicri tarihi veriyle
+  birlikte çekiliyor; veri dışındaki günlerde Ümmülkura, ölçülen kaymayla
+  düzeltiliyor.
+- **Veri bitince hesap Diyanet'e hizalanıyor.** Bildirim kuyruğu ve widget 30
+  gün ileriye bakıyor, veri ise ~32 gün ve geriden başlıyor; son günler
+  hesaba düşüyordu ve İstanbul, Antalya, Trabzon'da güneş/akşam 5–6 dk
+  sapıyordu. Hesap artık verinin son yedi günündeki farkla hizalanıyor:
+  örneklem dışı sınamada en büyük sapma 6 dk'dan 1 dk'ya indi.
+- Cami listesinde OpenStreetMap'ten gelen adlar kaçışsız sayfaya yazılıyordu;
+  kötü niyetli bir ad sayfada kod çalıştırabilirdi. Harita kütüphanesi de
+  artık bütünlük özetiyle (SRI) yükleniyor.
+- Eksik vakit işareti (0) kerahat ve iftar/sahur bildirimlerinde gece yarısı
+  sanılıyordu (yalnız kutup bölgelerinde olası).
+- Otomatik çekim, önceki çekime göre %5'ten fazla ilçe kaybederse commit'lemiyor.
 
 ### Google Play (9 Eylül 2026)
 - **Uygulama kapalı testten çıkıp Google Play'de yayına alındı.**

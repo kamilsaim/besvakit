@@ -50,13 +50,20 @@ jobs:
       - name: Değişikliği doğrula
         run: |
           test -f vakitler/dizin.json || { echo "dizin.json yok, çekim başarısız"; exit 1; }
-          node -e "
+          # Önceki çekimin ilçe sayısı: kaynak yarım yanıt verdiyse (868 yerine
+          # 150 gibi) bunu fark etmek için mutlak bir eşik yetmiyor.
+          ONCEKI=$(git show HEAD:vakitler/dizin.json 2>/dev/null | node -e "
+            let s=''; process.stdin.on('data',c=>s+=c).on('end',()=>{
+              try{ console.log(JSON.parse(s).ilceSayisi || 0) }catch(e){ console.log(0) } })")
+          ONCEKI="$ONCEKI" node -e "
             const d = require('./vakitler/dizin.json');
-            if (!d.ilceSayisi || d.ilceSayisi < 100) {
-              console.error('beklenenden az ilçe:', d.ilceSayisi);
+            const onceki = +process.env.ONCEKI || 0;
+            const alt = Math.max(100, Math.floor(onceki * 0.95));
+            if (!d.ilceSayisi || d.ilceSayisi < alt) {
+              console.error('beklenenden az ilçe:', d.ilceSayisi, '(önceki', onceki + ', alt sınır', alt + ')');
               process.exit(1);
             }
-            console.log('doğrulandı:', d.ilceSayisi, 'ilçe,', d.cekim);
+            console.log('doğrulandı:', d.ilceSayisi, 'ilçe (önceki', onceki + '),', d.cekim);
           "
 
       - name: Commit'le ve push'la
