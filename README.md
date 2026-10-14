@@ -27,14 +27,15 @@ olmadan da, kaynak kapansa da çalışır. Anahtar yok, hesap yok, veri dışar�
 | | |
 |---|---|
 | **Vakitler** | Altı vakit, canlı geri sayım, gün şeridi, aylık imsakiye, kerahat vakitleri |
-| **Ramazan** | İftar ve sahur geri sayımı, gün sayacı, oruç takibi |
+| **Ramazan** | İftar ve sahur geri sayımı, gün sayacı, oruç takibi; iPhone'da kilit ekranı / Dinamik Ada iftar sayacı |
 | **Dini günler** | Kandiller, bayramlar, üç aylar, ay evresi + doğuş/batış saatleri — hicri takvimden otomatik |
-| **Kıble** | Sekmeye girince başlayan pusula, kalibrasyon, uydu haritasında kıble hattı |
+| **Kıble** | Sekmeye girince başlayan pusula, kalibrasyon, uydu haritasında kıble hattı — nokta sürüklenip ev içinde düzeltilebilir, hatırlanır |
 | **İbadet** | Namaz takibi, seri gün, aylık istatistik, kaza sayacı, zikirmatik (tesbih seti, özel zikir), Esmâ-ül Hüsnâ, Nasûh Tövbesi takibi |
 | **Cuma** | Cuma hatırlatması, Kehf Suresi uyarısı, salâvat sayacı |
 | **Mübarek gün duaları** | Muharrem, Aşûre, Safer, Receb, Regaib, Mirac, Berat, Kadir, iftar, arefe, bayram gecesi, senenin sonu, cuma — o zaman girince kendiliğinden çıkar ve hatırlatır |
 | **Camiler** | 3 km çevrendeki camiler, yön ve yürüme mesafesiyle |
-| **Bildirim** | APK'da uygulama kapalıyken de çalışır: her vakit, her vaktin kendi önceden uyarısı, kerahat, cuma, mübarek gün duaları, sahur/iftar, sessiz saatler |
+| **Bildirim** | Android ve iPhone uygulamasında uygulama kapalıyken de çalışır: her vakit, her vaktin kendi önceden uyarısı, kerahat, cuma, mübarek gün duaları, sahur/iftar, sessiz saatler; vakit girince beş ezan sesinden biri |
+| **Widget** | Android: vakit ve geri sayım widget'ları, canlı sayaç. iPhone: küçük/orta/büyük (haftalık imsakiye) + kilit ekranı. Siri: "Beş Vakit sıradaki vakit" |
 | **Çevrimdışı** | Servis işçisiyle uygulama kabuğu; vakitler önbellekte, hesap yedekte |
 
 ## Nasıl edinilir
@@ -42,7 +43,8 @@ olmadan da, kaynak kapansa da çalışır. Anahtar yok, hesap yok, veri dışar�
 | | |
 |---|---|
 | **Android** | [Google Play](https://play.google.com/store/apps/details?id=com.kamilsaim.besvakit) — kapalı testten çıkıp yayına alındı. Bildirimler uygulama kapalıyken de gelir, ana ekran widget'ları buradadır. |
-| **iPhone / masaüstü** | [Tarayıcıda aç](https://kamilsaim.github.io/besvakit/) ve ana ekrana ekle. Kurulum gerekmez, çevrimdışı çalışır. |
+| **iPhone** | App Store'a hazırlanıyor (TestFlight'ta). O zamana kadar [tarayıcıda aç](https://kamilsaim.github.io/besvakit/) ve ana ekrana ekle. |
+| **Masaüstü** | [Tarayıcıda aç](https://kamilsaim.github.io/besvakit/) — kurulum gerekmez, çevrimdışı çalışır. |
 
 ## Nasıl hesaplıyor
 
