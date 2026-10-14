@@ -3,6 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<script>
+/* iOS uygulaması (Capacitor kabuğu): sayfa ekranın en tepesinden başlar, çentik /
+   Dinamik Ada payı env(safe-area-inset-*) ile gelir — ama yalnızca viewport-fit=cover
+   varken. Sabit yazılmaz: Android kabuğu da Capacitor 8 ve cover orada başlığı
+   durum çubuğunun altına iter. */
+(function(){
+  var C = window.Capacitor;
+  if(C && C.getPlatform && C.getPlatform() === 'ios'){
+    document.documentElement.classList.add('ios-app');
+    var m = document.querySelector('meta[name=viewport]');
+    if(m) m.content += ', viewport-fit=cover';
+  }
+})();
+</script>
 <title>Beş Vakit</title>
 <meta name="theme-color" content="#0A0E1C">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -866,11 +880,11 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
           </select>
         </div>
         <div class="alan">
-          <label>Sesli uyarı<em>Tarayıcıda çalışır. APK'da bildirim sesi Android ayarından.</em></label>
+          <label>Sesli uyarı<em id="sesNot">Tarayıcıda çalışır. APK'da bildirim sesi Android ayarından.</em></label>
           <button class="svic" id="sesSvic" role="switch"></button>
         </div>
         <div class="alan">
-          <label>Titreşim<em>Tesbih ve kıble için. Bildirim titreşimi Android ayarından.</em></label>
+          <label>Titreşim<em id="titresimNot">Tesbih ve kıble için. Bildirim titreşimi Android ayarından.</em></label>
           <button class="svic" id="titresimSvic" role="switch"></button>
         </div>
         <div class="alan">
@@ -992,7 +1006,9 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
    Vakitler cihazda hesaplanır; hiçbir sunucuya vakit sorulmaz.
    ========================================================== */
 const APP = 'Beş Vakit';
-const SURUM = '0.17.1';
+const SURUM = '0.18.0';
+/** iOS uygulaması (Capacitor kabuğu). Tarayıcıda ve Android'de false. */
+const IOS_APP = document.documentElement.classList.contains('ios-app');
 const LOGO = 'logo-beyaz.png';
 const KABE = { lat: 21.4224779, lng: 39.8261722 };
 const VAKITLER = [
@@ -1884,6 +1900,10 @@ function heroNotTazele(dk){
 function temaUygula(){
   document.documentElement.setAttribute('data-tema', A.tema || 'koyu');
   gokyuzuCiz(simdiDk());
+  // iOS kabuğunda durum çubuğu sayfanın üstünde durur: yazısı temaya uymalı.
+  // DARK = koyu zemin için açık yazı.
+  const SB = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.StatusBar;
+  if(IOS_APP && SB) SB.setStyle({ style: A.tema === 'acik' ? 'LIGHT' : 'DARK' }).catch(()=>{});
 }
 
 /* ---------- vakit listesi ---------- */
@@ -3018,7 +3038,8 @@ async function bildirimIzniDuzelt(){
           : C.pilAyariAc());
     ac.catch(()=> toast('Ayar ekranı açılamadı'));
   }
-  toast('Ayarlar › Bildirimler bölümünden izni aç');
+  toast(IOS_APP ? 'iPhone Ayarlar › Beş Vakit › Bildirimler bölümünden izni aç'
+                : 'Ayarlar › Bildirimler bölümünden izni aç');
 }
 
 /** Önümüzdeki 30 günün hangileri ramazan — hicri hesap burada kalır. */
@@ -3055,7 +3076,9 @@ function bildirimAyari(){
     duaSaat: A.duaSaat || '09:00',
     duaGunleri: duaGunleri(),
     ramazanGunleri: ramazanGunleri(),
-    sahurOnce: +A.sahurOnce || 0
+    sahurOnce: +A.sahurOnce || 0,
+    // iOS en fazla 64 bekleyen bildirim tutar (bildirim.js → bvGunButcesi)
+    hedef: IOS_APP ? 60 : undefined
   };
 }
 
@@ -3798,6 +3821,10 @@ function ayarlariKur(){
     };
     $('#pilDugme').onclick = ()=> C.pilAyariAc().catch(()=>{});
   }
+  if(IOS_APP){
+    $('#sesNot').textContent = 'Uygulama açıkken. Bildirim sesi iPhone Ayarlar › Beş Vakit › Bildirimler bölümünden.';
+    $('#titresimNot').textContent = 'Tesbih ve kıble için.';
+  }
   svicKur('#sesSvic','ses');
   svicKur('#titresimSvic','titresim');
   $('#tema').value = A.tema;
@@ -4106,10 +4133,23 @@ function gpsYuvasiniHazirla(){
   if(A.konumlar.length > 5) A.konumlar.pop();
   if(A.aktifKonum >= A.konumlar.length) A.aktifKonum = A.konumlar.length - 1;
 }
+/* iOS uygulamasında konum @capacitor/geolocation eklentisinden alınır:
+   WKWebView'in kendi konum istemi site adresiyle ("kamilsaim.github.io konumunu
+   kullanmak istiyor") ve her açılışta yeniden sorar. Eklentinin izni uygulamaya
+   bir kez verilir. Dönüş biçimi navigator.geolocation ile aynı. */
+function konumIste(tamam, hata, secenek){
+  const G = IOS_APP && window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Geolocation;
+  if(G){
+    G.getCurrentPosition(secenek).then(tamam, hata);
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(tamam, hata, secenek);
+}
 function konumBul(){
-  if(!navigator.geolocation){ toast('Cihaz konum desteklemiyor'); return; }
+  const eklenti = IOS_APP && window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Geolocation;
+  if(!eklenti && !navigator.geolocation){ toast('Cihaz konum desteklemiyor'); return; }
   toast('Konum alınıyor…');
-  navigator.geolocation.getCurrentPosition(p=>{
+  konumIste(p=>{
     gpsYuvasiniHazirla();
     // Yalnızca indisi değiştirmek yetmez: ayna (A.ilce, A.resmiIl...) önceki
     // aktif konumda kalır ve kaydet() onu GPS konumunun üstüne yazardı.

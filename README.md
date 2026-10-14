@@ -9,7 +9,7 @@
 [**→ Tarayıcıda aç**](https://kamilsaim.github.io/besvakit/) &nbsp;·&nbsp; [**→ Google Play**](https://play.google.com/store/apps/details?id=com.kamilsaim.besvakit)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-yayında-22B2AE?style=flat-square&logo=googleplay&logoColor=white)](https://play.google.com/store/apps/details?id=com.kamilsaim.besvakit)
-![sürüm](https://img.shields.io/badge/sürüm-0.17.1-22B2AE?style=flat-square)
+![sürüm](https://img.shields.io/badge/sürüm-0.18.0-22B2AE?style=flat-square)
 ![bağımlılık](https://img.shields.io/badge/bağımlılık-yok-D8A93C?style=flat-square)
 ![tek dosya](https://img.shields.io/badge/tek%20dosya-HTML-080C18?style=flat-square)
 
@@ -110,6 +110,20 @@ kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasın�
 Tam metin: [**Gizlilik Politikası**](https://kamilsaim.github.io/besvakit/gizlilik.html)
 
 ## Sürüm geçmişi
+
+### 0.18.0
+- **iOS uygulamasına hazırlık.** Web kodu App Store'a çıkacak iPhone uygulamasının
+  (Capacitor kabuğu) içinde doğru çalışacak şekilde düzenlendi; tarayıcıda ve
+  Android'de görünür bir değişiklik yok.
+  - iOS en fazla 64 bekleyen bildirim tutar (Android ~500). Kuyruk iOS'ta 60
+    bildirimlik bütçeyle kuruluyor: her şey açıkken ~3 gün, yalnız vakitler
+    açıkken ~9 gün. "Bildirimler duracak" hatırlatması burada da sondan bir
+    önceki güne düşüyor.
+  - Çentik / Dinamik Ada payı (`viewport-fit=cover`) yalnızca iOS uygulamasında.
+  - Durum çubuğu yazısı temaya uyar (açık temada koyu).
+  - Konum iOS'ta uygulamanın kendi izniyle alınıyor; site adresiyle her açılışta
+    sorulmuyor.
+  - Ayarlardaki ses/titreşim notları iPhone'a göre yazılıyor.
 
 ### 0.17.1
 - **Bildirimler sessizce bitmiyor.** Kuyruk uygulama açılınca kuruluyor ve en

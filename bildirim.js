@@ -76,7 +76,11 @@ function bvSaatYaz(dk) {
 
 /* Android'de uygulama başına bekleyen alarm sayısı ~500 ile sınırlıdır.
    Sınıra dayanmamak için hedefi 400'de tutup gün sayısını aktif tür sayısına
-   göre daraltıyoruz. Kullanıcı bu sayıyı görmez ve ayarlayamaz. */
+   göre daraltıyoruz. Kullanıcı bu sayıyı görmez ve ayarlayamaz.
+   iOS'ta sınır 64'tür ve aşan bildirimler (en uzaktakiler, yani kuyruk
+   hatırlatması da) sessizce düşer. bildirimAyari() iOS'ta `hedef: 60` verir —
+   4'lük pay cuma ve dua bildirimleri için, onlar sayıma katılmıyor. Bu kadar
+   dar bir hedefte 7 günlük taban tutulamaz, taban 1 güne iner. */
 const BV_HEDEF_BILDIRIM = 400;
 const BV_TABAN_GUN = 7;
 const BV_TAVAN_GUN = 30;
@@ -108,8 +112,15 @@ function bvGunButcesi(ayar) {
   // değer etkilemezler, sayıma katılmazlar.
   if (gunluk <= 0) return (ayar.cuma || ayar.dua) ? BV_TAVAN_GUN : 0;
 
-  return Math.max(BV_TABAN_GUN,
-         Math.min(BV_TAVAN_GUN, Math.floor((BV_HEDEF_BILDIRIM - 1) / gunluk)));  // 1: kuyruk hatırlatması
+  const hedef = +ayar.hedef || BV_HEDEF_BILDIRIM;
+  return Math.max(bvTabanGun(ayar),
+         Math.min(BV_TAVAN_GUN, Math.floor((hedef - 1) / gunluk)));  // 1: kuyruk hatırlatması
+}
+
+/** Hedef varsayılandan dar verildiyse (iOS) 7 günlük taban tutulamaz. */
+function bvTabanGun(ayar) {
+  const hedef = +(ayar && ayar.hedef) || BV_HEDEF_BILDIRIM;
+  return hedef < BV_HEDEF_BILDIRIM ? 1 : BV_TABAN_GUN;
 }
 
 function bildirimListesiUret(ayar, gunler, simdi) {
@@ -253,9 +264,10 @@ function bildirimListesiUret(ayar, gunler, simdi) {
 
   const gelecek = liste.filter(b => b.zaman.getTime() > simdi.getTime());
 
-  // Kısa tablolarda (yalnız testlerde olur; uygulama hep 30 gün verir)
-  // hatırlatma anlamsız: kuyruk zaten birkaç gün sonra bitiyor gibi görünür.
-  if (gelecek.length && anahtarlar.length >= BV_TABAN_GUN) {
+  // Kısa tablolarda (Android'de yalnız testlerde olur; uygulama hep 30 gün
+  // verir) hatırlatma anlamsız: kuyruk zaten birkaç gün sonra bitiyor gibi
+  // görünür. iOS'ta kuyruk gerçekten birkaç gün — orada da kurulur.
+  if (gelecek.length && anahtarlar.length >= Math.max(2, bvTabanGun(ayar))) {
     const sira = anahtarlar.length - 2;
     const zaman = bvZaman(anahtarlar[sira], BV_KUYRUK_SAAT);
     if (zaman.getTime() > simdi.getTime()) {

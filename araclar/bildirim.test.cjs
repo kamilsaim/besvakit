@@ -687,3 +687,53 @@ test('hatırlatma dahil toplam 400 sınırı aşılmaz (günde 16 bildirim)', ()
   assert.ok(liste.length <= 400, 'toplam ' + liste.length);
   assert.strictEqual(kuyrukUyarisi(liste).length, 1);
 });
+
+/* iOS: uygulama başına en fazla 64 bekleyen yerel bildirim. Fazlası sessizce
+   düşer — en uzaktakiler, yani kuyruk hatırlatması da. bildirimAyari() iOS'ta
+   hedef: 60 verir (cuma/dua için pay bırakır). */
+function hepsiAcikAyar(tablo) {
+  const ayar = ayarKur({ kerahat: true, cuma: true, ramazanGunleri: Object.keys(tablo), kerahatAraliklari: [
+    { ad: 'İşrak',  bas: 'gunes', basEk: 0,   son: 'gunes', sonEk: 45 },
+    { ad: 'İstiva', bas: 'ogle',  basEk: -45, son: 'ogle',  sonEk: 0 },
+    { ad: 'Gurub',  bas: 'aksam', basEk: -45, son: 'aksam', sonEk: 0 }] });
+  for (const k of Object.keys(ayar.vakit)) ayar.vakit[k] = { bildir: true, once: 10 };
+  return ayar;
+}
+
+test('iOS hedefiyle her şey açıkken toplam 64 sınırı aşılmaz, hatırlatma kalır', () => {
+  const simdi = new Date(2026, 9, 6, 0, 0, 0);   // 6 Ekim Salı — pencerede cuma var
+  const tablo = otuzGun(simdi);
+  const ayar = Object.assign(hepsiAcikAyar(tablo), { hedef: 60 });
+  // 6 vakit + 6 önce + 3 kerahat + sahur + iftar = 17 → 59 / 17 = 3 gün
+  assert.strictEqual(bvGunButcesi(ayar), 3);
+  const liste = bildirimListesiUret(ayar, tablo, simdi);
+  assert.ok(liste.length <= 64, 'toplam ' + liste.length);
+  assert.strictEqual(kuyrukUyarisi(liste).length, 1);
+});
+
+test('iOS hedefinde taban 7 gün uygulanmaz', () => {
+  const simdi = new Date(2026, 9, 6, 0, 0, 0);
+  const ayar = Object.assign(hepsiAcikAyar(otuzGun(simdi)), { hedef: 60 });
+  assert.ok(bvGunButcesi(ayar) < 7);
+});
+
+test('iOS hedefinde az tür açıkken gün sayısı hedefe göre daralır', () => {
+  const ayar = ayarKur({ hedef: 60 });
+  for (const k of Object.keys(ayar.vakit)) ayar.vakit[k] = { bildir: true, once: 0 };
+  // günde 6 → 59 / 6 = 9 gün
+  assert.strictEqual(bvGunButcesi(ayar), 9);
+});
+
+test('iOS hedefinde kısa kuyrukta da hatırlatma sondan bir önceki güne düşer', () => {
+  const simdi = new Date(2026, 9, 6, 0, 0, 0);
+  const ayar = Object.assign(hepsiAcikAyar(otuzGun(simdi)), { hedef: 60 });
+  const u = kuyrukUyarisi(bildirimListesiUret(ayar, otuzGun(simdi), simdi));
+  // 3 gün: 6, 7, 8 Ekim → hatırlatma 7 Ekim 10:00 ("yarından sonra duracak")
+  assert.strictEqual(u[0].zaman.getTime(), new Date(2026, 9, 7, 10, 0).getTime());
+});
+
+test('hedef verilmezse Android davranışı değişmez', () => {
+  const simdi = new Date(2026, 9, 6, 0, 0, 0);
+  const ayar = hepsiAcikAyar(otuzGun(simdi));
+  assert.strictEqual(bvGunButcesi(ayar), 23);
+});
