@@ -9,7 +9,7 @@
 [**→ Tarayıcıda aç**](https://kamilsaim.github.io/besvakit/) &nbsp;·&nbsp; [**→ Google Play**](https://play.google.com/store/apps/details?id=com.kamilsaim.besvakit)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-yayında-22B2AE?style=flat-square&logo=googleplay&logoColor=white)](https://play.google.com/store/apps/details?id=com.kamilsaim.besvakit)
-![sürüm](https://img.shields.io/badge/sürüm-0.19.0-22B2AE?style=flat-square)
+![sürüm](https://img.shields.io/badge/sürüm-0.19.1-22B2AE?style=flat-square)
 ![bağımlılık](https://img.shields.io/badge/bağımlılık-yok-D8A93C?style=flat-square)
 ![tek dosya](https://img.shields.io/badge/tek%20dosya-HTML-080C18?style=flat-square)
 
@@ -110,6 +110,10 @@ kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasın�
 Tam metin: [**Gizlilik Politikası**](https://kamilsaim.github.io/besvakit/gizlilik.html)
 
 ## Sürüm geçmişi
+
+### 0.19.1
+- Kıble haritası kaydırırken alt menünün üstüne çıkıyordu (Leaflet katmanları
+  kendi z-index bağlamına alındı).
 
 ### 0.19.0
 - **iPhone'da bildirimler kesilmiyor.** iOS en fazla 64 bekleyen bildirim tutuyor;
