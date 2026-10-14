@@ -457,12 +457,16 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
 .btn.ikincil{background:var(--kat2);border:1px solid var(--cizgi)}
 .btn.altin{background:var(--pirinc);color:#1A1200}
 .btn-satir{display:flex;gap:10px;margin-top:12px}
+.btn[hidden]{display:none}
 .btn-satir .btn{margin:0}
 .bilgi{font-size:12.5px;color:var(--hayalet);line-height:1.55;padding:0 2px;margin-top:12px}
 
 /* ---------- harita / camiler ---------- */
 #harita{height:56vh;min-height:320px;border-radius:var(--r);overflow:hidden;border:1px solid var(--cizgi);
   background:var(--kat)}
+.kible-nokta{background:none;border:0}
+.kible-nokta span{position:absolute;left:50%;top:50%;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;
+  background:#0A0E1C;border:3px solid var(--pirinc);box-shadow:0 0 0 4px rgba(216,169,60,.25)}
 .harita-yer{display:grid;place-items:center;height:100%;color:var(--hayalet);font-size:13px;text-align:center;padding:20px}
 .cami{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--cizgi);width:100%;text-align:left}
 .cami:last-child{border-bottom:0}
@@ -647,9 +651,11 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
         <div class="btn-satir">
           <button class="btn ikincil" id="uyduBtn">Uydu / sokak</button>
           <button class="btn ikincil" id="camiAraBtn">Yakındaki camiler</button>
+          <button class="btn ikincil" id="noktaSifirla" hidden>Konumuma dön</button>
         </div>
         <p class="bilgi">Turkuaz hat, bulunduğun noktadan Kâbe'ye giden gerçek kıble yönü. Binanın duvarına veya
-          çatı hattına göre bakarak seccadeni pusulasız da doğru yerleştirebilirsin.</p>
+          çatı hattına göre bakarak seccadeni pusulasız da doğru yerleştirebilirsin.
+          Ev içinde konum kayabilir: altın noktayı sürükle ya da haritada durduğun yere dokun.</p>
       </div>
     </div>
 
@@ -1006,7 +1012,7 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
    Vakitler cihazda hesaplanır; hiçbir sunucuya vakit sorulmaz.
    ========================================================== */
 const APP = 'Beş Vakit';
-const SURUM = '0.18.0';
+const SURUM = '0.18.1';
 /** iOS uygulaması (Capacitor kabuğu). Tarayıcıda ve Android'de false. */
 const IOS_APP = document.documentElement.classList.contains('ios-app');
 const LOGO = 'logo-beyaz.png';
@@ -3578,7 +3584,8 @@ async function pusulaBaslat(elle){
    HARİTA & CAMİLER
    ========================================================== */
 let harita = null, katmanUydu = null, katmanSokak = null, uyduMu = true,
-    kibleHat = null, benimNokta = null, camiKatman = null;
+    kibleHat = null, benimNokta = null, camiKatman = null,
+    haritaNokta = null, haritaNoktaKaynak = '';
 
 function leafletYukle(){
   return new Promise((res,rej)=>{
@@ -3629,28 +3636,76 @@ async function haritaKur(){
   try{ await leafletYukle(); }
   catch(e){ $('#haritaYer').textContent='Harita yüklenemedi. İnternet bağlantını kontrol et.'; return; }
   $('#harita').innerHTML = '';
-  harita = L.map('harita', { zoomControl:true, attributionControl:true }).setView([A.lat, A.lng], 18);
+  // Ev içinde oda ölçeğine inebilmek için 22'ye kadar yakınlaşılır. Karolar 19'da
+  // biter (Esri birçok yerde 20'de "veri yok" karosu verir); ötesi büyütülerek gösterilir.
+  harita = L.map('harita', { zoomControl:true, attributionControl:true, maxZoom:22 }).setView([A.lat, A.lng], 18);
   katmanUydu = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    { maxZoom:20, attribution:'Uydu: Esri' });
+    { maxZoom:22, maxNativeZoom:19, attribution:'Uydu: Esri' });
   katmanSokak = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-    { maxZoom:19, attribution:'© OpenStreetMap' });
+    { maxZoom:22, maxNativeZoom:19, attribution:'© OpenStreetMap' });
   katmanUydu.addTo(harita);
   camiKatman = L.layerGroup().addTo(harita);
+  // Haritaya dokununca nokta oraya taşınır (sürüklemek küçük ekranda zor olabiliyor)
+  harita.on('click', e => haritaNoktaTasi(e.latlng.lat, e.latlng.lng));
   window._haritaHazir = true;
   haritaTazele();
 }
+/* Ev içinde GPS birkaç on metre kayabilir. Kullanıcı altın noktayı sürükleyerek ya da
+   haritaya dokunarak gerçekte durduğu yere taşır, kıble hattı oradan çizilir.
+   Taşınan nokta YALNIZCA haritaya aittir: A.lat/A.lng'ye yazılmaz — birkaç metre ne
+   vakti ne kıble açısını anlamlı değiştirir. Gerçek konum değişince sıfırlanır. */
 function haritaTazele(){
   if(!harita) return;
-  if(kibleHat) kibleHat.forEach(l=>harita.removeLayer(l));
-  if(benimNokta) harita.removeLayer(benimNokta);
-  const yakin = buyukDaire({lat:A.lat,lng:A.lng}, KABE, 96).slice(0,6);
-  kibleHat = [
-    L.polyline(buyukDaire({lat:A.lat,lng:A.lng}, KABE, 96), {color:'#22B2AE', weight:2, opacity:.55, dashArray:'6 8'}).addTo(harita),
-    L.polyline(yakin, {color:'#2FD3CE', weight:4, opacity:.95}).addTo(harita)
-  ];
-  benimNokta = L.circleMarker([A.lat,A.lng], {radius:7, color:'#D8A93C', weight:2, fillColor:'#0A0E1C', fillOpacity:1})
-    .addTo(harita).bindTooltip('Buradasın · kıble '+kible.toFixed(1)+'°');
-  harita.setView([A.lat, A.lng], harita.getZoom() < 15 ? 18 : harita.getZoom());
+  const kaynak = A.lat + ',' + A.lng;
+  const yeniKonum = kaynak !== haritaNoktaKaynak;
+  if(yeniKonum){ haritaNokta = null; haritaNoktaKaynak = kaynak; }
+  const p = haritaNokta || { lat:A.lat, lng:A.lng };
+  kibleHattiCiz(p);
+  // kibleBilgiTazele her öne gelişte burayı çağırır: kullanıcının yaklaştığı yeri bozma
+  if(yeniKonum || !benimNokta._ilkGorunum){
+    harita.setView([p.lat, p.lng], harita.getZoom() < 15 ? 18 : harita.getZoom());
+    benimNokta._ilkGorunum = true;
+  }
+  $('#noktaSifirla').hidden = !haritaNokta;
+}
+function kibleHattiCiz(p){
+  const tam = buyukDaire(p, KABE, 96);
+  if(kibleHat){
+    kibleHat[0].setLatLngs(tam);
+    kibleHat[1].setLatLngs(tam.slice(0,6));
+  } else {
+    kibleHat = [
+      L.polyline(tam, {color:'#22B2AE', weight:2, opacity:.55, dashArray:'6 8', interactive:false}).addTo(harita),
+      L.polyline(tam.slice(0,6), {color:'#2FD3CE', weight:4, opacity:.95, interactive:false}).addTo(harita)
+    ];
+  }
+  if(!benimNokta){
+    benimNokta = L.marker([p.lat, p.lng], {
+      draggable:true, autoPan:true,
+      icon: L.divIcon({ className:'kible-nokta', html:'<span></span>', iconSize:[44,44] })
+    }).addTo(harita);
+    benimNokta.bindTooltip('');
+    benimNokta.on('drag', e => { const q = e.target.getLatLng(); kibleHattiCiz({ lat:q.lat, lng:q.lng }); });
+    benimNokta.on('dragend', e => { const q = e.target.getLatLng(); haritaNoktaTasi(q.lat, q.lng); });
+  } else {
+    benimNokta.setLatLng([p.lat, p.lng]);
+  }
+  benimNokta.setTooltipContent((haritaNokta ? 'Seçtiğin nokta' : 'Buradasın') +
+    ' · kıble ' + kibleAcisi(p.lat, p.lng).toFixed(1) + '°');
+}
+let _noktaIpucu = false;
+function haritaNoktaTasi(lat, lng){
+  haritaNokta = { lat, lng };
+  kibleHattiCiz(haritaNokta);
+  $('#noktaSifirla').hidden = false;
+  if(!_noktaIpucu){ _noktaIpucu = true; toast('Nokta taşındı — kıble hattı buradan çiziliyor'); }
+}
+function haritaNoktaSifirla(){
+  haritaNokta = null;
+  if(!harita) return;
+  kibleHattiCiz({ lat:A.lat, lng:A.lng });
+  harita.setView([A.lat, A.lng], harita.getZoom());
+  $('#noktaSifirla').hidden = true;
 }
 /* Overpass'in oran sınırı var; aynı yerde 24 saat boyunca aynı sonucu kullan. */
 function camiOnbellek(){
@@ -4266,6 +4321,7 @@ function baslat(){
   $$('#tabbar button').forEach(b => b.onclick = ()=> sekmeAc(b.dataset.sayfa));
   $('#pusulaBtn').onclick = ()=> pusulaBaslat(true);
   $('#camiAraBtn').onclick = camileriBul;
+  $('#noktaSifirla').onclick = haritaNoktaSifirla;
   $('#uyduBtn').onclick = ()=>{
     if(!harita) return;
     uyduMu = !uyduMu;
