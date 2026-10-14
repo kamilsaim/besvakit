@@ -152,7 +152,9 @@ function bildirimListesiUret(ayar, gunler, simdi) {
 
       liste.push({
         id: gunSira * 100 + BV_TUR.vakit + i,
-        kanal: bvKanal('vakit', dk, ayar.sessiz),
+        // Ezan sesi açıksa vakit girişi 'ezan' kanalından çalar; güneş bir
+        // namaz vakti değil, ezan okunmaz.
+        kanal: bvKanal(ayar.ezan && k !== 'gunes' ? 'ezan' : 'vakit', dk, ayar.sessiz),
         baslik: BV_BASLIK,
         govde: k === 'gunes'
           ? 'Güneş doğdu — sabah namazı vakti çıktı'

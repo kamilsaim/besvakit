@@ -9,7 +9,7 @@
 [**→ Tarayıcıda aç**](https://kamilsaim.github.io/besvakit/) &nbsp;·&nbsp; [**→ Google Play**](https://play.google.com/store/apps/details?id=com.kamilsaim.besvakit)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-yayında-22B2AE?style=flat-square&logo=googleplay&logoColor=white)](https://play.google.com/store/apps/details?id=com.kamilsaim.besvakit)
-![sürüm](https://img.shields.io/badge/sürüm-0.18.1-22B2AE?style=flat-square)
+![sürüm](https://img.shields.io/badge/sürüm-0.19.0-22B2AE?style=flat-square)
 ![bağımlılık](https://img.shields.io/badge/bağımlılık-yok-D8A93C?style=flat-square)
 ![tek dosya](https://img.shields.io/badge/tek%20dosya-HTML-080C18?style=flat-square)
 
@@ -110,6 +110,25 @@ kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasın�
 Tam metin: [**Gizlilik Politikası**](https://kamilsaim.github.io/besvakit/gizlilik.html)
 
 ## Sürüm geçmişi
+
+### 0.19.0
+- **iPhone'da bildirimler kesilmiyor.** iOS en fazla 64 bekleyen bildirim tutuyor;
+  kuyruk her şey açıkken ~3 gün yetiyordu. Artık web 30 günlük listenin tamamını
+  uygulamaya veriyor, uygulama en yakın 60'ını kuruyor ve pencereyi arka planda
+  (uygulama kapanınca, iOS'un arka plan tazelemesinde) kaydırıyor. Liste yine
+  `bildirim.js`'te üretiliyor.
+- **Sessiz saatler iPhone'da gerçekten sessiz.** Android'deki `sessiz` kanalının
+  karşılığı: o aralığa düşen bildirim sessiz geliyor.
+- **İftar sayacı (iPhone).** Ramazanda iftara 8 saat kala kilit ekranında ve
+  Dinamik Ada'da canlı geri sayım. Ayarlar → İftar sayacı.
+- **Siri ve Kısayollar (iPhone):** "Beş Vakit sıradaki vakit", "Beş Vakit bugünün
+  vakitleri".
+- **Widget (iPhone):** büyük boy (haftalık imsakiye), iOS 18 renklendirilmiş ana
+  ekranda okunur görünüm.
+- **Kıble noktası hatırlanıyor.** Haritada taşınan nokta kaydediliyor; aynı yerin
+  150 m yakınında haritayı açınca oradan başlıyor. "Konumuma dön" kaydı siler.
+- Ezan sesi için altyapı (`ezan` kanalı, `bildirim.js` testli); ayar ses dosyası
+  uygulamaya eklenince görünecek.
 
 ### 0.18.1
 - **Kıble haritasında noktayı taşı.** Ev içinde GPS birkaç on metre kayabiliyor;

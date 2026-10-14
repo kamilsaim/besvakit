@@ -737,3 +737,37 @@ test('hedef verilmezse Android davranışı değişmez', () => {
   const ayar = hepsiAcikAyar(otuzGun(simdi));
   assert.strictEqual(bvGunButcesi(ayar), 23);
 });
+
+/* Ezan sesi: ayar.ezan açıkken vakit bildirimleri 'ezan' kanalından gider
+   (iOS'ta ezan.caf, Android'de ses dosyalı ayrı kanal). Güneş ezan değildir. */
+test('ezan açıkken vakit bildirimi ezan kanalına gider, güneş gitmez', () => {
+  const ayar = ayarKur({ ezan: true });
+  ayar.vakit.ogle.bildir = true;
+  ayar.vakit.gunes.bildir = true;
+  const liste = bildirimListesiUret(ayar, GUNLER, new Date(2026, 7, 11, 0, 0, 0));
+  const ogle = liste.filter(b => b.govde.startsWith('Öğle'));
+  const gunes = liste.filter(b => b.govde.startsWith('Güneş doğdu'));
+  assert.ok(ogle.length && ogle.every(b => b.kanal === 'ezan'));
+  assert.ok(gunes.length && gunes.every(b => b.kanal === 'vakit'));
+});
+
+test('ezan açıkken önceden uyarı ezan çalmaz', () => {
+  const ayar = ayarKur({ ezan: true });
+  ayar.vakit.ogle = { bildir: true, once: 10 };
+  const liste = bildirimListesiUret(ayar, GUNLER, new Date(2026, 7, 11, 0, 0, 0));
+  assert.ok(liste.filter(b => b.govde.includes('kaldı')).every(b => b.kanal === 'once'));
+});
+
+test('ezan açık ama sessiz saatteyse sessiz kanal kazanır', () => {
+  const ayar = ayarKur({ ezan: true, sessiz: { bas: '12:00', son: '13:30' } });
+  ayar.vakit.ogle.bildir = true;   // 12:49
+  const liste = bildirimListesiUret(ayar, GUNLER, new Date(2026, 7, 11, 0, 0, 0));
+  assert.ok(liste.length && liste.every(b => b.kanal === 'sessiz'));
+});
+
+test('ezan kapalıyken kanal değişmez', () => {
+  const ayar = ayarKur();
+  ayar.vakit.ogle.bildir = true;
+  const liste = bildirimListesiUret(ayar, GUNLER, new Date(2026, 7, 11, 0, 0, 0));
+  assert.ok(liste.every(b => b.kanal === 'vakit'));
+});

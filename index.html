@@ -655,7 +655,8 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
         </div>
         <p class="bilgi">Turkuaz hat, bulunduğun noktadan Kâbe'ye giden gerçek kıble yönü. Binanın duvarına veya
           çatı hattına göre bakarak seccadeni pusulasız da doğru yerleştirebilirsin.
-          Ev içinde konum kayabilir: altın noktayı sürükle ya da haritada durduğun yere dokun.</p>
+          Ev içinde konum kayabilir: altın noktayı sürükle ya da haritada durduğun yere dokun —
+          nokta hatırlanır.</p>
       </div>
     </div>
 
@@ -885,6 +886,10 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
             <option value="90">1,5 saat önce</option>
           </select>
         </div>
+        <div class="alan" id="ezanAlani" style="display:none">
+          <label>Ezan sesi<em>Vakit girince bildirimle birlikte ezan okunur (ilk 30 saniye). Güneş hariç.</em></label>
+          <button class="svic" id="ezanSvic" role="switch"></button>
+        </div>
         <div class="alan">
           <label>Sesli uyarı<em id="sesNot">Tarayıcıda çalışır. APK'da bildirim sesi Android ayarından.</em></label>
           <button class="svic" id="sesSvic" role="switch"></button>
@@ -933,6 +938,10 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
             <option value="kapali">Kapalı</option>
           </select>
         </div>
+        <div class="alan" id="canliAlani" style="display:none">
+          <label>İftar sayacı<em>Ramazanda iftara 8 saat kala kilit ekranında ve Dinamik Ada'da</em></label>
+          <button class="svic" id="canliSvic" role="switch"></button>
+        </div>
         <div class="alan">
           <label>Ekranı açık tut<em>Kıble ve geri sayım için</em></label>
           <button class="svic" id="uyanikSvic" role="switch"></button>
@@ -946,6 +955,7 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
             <option value="oruc">Sahur ve iftar</option>
             <option value="ozel">Cuma ve kerahat</option>
             <option value="sessiz">Sessiz saatler</option>
+            <option value="ezan" hidden id="ezanKanalSecenek">Ezan</option>
           </select>
         </div>
         <div class="alan uyari" id="izinAlani" style="display:none">
@@ -1012,7 +1022,7 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
    Vakitler cihazda hesaplanır; hiçbir sunucuya vakit sorulmaz.
    ========================================================== */
 const APP = 'Beş Vakit';
-const SURUM = '0.18.1';
+const SURUM = '0.19.0';
 /** iOS uygulaması (Capacitor kabuğu). Tarayıcıda ve Android'de false. */
 const IOS_APP = document.documentElement.classList.contains('ios-app');
 const LOGO = 'logo-beyaz.png';
@@ -1096,7 +1106,10 @@ const VARSAYILAN = {
   imsakiyeAcik:true, diniAcik:false, istatistikAcik:false, kazaAcik:false,
   haritaAcik:false, camiAcik:false, zikirIstAcik:true, esmaAcik:false, tovbeAcik:false,
   duaArsivAcik:false,
-  sapma:0
+  sapma:0,
+  kibleNokta:null,      // kıble haritasında elle düzeltilen nokta (ev içi GPS kayması)
+  canliEtkinlik:true,   // iOS: ramazanda Dinamik Ada / kilit ekranında iftar sayacı
+  ezan:false            // vakit girince bildirimle ezan (ezanDestek() varsa)
 };
 const KONUM_ALANLARI = ['sehir','lat','lng','rakim','otoKonum','resmi','resmiIl','ilce'];
 let A = yukle();
@@ -2962,6 +2975,18 @@ const BV_KANALLAR = [
     importance:2, vibration:false }
 ];
 
+/* Ezan sesi uygulamaya gömülü bir ses dosyası ister: iOS'ta ezan.caf (uygulamanın
+   kendi zamanlayıcısı çalar), Android'de res/raw/ezan.ogg + ayrı 'ezan' kanalı.
+   Dosyayı taşımayan eski APK/derlemelerde ayar görünmez. Android'de kanalın sesi
+   kanal kurulunca bir daha değişmez — bu yüzden ezan ayrı kanal, 'vakit'e dokunulmadı. */
+function ezanDestek(){
+  if(IOS_APP) return _yerelZamanlayici === true;
+  const C = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Cihaz;
+  return !!(C && typeof C.ezanVar === 'function');
+}
+const BV_EZAN_KANALI = { id:'ezan', name:'Ezan', description:'Vakit girince ezan okunur',
+  importance:5, vibration:true, sound:'ezan.ogg' };
+
 const bildirimEklentisi = ()=>
   (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.LocalNotifications) || null;
 
@@ -2973,7 +2998,8 @@ let _kanallarKuruldu = false;
 async function bildirimKanallariKur(){
   const L = bildirimEklentisi();
   if(!L || _kanallarKuruldu) return;
-  for(const k of BV_KANALLAR){
+  const kanallar = ezanDestek() && !IOS_APP ? BV_KANALLAR.concat([BV_EZAN_KANALI]) : BV_KANALLAR;
+  for(const k of kanallar){
     try{ await L.createChannel(k); }catch(e){}
   }
   _kanallarKuruldu = true;
@@ -3064,8 +3090,27 @@ function ramazanGunleri(){
   return liste;
 }
 
-/** bildirim.js'in beklediği saf ayar nesnesini üretir. */
-function bildirimAyari(){
+/* iOS uygulamasının yerel zamanlayıcısı (BildirimZamanlayici.swift) var mı.
+   Varsa kuyruğu o kurar: web 30 günlük listenin tamamını "bv_kuyruk"a yazar, uygulama
+   en yakın 60'ını iOS'a verir ve arka planda (uygulama kapanınca, iOS'un arka plan
+   tazelemesinde) pencereyi kaydırır — 64 sınırı kuyruğu kısaltmaz, sessiz saatlerde
+   bildirim sessiz gelir. Uygulama açılışta "bv_yerel_zamanlayici"=1 yazar; eski
+   TestFlight derlemelerinde yoktur, o zaman eski yol (eklentiyle 60'lık kuyruk) çalışır. */
+let _yerelZamanlayici = null;
+async function yerelZamanlayiciVar(){
+  if(!IOS_APP) return false;
+  if(_yerelZamanlayici !== null) return _yerelZamanlayici;
+  const P = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Preferences;
+  try{
+    const r = P ? await P.get({ key:'bv_yerel_zamanlayici' }) : null;
+    _yerelZamanlayici = !!(r && r.value === '1');
+  }catch(e){ _yerelZamanlayici = false; }
+  return _yerelZamanlayici;
+}
+
+/** bildirim.js'in beklediği saf ayar nesnesini üretir.
+ *  yerel: iOS'ta kuyruğu uygulamanın zamanlayıcısı kuruyor — 64 sınırı uygulanmaz. */
+function bildirimAyari(yerel){
   const vakit = {};
   VAKITLER.forEach(v=>{
     vakit[v.k] = { bildir: !!A.bildirim[v.k].bildir, once: +A.bildirim[v.k].once || 0 };
@@ -3084,7 +3129,8 @@ function bildirimAyari(){
     ramazanGunleri: ramazanGunleri(),
     sahurOnce: +A.sahurOnce || 0,
     // iOS en fazla 64 bekleyen bildirim tutar (bildirim.js → bvGunButcesi)
-    hedef: IOS_APP ? 60 : undefined
+    hedef: (IOS_APP && !yerel) ? 60 : undefined,
+    ezan: !!A.ezan && ezanDestek()
   };
 }
 
@@ -3128,7 +3174,7 @@ function bildirimImza(){
     '|' + (+A.sahurOnce||0) +
     '|' + (A.kerahat?1:0) + '|' + (A.cuma?1:0) + '|' + (A.cumaSaat||'11:30') +
     '|' + (A.dua?1:0) + '|' + (A.duaSaat||'09:00') +
-    '|' + (A.ramazanMod||'') +
+    '|' + (A.ramazanMod||'') + '|' + (A.ezan && ezanDestek() ? 1 : 0) +
     '|' + A.sehir + '|' + A.lat.toFixed(4) + ',' + A.lng.toFixed(4) +
     '|' + A.rakim + '|' + A.yontem + '|' + A.mezhep +
     '|' + (A.resmi?1:0) + '|' + A.ilce + '|' + resmiOzet() + '|' + hicriOzet() +
@@ -3167,11 +3213,23 @@ async function bildirimKur(){
       if(imza === _bildirimSonKurulum) return;
 
       await bildirimKanallariKur();
+      const yerel = await yerelZamanlayiciVar();
 
       // önce üret: üretim patlarsa mevcut kuyruk dokunulmamış kalır
       const liste = A.bildirimAcik
-        ? anaKonumdaCalistir(()=> bildirimListesiUret(bildirimAyari(), bildirimGunTablosu(), new Date()))
+        ? anaKonumdaCalistir(()=> bildirimListesiUret(bildirimAyari(yerel), bildirimGunTablosu(), new Date()))
         : [];
+
+      if(yerel){
+        // iOS: listeyi uygulamanın zamanlayıcısına ver; iptal ve kurulum onda
+        const P = Capacitor.Plugins.Preferences;
+        await P.set({ key:'bv_kuyruk', value: JSON.stringify({
+          liste: liste.map(b=>({ id:b.id, baslik:b.baslik, govde:b.govde, kanal:b.kanal,
+                                 zaman:b.zaman.getTime() }))
+        }) });
+        _bildirimSonKurulum = imza;
+        return;
+      }
 
       const bekleyen = await L.getPending();
       if(bekleyen && bekleyen.notifications && bekleyen.notifications.length){
@@ -3206,6 +3264,14 @@ async function bildirimKur(){
       await bildirimKur();
     }
   }
+}
+
+/* iOS: iftar sayacını (Live Activity) uygulama kendisi başlatır (IftarSayaci.swift),
+   ramazan günlerini ve akşam vaktini bv_widget'tan okur; açık/kapalı buradan gider. */
+function canliAyarYaz(){
+  const P = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Preferences;
+  if(!IOS_APP || !P) return;
+  P.set({ key:'bv_canli', value: A.canliEtkinlik ? '1' : '0' }).catch(()=>{});
 }
 
 let _widgetSonYazim = '';
@@ -3658,7 +3724,12 @@ function haritaTazele(){
   if(!harita) return;
   const kaynak = A.lat + ',' + A.lng;
   const yeniKonum = kaynak !== haritaNoktaKaynak;
-  if(yeniKonum){ haritaNokta = null; haritaNoktaKaynak = kaynak; }
+  if(yeniKonum){
+    // Kaydedilmiş nokta bu konumun 150 m yakınındaysa (aynı ev) oradan başla
+    const k = A.kibleNokta;
+    haritaNokta = (k && mesafeKm(A.lat, A.lng, k.lat, k.lng) < 0.15) ? { lat:k.lat, lng:k.lng } : null;
+    haritaNoktaKaynak = kaynak;
+  }
   const p = haritaNokta || { lat:A.lat, lng:A.lng };
   kibleHattiCiz(p);
   // kibleBilgiTazele her öne gelişte burayı çağırır: kullanıcının yaklaştığı yeri bozma
@@ -3696,12 +3767,14 @@ function kibleHattiCiz(p){
 let _noktaIpucu = false;
 function haritaNoktaTasi(lat, lng){
   haritaNokta = { lat, lng };
+  A.kibleNokta = { lat:+lat.toFixed(6), lng:+lng.toFixed(6) }; kaydet();
   kibleHattiCiz(haritaNokta);
   $('#noktaSifirla').hidden = false;
-  if(!_noktaIpucu){ _noktaIpucu = true; toast('Nokta taşındı — kıble hattı buradan çiziliyor'); }
+  if(!_noktaIpucu){ _noktaIpucu = true; toast('Nokta kaydedildi — kıble hattı buradan çiziliyor, haritayı bir dahaki açışında da buradan başlar'); }
 }
 function haritaNoktaSifirla(){
   haritaNokta = null;
+  A.kibleNokta = null; kaydet();
   if(!harita) return;
   kibleHattiCiz({ lat:A.lat, lng:A.lng });
   harita.setView([A.lat, A.lng], harita.getZoom());
@@ -3876,7 +3949,17 @@ function ayarlariKur(){
     };
     $('#pilDugme').onclick = ()=> C.pilAyariAc().catch(()=>{});
   }
+  // Ezan: iOS'ta zamanlayıcının varlığı async öğrenilir
+  yerelZamanlayiciVar().then(()=>{
+    if(!ezanDestek()) return;
+    $('#ezanAlani').style.display = '';
+    if(!IOS_APP) $('#ezanKanalSecenek').hidden = false;
+    svicKur('#ezanSvic', 'ezan', ()=>{ setTimeout(bildirimKur, 0); return true; });
+  });
   if(IOS_APP){
+    $('#canliAlani').style.display = '';
+    svicKur('#canliSvic', 'canliEtkinlik', ()=>{ setTimeout(canliAyarYaz, 0); return true; });
+    canliAyarYaz();
     $('#sesNot').textContent = 'Uygulama açıkken. Bildirim sesi iPhone Ayarlar › Beş Vakit › Bildirimler bölümünden.';
     $('#titresimNot').textContent = 'Tesbih ve kıble için.';
   }
