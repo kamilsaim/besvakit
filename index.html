@@ -890,8 +890,12 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
           </select>
         </div>
         <div class="alan" id="ezanAlani" style="display:none">
-          <label>Ezan sesi<em>Vakit girince bildirimle birlikte ezan okunur (ilk 30 saniye). Güneş hariç.</em></label>
-          <button class="svic" id="ezanSvic" role="switch"></button>
+          <label>Ezan sesi<em>Vakit girince bildirimle ezan okunur (ilk 29 saniye). Güneş hariç.</em></label>
+          <select id="ezanSec"><option value="">Kapalı</option></select>
+        </div>
+        <div class="alan" id="ezanDeneAlani" style="display:none">
+          <label>Ezanı dinle<em>5 saniye sonra seçili ezanla deneme bildirimi gelir</em></label>
+          <button class="alan-dugme" id="ezanDene">Dinle</button>
         </div>
         <div class="alan">
           <label>Sesli uyarı<em id="sesNot">Tarayıcıda çalışır. APK'da bildirim sesi Android ayarından.</em></label>
@@ -958,7 +962,7 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
             <option value="oruc">Sahur ve iftar</option>
             <option value="ozel">Cuma ve kerahat</option>
             <option value="sessiz">Sessiz saatler</option>
-            <option value="ezan" hidden id="ezanKanalSecenek">Ezan</option>
+
           </select>
         </div>
         <div class="alan uyari" id="izinAlani" style="display:none">
@@ -1025,7 +1029,7 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
    Vakitler cihazda hesaplanır; hiçbir sunucuya vakit sorulmaz.
    ========================================================== */
 const APP = 'Beş Vakit';
-const SURUM = '0.19.1';
+const SURUM = '0.20.0';
 /** iOS uygulaması (Capacitor kabuğu). Tarayıcıda ve Android'de false. */
 const IOS_APP = document.documentElement.classList.contains('ios-app');
 const LOGO = 'logo-beyaz.png';
@@ -1112,7 +1116,7 @@ const VARSAYILAN = {
   sapma:0,
   kibleNokta:null,      // kıble haritasında elle düzeltilen nokta (ev içi GPS kayması)
   canliEtkinlik:true,   // iOS: ramazanda Dinamik Ada / kilit ekranında iftar sayacı
-  ezan:false            // vakit girince bildirimle ezan (ezanDestek() varsa)
+  ezan:''               // vakit girince çalan ezan (EZAN_SESLERI kimliği, '' = kapalı)
 };
 const KONUM_ALANLARI = ['sehir','lat','lng','rakim','otoKonum','resmi','resmiIl','ilce'];
 let A = yukle();
@@ -1125,6 +1129,7 @@ function yukle(){
     if(h.duzeltmeAcik === undefined && h.duzeltme)
       a.duzeltmeAcik = Object.values(h.duzeltme).some(x => +x !== 0);
     a.bildirim = bildirimSemasiniTasi(h.bildirim, h.onceden);
+    if(typeof a.ezan !== 'string') a.ezan = '';     // 0.19.0'da boolean'dı (hiç açılmadı)
     delete a.onceden;
     konumlariGoc(a);
     return a;
@@ -2987,8 +2992,42 @@ function ezanDestek(){
   const C = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Cihaz;
   return !!(C && typeof C.ezanVar === 'function');
 }
-const BV_EZAN_KANALI = { id:'ezan', name:'Ezan', description:'Vakit girince ezan okunur',
-  importance:5, vibration:true, sound:'ezan.ogg' };
+/* Kimlik → iOS: ezan-<kimlik>.caf, Android: res/raw/ezan_<kimlik>.ogg + 'ezan-<kimlik>'
+   kanalı. Kimlikler değişmemeli: Android'de kanal id'si ve kullanıcının seçimi onlara bağlı. */
+const EZAN_SESLERI = [
+  { id:'abdulbasit',  ad:'Abdulbasit Abdussamed' },
+  { id:'dunya',       ad:'Dünyanın en güzel ezanı' },
+  { id:'kabe-imami',  ad:'Kâbe imamı' },
+  { id:'kabe-makam',  ad:'Kâbe makamı' },
+  { id:'mescid-nebi', ad:'Mescid-i Nebevî' }
+];
+const ezanKanallari = ()=> EZAN_SESLERI.map(e=>({
+  id:'ezan-' + e.id, name:'Ezan · ' + e.ad, description:'Vakit girince ezan okunur',
+  importance:5, vibration:true, sound:'ezan_' + e.id.replace(/-/g,'_') + '.ogg'
+}));
+
+/** Seçili ezanla 5 sn sonra deneme bildirimi. Kuyruk kurulumu (iOS'ta uygulamanın
+ *  zamanlayıcısı bekleyenleri baştan kurar) denemeyi silmesin diye önce o biter. */
+async function ezanDene(){
+  const L = bildirimEklentisi();
+  const e = EZAN_SESLERI.find(x => x.id === A.ezan);
+  if(!L || !e){ toast('Önce bir ezan sesi seç'); return; }
+  try{
+    let d = await L.checkPermissions();
+    if(d.display !== 'granted') d = await L.requestPermissions();
+    if(d.display !== 'granted'){ toast('Bildirim izni verilmedi'); return; }
+    await bildirimKanallariKur();
+    await bildirimKur();
+    await new Promise(r => setTimeout(r, 1500));
+    await L.schedule({ notifications: [{
+      id: 99990, title: 'Beş Vakit', body: 'Ezan sesi denemesi · ' + e.ad,
+      channelId: 'ezan-' + e.id,
+      sound: IOS_APP ? 'ezan-' + e.id + '.caf' : 'ezan_' + e.id.replace(/-/g,'_') + '.ogg',
+      schedule: { at: new Date(Date.now() + 5000), allowWhileIdle: true }
+    }] });
+    toast('5 saniye sonra ' + e.ad + ' çalacak');
+  }catch(err){ toast('Deneme bildirimi kurulamadı'); }
+}
 
 const bildirimEklentisi = ()=>
   (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.LocalNotifications) || null;
@@ -3001,7 +3040,7 @@ let _kanallarKuruldu = false;
 async function bildirimKanallariKur(){
   const L = bildirimEklentisi();
   if(!L || _kanallarKuruldu) return;
-  const kanallar = ezanDestek() && !IOS_APP ? BV_KANALLAR.concat([BV_EZAN_KANALI]) : BV_KANALLAR;
+  const kanallar = ezanDestek() && !IOS_APP ? BV_KANALLAR.concat(ezanKanallari()) : BV_KANALLAR;
   for(const k of kanallar){
     try{ await L.createChannel(k); }catch(e){}
   }
@@ -3133,7 +3172,7 @@ function bildirimAyari(yerel){
     sahurOnce: +A.sahurOnce || 0,
     // iOS en fazla 64 bekleyen bildirim tutar (bildirim.js → bvGunButcesi)
     hedef: (IOS_APP && !yerel) ? 60 : undefined,
-    ezan: !!A.ezan && ezanDestek()
+    ezan: ezanDestek() && EZAN_SESLERI.some(e => e.id === A.ezan) ? A.ezan : ''
   };
 }
 
@@ -3177,7 +3216,7 @@ function bildirimImza(){
     '|' + (+A.sahurOnce||0) +
     '|' + (A.kerahat?1:0) + '|' + (A.cuma?1:0) + '|' + (A.cumaSaat||'11:30') +
     '|' + (A.dua?1:0) + '|' + (A.duaSaat||'09:00') +
-    '|' + (A.ramazanMod||'') + '|' + (A.ezan && ezanDestek() ? 1 : 0) +
+    '|' + (A.ramazanMod||'') + '|' + (ezanDestek() ? A.ezan : '') +
     '|' + A.sehir + '|' + A.lat.toFixed(4) + ',' + A.lng.toFixed(4) +
     '|' + A.rakim + '|' + A.yontem + '|' + A.mezhep +
     '|' + (A.resmi?1:0) + '|' + A.ilce + '|' + resmiOzet() + '|' + hicriOzet() +
@@ -3249,6 +3288,8 @@ async function bildirimKur(){
         title: b.baslik,
         body: b.govde,
         channelId: b.kanal,
+        // Android 7'de kanal yok, ses bildirimden okunur (8+ kanalın sesini kullanır)
+        sound: b.kanal.startsWith('ezan-') ? 'ezan_' + b.kanal.slice(5).replace(/-/g,'_') + '.ogg' : undefined,
         schedule: { at: b.zaman, allowWhileIdle: true }
       })) });
       _bildirimSonKurulum = imza;
@@ -3955,9 +3996,20 @@ function ayarlariKur(){
   // Ezan: iOS'ta zamanlayıcının varlığı async öğrenilir
   yerelZamanlayiciVar().then(()=>{
     if(!ezanDestek()) return;
+    const sec = $('#ezanSec');
+    sec.innerHTML = '<option value="">Kapalı</option>' +
+      EZAN_SESLERI.map(e => `<option value="${e.id}">${esc(e.ad)}</option>`).join('');
+    sec.value = EZAN_SESLERI.some(e => e.id === A.ezan) ? A.ezan : '';
+    const dene = ()=> $('#ezanDeneAlani').style.display = A.ezan ? '' : 'none';
+    sec.onchange = ()=>{ A.ezan = sec.value; kaydet(); dene(); bildirimKur(); };
+    $('#ezanDene').onclick = ezanDene;
     $('#ezanAlani').style.display = '';
-    if(!IOS_APP) $('#ezanKanalSecenek').hidden = false;
-    svicKur('#ezanSvic', 'ezan', ()=>{ setTimeout(bildirimKur, 0); return true; });
+    dene();
+    if(!IOS_APP){
+      // Android: kanal ayarı listesine ezan kanalları (kullanıcı titreşim vb. değiştirebilsin)
+      $('#sesKanal').insertAdjacentHTML('beforeend',
+        EZAN_SESLERI.map(e => `<option value="ezan-${e.id}">Ezan · ${esc(e.ad)}</option>`).join(''));
+    }
   });
   if(IOS_APP){
     $('#canliAlani').style.display = '';
