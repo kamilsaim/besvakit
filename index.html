@@ -4525,7 +4525,8 @@ function baslat(){
   if(A.otoKonum) konumBul();
   if(A.uyanik) uyanikAyarla(true);
   document.addEventListener('visibilitychange', ()=>{
-    if(!document.hidden){ gunuTazele(); if(A.uyanik) uyanikAyarla(true); }
+    // kisayolBak: uygulama haber veremediyse de (sıra yarışı) bekleyen kısayol açılsın
+    if(!document.hidden){ gunuTazele(); if(A.uyanik) uyanikAyarla(true); kisayolBak(); }
   });
   kisayolBak();
 }
