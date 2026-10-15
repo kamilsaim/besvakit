@@ -4389,13 +4389,14 @@ function sekmeAc(ad){
   }
   window.scrollTo({top:0, behavior:'instant'});
 }
-/* iOS kısayolları: simgeye basılı tutma, Siri "Beş Vakit kıble sayfasını aç",
-   Denetim Merkezi düğmesi. Uygulama istenen sayfayı bv_kisayol'a yazar ve
-   kisayolBak()'ı çağırır (AppDelegate → kisayolIlet); soğuk açılışta baslat() bakar.
-   Sayfa adları KisayolNiyeti.swift'teki BesVakitSayfa ile aynı. */
+/* Uygulama kısayolları. iOS: simgeye basılı tutma, Siri "Beş Vakit kıble sayfasını
+   aç", Denetim Merkezi düğmesi (AppDelegate → kisayolIlet). Android: simgeye basılı
+   tutma, hızlı ayar kutusu (MainActivity.onNewIntent). Uygulama istenen sayfayı
+   bv_kisayol'a yazar ve kisayolBak()'ı çağırır; soğuk açılışta baslat() bakar.
+   Sayfa adları KisayolNiyeti.swift'teki BesVakitSayfa ve Android shortcuts.xml ile aynı. */
 async function kisayolBak(){
   const P = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Preferences;
-  if(!IOS_APP || !P) return;
+  if(!P) return;                        // tarayıcıda Preferences yok
   let ad = null;
   try{ const r = await P.get({ key:'bv_kisayol' }); ad = r && r.value; }catch(e){ return; }
   if(!ad) return;

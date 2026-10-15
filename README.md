@@ -36,7 +36,7 @@ olmadan da, kaynak kapansa da çalışır. Anahtar yok, hesap yok, veri dışar�
 | **Camiler** | 3 km çevrendeki camiler, yön ve yürüme mesafesiyle |
 | **Bildirim** | Android ve iPhone uygulamasında uygulama kapalıyken de çalışır: her vakit, her vaktin kendi önceden uyarısı, kerahat, cuma, mübarek gün duaları, sahur/iftar, sessiz saatler; vakit girince beş ezan sesinden biri |
 | **Widget** | Android: vakit ve geri sayım widget'ları, canlı sayaç. iPhone: küçük/orta/büyük (haftalık imsakiye) + kilit ekranı, Denetim Merkezi düğmeleri |
-| **iPhone kısayolları** | Simgeye basılı tut: Kıble, Zikirmatik, İmsakiye, Yakındaki camiler. Siri: "Beş Vakit sıradaki vakit", "… iftara ne kadar var", "… cumaya ne kadar var", "… kıble yönü", "… hicri tarih", "… kıble sayfasını aç" |
+| **Kısayollar** | Android ve iPhone'da simgeye basılı tut: Kıble, Zikirmatik, İmsakiye, Yakındaki camiler. Android bildirim panelinde hızlı ayar kutuları: sıradaki vakit + kalan süre, kıble. iPhone Siri: "Beş Vakit sıradaki vakit", "… iftara ne kadar var", "… cumaya ne kadar var", "… kıble yönü", "… hicri tarih", "… kıble sayfasını aç" |
 | **Çevrimdışı** | Servis işçisiyle uygulama kabuğu; vakitler önbellekte, hesap yedekte |
 
 ## Nasıl edinilir
@@ -124,6 +124,9 @@ Tam metin: [**Gizlilik Politikası**](https://kamilsaim.github.io/besvakit/gizli
   dışında akşam vakti), "… cumaya ne kadar var", "… kıble yönü", "… hicri tarih",
   "… kıble / zikirmatik / imsakiye / camiler sayfasını aç".
 - **iPhone (iOS 18): Denetim Merkezi ve kilit ekranı düğmeleri** — Kıble, Zikirmatik.
+- **Android (APK, versionCode 8): simge kısayolları** (aynı dört sayfa) ve bildirim
+  panelinde iki **hızlı ayar kutusu**: "Akşam 18:15 · 2 sa 5 dk kaldı" ve Kıble
+  (açı yazılı, dokununca kıble sayfası).
 - Kıble sekmesi dokunuşsuz açıldığında (kısayol, Siri) iOS'un pusula izni
   isteğini ret sayıp bir daha sormaması düzeltildi.
 - Widget verisine kıble açısı eklendi (Siri okur).
