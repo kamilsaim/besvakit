@@ -9,7 +9,7 @@
 [**→ Tarayıcıda aç**](https://kamilsaim.github.io/besvakit/) &nbsp;·&nbsp; [**→ Google Play**](https://play.google.com/store/apps/details?id=com.kamilsaim.besvakit)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-yayında-22B2AE?style=flat-square&logo=googleplay&logoColor=white)](https://play.google.com/store/apps/details?id=com.kamilsaim.besvakit)
-![sürüm](https://img.shields.io/badge/sürüm-0.20.0-22B2AE?style=flat-square)
+![sürüm](https://img.shields.io/badge/sürüm-0.21.0-22B2AE?style=flat-square)
 ![bağımlılık](https://img.shields.io/badge/bağımlılık-yok-D8A93C?style=flat-square)
 ![tek dosya](https://img.shields.io/badge/tek%20dosya-HTML-080C18?style=flat-square)
 
@@ -35,7 +35,8 @@ olmadan da, kaynak kapansa da çalışır. Anahtar yok, hesap yok, veri dışar�
 | **Mübarek gün duaları** | Muharrem, Aşûre, Safer, Receb, Regaib, Mirac, Berat, Kadir, iftar, arefe, bayram gecesi, senenin sonu, cuma — o zaman girince kendiliğinden çıkar ve hatırlatır |
 | **Camiler** | 3 km çevrendeki camiler, yön ve yürüme mesafesiyle |
 | **Bildirim** | Android ve iPhone uygulamasında uygulama kapalıyken de çalışır: her vakit, her vaktin kendi önceden uyarısı, kerahat, cuma, mübarek gün duaları, sahur/iftar, sessiz saatler; vakit girince beş ezan sesinden biri |
-| **Widget** | Android: vakit ve geri sayım widget'ları, canlı sayaç. iPhone: küçük/orta/büyük (haftalık imsakiye) + kilit ekranı. Siri: "Beş Vakit sıradaki vakit" |
+| **Widget** | Android: vakit ve geri sayım widget'ları, canlı sayaç. iPhone: küçük/orta/büyük (haftalık imsakiye) + kilit ekranı, Denetim Merkezi düğmeleri |
+| **iPhone kısayolları** | Simgeye basılı tut: Kıble, Zikirmatik, İmsakiye, Yakındaki camiler. Siri: "Beş Vakit sıradaki vakit", "… iftara ne kadar var", "… cumaya ne kadar var", "… kıble yönü", "… hicri tarih", "… kıble sayfasını aç" |
 | **Çevrimdışı** | Servis işçisiyle uygulama kabuğu; vakitler önbellekte, hesap yedekte |
 
 ## Nasıl edinilir
@@ -112,6 +113,20 @@ kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasın�
 Tam metin: [**Gizlilik Politikası**](https://kamilsaim.github.io/besvakit/gizlilik.html)
 
 ## Sürüm geçmişi
+
+### 0.21.0
+- **iPhone: vakit bildirimleri Odak/Uyku modunu deliyor.** Vakit, ezan, önceden
+  uyarı ve sahur/iftar bildirimleri "zamana duyarlı"; sessiz saatlere düşenler
+  ekranı yakmıyor. iPhone Ayarlar → Bildirimler → Beş Vakit'ten kapatılabilir.
+- **iPhone: simge kısayolları.** Simgeye basılı tutunca Kıble, Zikirmatik,
+  İmsakiye, Yakındaki camiler.
+- **iPhone: yeni Siri komutları.** "Beş Vakit iftara ne kadar var" (ramazan
+  dışında akşam vakti), "… cumaya ne kadar var", "… kıble yönü", "… hicri tarih",
+  "… kıble / zikirmatik / imsakiye / camiler sayfasını aç".
+- **iPhone (iOS 18): Denetim Merkezi ve kilit ekranı düğmeleri** — Kıble, Zikirmatik.
+- Kıble sekmesi dokunuşsuz açıldığında (kısayol, Siri) iOS'un pusula izni
+  isteğini ret sayıp bir daha sormaması düzeltildi.
+- Widget verisine kıble açısı eklendi (Siri okur).
 
 ### 0.20.0
 - **Ezan sesi.** Ayarlar → Bildirimler → Ezan sesi: beş ezan arasından seçim
