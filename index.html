@@ -1007,8 +1007,7 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
     </div>
 
     <p class="bilgi" style="margin:14px 0 40px;text-align:center">
-      Hesaplama yöntemi Diyanet ile aynı astronomik modeldir; kaynak koda
-      <b>github.com/kamilsaim/besvakit</b> adresinden ulaşabilirsin.<br>
+      Hesaplama yöntemi Diyanet ile aynı astronomik modeldir.<br>
       Harita ve cami verisi © OpenStreetMap katkıcıları · Uydu görüntüsü Esri.
     </p>
   </section>
@@ -1031,7 +1030,7 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
    Vakitler cihazda hesaplanır; hiçbir sunucuya vakit sorulmaz.
    ========================================================== */
 const APP = 'Beş Vakit';
-const SURUM = '0.21.1';
+const SURUM = '0.21.2';
 /** iOS uygulaması (Capacitor kabuğu). Tarayıcıda ve Android'de false. */
 const IOS_APP = document.documentElement.classList.contains('ios-app');
 const LOGO = 'logo-beyaz.png';
@@ -4292,6 +4291,39 @@ async function ilceEslestir(sehirAdi, sehirDegisti){
   if(resmiKullaniliyorMu()) toast(il.ad + ' Diyanet takvimi yüklendi');
 }
 
+/**
+ * GPS noktasına en yakın Diyanet ilçesi (vakitler/ilce-konum.json, araclar/ilce-koordinat.mjs).
+ * Eskiden yalnızca 81 il merkezine bakılıyordu: Develi'deki kullanıcı Kayseri merkezin
+ * takvimini görüyordu (vakitler birkaç dakika kayar). Dosya inmezse null → eski yol.
+ * 60 km'den uzak nokta (yurt dışı) eşlenmez.
+ */
+let ILCE_KONUM = null;
+async function enYakinIlce(lat, lng){
+  try{
+    if(!YERLER){
+      const r = await fetch('vakitler/yerler.json', { cache:'no-cache' });
+      YERLER = r.ok ? await r.json() : null;
+    }
+    if(!ILCE_KONUM){
+      const r = await fetch('vakitler/ilce-konum.json', { cache:'no-cache' });
+      ILCE_KONUM = r.ok ? await r.json() : null;
+    }
+  }catch(e){}
+  if(!YERLER || !ILCE_KONUM) return null;
+  const tr = YERLER.find(u => String(u.id) === '2') || YERLER[0];
+  let en = null;
+  for(const il of tr.sehirler || []) for(const ilce of il.ilceler || []){
+    const k = ILCE_KONUM[ilce.id];
+    if(!k) continue;
+    const km = mesafeKm(lat, lng, k[0], k[1]);
+    if(!en || km < en.km) en = { km, il, ilce };
+  }
+  if(!en || en.km > 60) return null;
+  const buyuk = s => s.toLocaleLowerCase('tr').replace(/(^|[\s-])(\S)/g, (m, a, b) => a + b.toLocaleUpperCase('tr'));
+  return { il:String(en.il.id), ilce:String(en.ilce.id), ad:buyuk(en.ilce.ad),
+           merkez: trSade(en.ilce.ad) === trSade(en.il.ad) };
+}
+
 function resmiDurumYaz(){
   const el = $('#resmiDurum');
   if(!el) return;
@@ -4358,26 +4390,44 @@ function konumBul(){
   const eklenti = IOS_APP && window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Geolocation;
   if(!eklenti && !navigator.geolocation){ toast('Cihaz konum desteklemiyor'); return; }
   toast('Konum alınıyor…');
-  konumIste(p=>{
+  konumIste(async p=>{
+    const lat = +p.coords.latitude.toFixed(5), lng = +p.coords.longitude.toFixed(5);
+    // Ayna aşağıda değişmeden önce beklenir: arada kullanıcı başka konuma geçse de karışmaz.
+    const yakin = A.resmi ? await enYakinIlce(lat, lng) : null;
     gpsYuvasiniHazirla();
     // Yalnızca indisi değiştirmek yetmez: ayna (A.ilce, A.resmiIl...) önceki
     // aktif konumda kalır ve kaydet() onu GPS konumunun üstüne yazardı.
     konumSec(0);
     const eskiSehir = A.sehir;
-    A.lat = +p.coords.latitude.toFixed(5);
-    A.lng = +p.coords.longitude.toFixed(5);
+    A.lat = lat; A.lng = lng;
     if(p.coords.altitude != null) A.rakim = Math.max(0, Math.round(p.coords.altitude));
     A.otoKonum = true; A.sehir = 'Konumum';
     const y = SEHIRLER.slice(1).map(s=>[s[0], mesafeKm(A.lat,A.lng,s[1],s[2])]).sort((a,b)=>a[1]-b[1])[0];
     // 81 il merkezinin hepsi listede; Türkiye içinde en uzak nokta bile bir
     // merkeze 100 km'den yakın. Ötesi yurt dışı sayılır.
     if(y && y[1] < 100) A.sehir = y[0];
+    let ilceDegisti = false;
+    if(yakin){
+      if(!yakin.merkez) A.sehir = yakin.ad;
+      // Ayarlardan elle seçilen ilçe, GPS başka bir ilçe bulana kadar korunur.
+      const elle = A.ilce && String(A.ilce) !== String(A.gpsIlce) && String(A.gpsIlce) === yakin.ilce;
+      A.gpsIlce = yakin.ilce;
+      if(!elle){
+        ilceDegisti = String(A.ilce) !== yakin.ilce;
+        A.resmiIl = yakin.il; A.ilce = yakin.ilce;
+      }
+    }
     const degisti = A.sehir !== eskiSehir;
     if(degisti && A.sehir === 'Konumum') ilceBirak();
     // Başka bir konumdan GPS'e dönüldüyse RESMI hâlâ o konumun ilçesinde.
     if(!resmiGecerli() && A.resmi && A.ilce) RESMI = resmiOnbellekOku(A.ilce);
     kaydet(); alanlariDoldur(); gunuTazele(); toast(A.sehir + ' · konum güncellendi');
-    ilceEslestir(A.sehir, degisti);
+    if(!yakin) ilceEslestir(A.sehir, degisti);
+    else if(ilceDegisti) resmiYukle().then(()=>{
+      gunuTazele(); resmiDurumYaz();
+      if($('#resmiIl')) yerleriKur();
+      if(resmiKullaniliyorMu()) toast(A.sehir + ' Diyanet takvimi yüklendi');
+    });
     if(typeof konumlariCiz === 'function') konumlariCiz();
   }, err=>{
     toast('Konum alınamadı — şehri elle seçebilirsin');

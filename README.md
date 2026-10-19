@@ -9,7 +9,7 @@
 [**→ Tarayıcıda aç**](https://kamilsaim.github.io/besvakit/) &nbsp;·&nbsp; [**→ Google Play**](https://play.google.com/store/apps/details?id=com.kamilsaim.besvakit)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-yayında-22B2AE?style=flat-square&logo=googleplay&logoColor=white)](https://play.google.com/store/apps/details?id=com.kamilsaim.besvakit)
-![sürüm](https://img.shields.io/badge/sürüm-0.21.1-22B2AE?style=flat-square)
+![sürüm](https://img.shields.io/badge/sürüm-0.21.2-22B2AE?style=flat-square)
 ![bağımlılık](https://img.shields.io/badge/bağımlılık-yok-D8A93C?style=flat-square)
 ![tek dosya](https://img.shields.io/badge/tek%20dosya-HTML-080C18?style=flat-square)
 
@@ -64,7 +64,7 @@ olarak commit'ler, GitHub Pages statik dosya olarak servis eder, uygulama bir ke
 `localStorage`'a önbellekler. Anahtar yok, CORS yok, kullanıcı başına istek yok — kaynak
 bir gün kapansa bile elimizdeki veri çalışmaya devam eder.
 
-Türkiye'nin **868 ilçesi** kapsanıyor. GPS konumu en yakın il merkezine (81 il) bağlanır.
+Türkiye'nin **868 ilçesi** kapsanıyor. GPS konumu en yakın Diyanet ilçesine bağlanır (ilçe koordinatları `vakitler/ilce-konum.json`, `araclar/ilce-koordinat.mjs` ile OpenStreetMap'ten bir kerelik çekildi).
 Verinin bittiği günlerde hesap, Diyanet takviminin son günlerine hizalanır (±1 dk);
 Türkiye dışında ya da veri hiç yoksa uygulama kendi astronomik hesabına düşer ve bunu
 ekranda yazar — yani veri olmadan da çalışır. Hicri tarih de Diyanet'in takviminden gelir.
@@ -113,6 +113,13 @@ kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasın�
 Tam metin: [**Gizlilik Politikası**](https://kamilsaim.github.io/besvakit/gizlilik.html)
 
 ## Sürüm geçmişi
+
+### 0.21.2
+- **Konum alınınca artık en yakın ilçenin Diyanet takvimi geliyor.** Önceden GPS
+  yalnızca 81 il merkezine bakıyordu; örneğin Develi'deki kullanıcı Kayseri
+  merkezin vakitlerini görüyordu (birkaç dakika fark). Ayarlardan elle seçilen
+  ilçe, GPS başka bir ilçe bulana kadar korunuyor.
+- Ayarların altındaki "kaynak koda ulaşabilirsin" cümlesi kaldırıldı.
 
 ### 0.21.1
 - **"Camileri bul" düğmesi Yakındaki camiler bölümüne taşındı** (önceden kıble
