@@ -44,7 +44,7 @@ olmadan da, kaynak kapansa da çalışır. Anahtar yok, hesap yok, veri dışar�
 | | |
 |---|---|
 | **Android** | [Google Play](https://play.google.com/store/apps/details?id=com.kamilsaim.besvakit) — yayında. Bildirimler uygulama kapalıyken de gelir; ana ekran widget'ları, simge kısayolları ve bildirim panelinde hızlı ayar kutuları vardır. |
-| **iPhone** | App Store'a hazırlanıyor (TestFlight'ta). O zamana kadar [tarayıcıda aç](https://kamilsaim.github.io/besvakit/) ve ana ekrana ekle. |
+| **iPhone** | App Store incelemesinde (1.3, 19 Ekim 2026). O zamana kadar [tarayıcıda aç](https://kamilsaim.github.io/besvakit/) ve ana ekrana ekle. |
 | **Masaüstü** | [Tarayıcıda aç](https://kamilsaim.github.io/besvakit/) — kurulum gerekmez, çevrimdışı çalışır. |
 
 ## Nasıl hesaplıyor
