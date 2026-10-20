@@ -971,6 +971,10 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
           <label>Bildirim izni kapalı<em>Bu haliyle hiçbir vakit bildirimi gelmez</em></label>
           <button class="alan-dugme" id="izinDugme">Düzelt</button>
         </div>
+        <div class="alan uyari" id="alarmAlani" style="display:none">
+          <label>Kesin alarm izni kapalı<em>Bildirimler saatinde gelmeyebilir, gecikebilir</em></label>
+          <button class="alan-dugme" id="alarmDugme">Aç</button>
+        </div>
         <div class="alan" id="pilAlani" style="display:none">
           <label>Bildirimler gecikiyor mu?<em>Pil ayarından uygulamayı serbest bırak</em></label>
           <button class="alan-dugme" id="pilDugme">Aç</button>
@@ -1030,7 +1034,7 @@ button.baslik[aria-expanded=false]{color:var(--sis)}
    Vakitler cihazda hesaplanır; hiçbir sunucuya vakit sorulmaz.
    ========================================================== */
 const APP = 'Beş Vakit';
-const SURUM = '0.21.2';
+const SURUM = '0.21.3';
 /** iOS uygulaması (Capacitor kabuğu). Tarayıcıda ve Android'de false. */
 const IOS_APP = document.documentElement.classList.contains('ios-app');
 const LOGO = 'logo-beyaz.png';
@@ -3083,7 +3087,35 @@ async function bildirimIzniTazele(){
   }
   if(!goster) _izinUyarisiGosterildi = false;
 
+  kesinAlarmTazele(L);
   return izinli;
+}
+
+/* Android 12+: "Alarmlar ve hatırlatıcılar" kapalıysa eklenti kesin olmayan
+   alarm kurar; pil tasarrufu onu saatlerce bekletip toplu verebiliyor (öğle
+   vakti gelen "ikindi vakti girdi"). Kapalıysa ayarlarda uyarı satırı açılır.
+   iOS'ta ve eski Android'de metot yok ya da hep 'granted' döner. */
+async function kesinAlarmTazele(L){
+  const satir = $('#alarmAlani');
+  if(!satir) return;
+  let kapali = false;
+  try{
+    if(!IOS_APP && typeof L.checkExactNotificationSetting === 'function'){
+      kapali = (await L.checkExactNotificationSetting()).exact_alarm === 'denied';
+    }
+  }catch(e){}
+  satir.style.display = (A.bildirimAcik && kapali) ? '' : 'none';
+}
+
+async function kesinAlarmDuzelt(){
+  const L = bildirimEklentisi();
+  if(!L || typeof L.changeExactNotificationSetting !== 'function') return;
+  try{ await L.changeExactNotificationSetting(); }
+  catch(e){ toast('Ayar ekranı açılamadı'); }
+  await kesinAlarmTazele(L);
+  // izin yeni açıldıysa kuyruk kesin alarmla yeniden kurulsun
+  _bildirimSonKurulum = '';
+  bildirimKur();
 }
 
 /** Uyarı satırındaki düğme: önce izni iste, sistem istemi çıkmıyorsa
@@ -3987,6 +4019,7 @@ function ayarlariKur(){
   })();
 
   $('#izinDugme').onclick = bildirimIzniDuzelt;
+  $('#alarmDugme').onclick = kesinAlarmDuzelt;
 
   $('#sessizBas').value = A.sessizBas || '00:00';
   $('#sessizBas').onchange = e => { A.sessizBas = e.target.value; kaydet(); bildirimKur(); };

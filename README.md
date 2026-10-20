@@ -9,7 +9,7 @@
 [**→ Tarayıcıda aç**](https://kamilsaim.github.io/besvakit/) &nbsp;·&nbsp; [**→ Google Play**](https://play.google.com/store/apps/details?id=com.kamilsaim.besvakit)
 
 [![Google Play](https://img.shields.io/badge/Google%20Play-yayında-22B2AE?style=flat-square&logo=googleplay&logoColor=white)](https://play.google.com/store/apps/details?id=com.kamilsaim.besvakit)
-![sürüm](https://img.shields.io/badge/sürüm-0.21.2-22B2AE?style=flat-square)
+![sürüm](https://img.shields.io/badge/sürüm-0.21.3-22B2AE?style=flat-square)
 ![bağımlılık](https://img.shields.io/badge/bağımlılık-yok-D8A93C?style=flat-square)
 ![tek dosya](https://img.shields.io/badge/tek%20dosya-HTML-080C18?style=flat-square)
 
@@ -113,6 +113,16 @@ kalıcı olarak düzeltsin. Bu yaklaşım telefonun kendi manyetometre hatasın�
 Tam metin: [**Gizlilik Politikası**](https://kamilsaim.github.io/besvakit/gizlilik.html)
 
 ## Sürüm geçmişi
+
+### 0.21.3
+- **Bildirim metinlerinde artık saat var:** "İkindi vakti girdi · 15:26",
+  "İşrak kerahat vakti başladı · 06:43–07:28". Bazı Android telefonlar pil
+  tasarrufu yüzünden bildirimi saatler sonra "şimdi" diye veriyordu; dünkü ikindi
+  bildirimi öğle vakti gelince bugünkü sanılıyordu.
+- **Android: geç kalan bildirim artık hiç gösterilmiyor** (APK 0.21.3). Planlanan
+  saatten 30 dakikadan fazla gecikmişse ya da telefon kapalıyken kaçırılmışsa atılır.
+- **Android: "Kesin alarm izni kapalı" uyarısı.** Ayarlar › Bildirimler'de
+  "Alarmlar ve hatırlatıcılar" izni kapalıysa uyarı satırı ve "Aç" düğmesi çıkar.
 
 ### 0.21.2
 - **Konum alınınca artık en yakın ilçenin Diyanet takvimi geliyor.** Önceden GPS

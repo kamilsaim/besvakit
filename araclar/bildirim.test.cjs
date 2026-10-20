@@ -41,7 +41,7 @@ test('açık olan vakit için bildirim üretir', () => {
   const simdi = new Date(2026, 7, 11, 0, 0, 0);
 
   const liste = bildirimListesiUret(ayar, GUNLER, simdi);
-  const ogleler = liste.filter(b => b.govde === 'Öğle vakti girdi');
+  const ogleler = liste.filter(b => b.govde === 'Öğle vakti girdi · 12:49');
 
   assert.strictEqual(ogleler.length, 2, 'iki gün için ikişer öğle bildirimi');
   assert.strictEqual(ogleler[0].zaman.getHours(), 12);
@@ -84,7 +84,7 @@ test('güneş vaktinin metni farklıdır', () => {
 
   const liste = bildirimListesiUret(ayar, GUNLER, simdi);
 
-  assert.strictEqual(liste[0].govde, 'Güneş doğdu — sabah namazı vakti çıktı');
+  assert.strictEqual(liste[0].govde, 'Güneş doğdu · 05:34 — sabah namazı vakti çıktı');
 });
 
 test('kimlikler benzersizdir', () => {
@@ -111,7 +111,7 @@ test('vakit öncesi uyarı üretir', () => {
   // ikindi 999 dk = 16:39; 15 dk öncesi 16:24
   assert.strictEqual(once[0].zaman.getHours(), 16);
   assert.strictEqual(once[0].zaman.getMinutes(), 24);
-  assert.strictEqual(once[0].govde, 'İkindi vaktine 15 dakika kaldı');
+  assert.strictEqual(once[0].govde, 'İkindi vaktine 15 dakika kaldı · 16:39');
 });
 
 test('her vaktin kendi önceden süresi olur', () => {
@@ -123,8 +123,8 @@ test('her vaktin kendi önceden süresi olur', () => {
   const liste = bildirimListesiUret(ayar, GUNLER, simdi);
   const metinler = liste.filter(b => b.kanal === 'once').map(b => b.govde);
 
-  assert.ok(metinler.includes('Öğle vaktine 10 dakika kaldı'));
-  assert.ok(metinler.includes('İkindi vaktine 30 dakika kaldı'));
+  assert.ok(metinler.includes('Öğle vaktine 10 dakika kaldı · 12:49'));
+  assert.ok(metinler.includes('İkindi vaktine 30 dakika kaldı · 16:39'));
 });
 
 test('güneş için önceden uyarı üretilir ve metni farklıdır', () => {
@@ -140,7 +140,7 @@ test('güneş için önceden uyarı üretilir ve metni farklıdır', () => {
   // "Güneş vaktine kaldı" yanıltıcı olurdu: uyarılan şey vaktin başlaması
   // değil, sabah namazı vaktinin kapanması.
   assert.strictEqual(once[0].govde,
-    'Güneş doğuşuna 15 dakika kaldı — sabah namazı vakti çıkıyor');
+    'Güneş doğuşuna 15 dakika kaldı · 05:34 — sabah namazı vakti çıkıyor');
 });
 
 test('güneş öncesi uyarı doğuştan tam o kadar dakika önceye kurulur', () => {
@@ -175,8 +175,8 @@ test('sessiz aralığa düşen bildirimin kanalı sessiz olur', () => {
   const simdi = new Date(2026, 7, 11, 0, 0, 0);
 
   const liste = bildirimListesiUret(ayar, GUNLER, simdi);
-  const imsak = liste.find(b => b.govde === 'İmsak vakti girdi');
-  const ogle  = liste.find(b => b.govde === 'Öğle vakti girdi');
+  const imsak = liste.find(b => b.govde === 'İmsak vakti girdi · 03:56');
+  const ogle  = liste.find(b => b.govde === 'Öğle vakti girdi · 12:49');
 
   assert.strictEqual(imsak.kanal, 'sessiz');
   assert.strictEqual(ogle.kanal, 'vakit');
@@ -190,8 +190,8 @@ test('gece yarısını aşmayan sessiz aralık da çalışır', () => {
 
   const liste = bildirimListesiUret(ayar, GUNLER, simdi);
 
-  assert.strictEqual(liste.find(b => b.govde === 'Öğle vakti girdi').kanal, 'sessiz');
-  assert.strictEqual(liste.find(b => b.govde === 'İkindi vakti girdi').kanal, 'vakit');
+  assert.strictEqual(liste.find(b => b.govde === 'Öğle vakti girdi · 12:49').kanal, 'sessiz');
+  assert.strictEqual(liste.find(b => b.govde === 'İkindi vakti girdi · 16:39').kanal, 'vakit');
 });
 
 test('başlangıç ve bitiş aynıysa sessiz saatler kapalıdır', () => {
@@ -223,7 +223,7 @@ test('kerahat açıkken üç uyarı üretir', () => {
   const israk = ker.find(b => b.govde.startsWith('İşrak'));
   assert.strictEqual(israk.zaman.getHours(), 5);
   assert.strictEqual(israk.zaman.getMinutes(), 34);
-  assert.strictEqual(israk.govde, 'İşrak kerahat vakti başladı · 45 dk sürer');
+  assert.strictEqual(israk.govde, 'İşrak kerahat vakti başladı · 05:34–06:19');
 });
 
 test('kerahat kapalıyken uyarı üretmez', () => {
@@ -245,7 +245,7 @@ test('İstiva kerahatı öğleden 10 dk önce başlar', () => {
   // ogle 769 dk = 12:49; 10 dk öncesi 12:39
   assert.strictEqual(istiva.zaman.getHours(), 12);
   assert.strictEqual(istiva.zaman.getMinutes(), 39);
-  assert.strictEqual(istiva.govde, 'İstiva kerahat vakti başladı · 10 dk sürer');
+  assert.strictEqual(istiva.govde, 'İstiva kerahat vakti başladı · 12:39–12:49');
 });
 
 /** 14 Ağustos 2026 cuma gününü de içeren daha uzun bir tablo. */
@@ -370,7 +370,7 @@ test('bütçe üretilen gün sayısını sınırlar', () => {
   const liste = bildirimListesiUret(ayar, uzun, simdi);
 
   // kuyruk hatırlatması hariç: 30 gün × 1 öğle
-  assert.strictEqual(liste.filter(b => b.govde === 'Öğle vakti girdi').length, 30);
+  assert.strictEqual(liste.filter(b => b.govde === 'Öğle vakti girdi · 12:49').length, 30);
 });
 
 test('toplam bildirim sayısı 400\'ü aşmaz', () => {
@@ -420,7 +420,7 @@ test('vakit 0 iken aynı gündeki diğer vakitler çalışmaya devam eder', () =
 
   const liste = bildirimListesiUret(ayar, gunler, simdi);
 
-  assert.strictEqual(liste.filter(b => b.govde === 'Öğle vakti girdi').length, 1);
+  assert.strictEqual(liste.filter(b => b.govde === 'Öğle vakti girdi · 12:49').length, 1);
 });
 
 // --- Fix 2: Cuma bloğu öğle değeri eksikse ek metni atlamalı ---

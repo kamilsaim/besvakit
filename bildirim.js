@@ -157,9 +157,12 @@ function bildirimListesiUret(ayar, gunler, simdi) {
         kanal: bvKanal(typeof ayar.ezan === 'string' && ayar.ezan && k !== 'gunes'
           ? 'ezan-' + ayar.ezan : 'vakit', dk, ayar.sessiz),
         baslik: BV_BASLIK,
+        // Saat metinde durur: Android bazı cihazlarda (pil tasarrufu, yeniden
+        // başlatma) bildirimi saatler sonra "şimdi" damgasıyla verebiliyor.
+        // Saat yazmazsa dünkü ikindi bugün öğlede gelmiş gibi okunur.
         govde: k === 'gunes'
-          ? 'Güneş doğdu — sabah namazı vakti çıktı'
-          : BV_VAKIT_AD[k] + ' vakti girdi',
+          ? 'Güneş doğdu · ' + bvSaatYaz(dk) + ' — sabah namazı vakti çıktı'
+          : BV_VAKIT_AD[k] + ' vakti girdi · ' + bvSaatYaz(dk),
         zaman: bvZaman(gun, dk)
       });
 
@@ -173,8 +176,9 @@ function bildirimListesiUret(ayar, gunler, simdi) {
           kanal: bvKanal('once', dk - once, ayar.sessiz),
           baslik: BV_BASLIK,
           govde: k === 'gunes'
-            ? 'Güneş doğuşuna ' + once + ' dakika kaldı — sabah namazı vakti çıkıyor'
-            : BV_VAKIT_AD[k] + ' vaktine ' + once + ' dakika kaldı',
+            ? 'Güneş doğuşuna ' + once + ' dakika kaldı · ' + bvSaatYaz(dk) +
+              ' — sabah namazı vakti çıkıyor'
+            : BV_VAKIT_AD[k] + ' vaktine ' + once + ' dakika kaldı · ' + bvSaatYaz(dk),
           zaman: bvZaman(gun, dk - once)
         });
       }
@@ -196,7 +200,7 @@ function bildirimListesiUret(ayar, gunler, simdi) {
           kanal: bvKanal('ozel', basDk, ayar.sessiz),
           baslik: BV_BASLIK,
           govde: ker.ad + ' kerahat vakti başladı · ' +
-                 Math.round(sonDk - basDk) + ' dk sürer',
+                 bvSaatYaz(basDk) + '–' + bvSaatYaz(sonDk),
           zaman: bvZaman(gun, basDk)
         });
       });
